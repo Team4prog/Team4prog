@@ -16,6 +16,28 @@ namespace Team4prog.UI
         private List<double?> angles = new List<double?>();
         private List<double?> throttles = new List<double?>();
         private int currentIndex = -1;
+        private System.Windows.Forms.Timer timerPlayback;
+        private bool isPlayingForward = false;
+        private bool isPlayingBackward = false;
+        private double playbackSpeed = 1.0;
+        // Tub cleaner variables
+        private int leftIndex = -1;
+        private int rightIndex = -1;
+        private List<string> deletedImagePaths = new List<string>();
+        private List<double> deletedAngles = new List<double>();
+        private List<double> deletedThrottles = new List<double>();
+        // Keep original indices for restore
+        private List<int> deletedIndices = new List<int>();
+        // remember last loaded folder for Reload
+        private string? currentFolder = null;
+        // Filtering
+        private List<string> originalImagePaths = new List<string>();
+        private List<double?> originalAngles = new List<double?>();
+        private List<double?> originalThrottles = new List<double?>();
+
+        private List<string> filteredImagePaths = new List<string>();
+        private List<double?> filteredAngles = new List<double?>();
+        private List<double?> filteredThrottles = new List<double?>();
 
         public Form1()
         {
@@ -26,11 +48,923 @@ namespace Team4prog.UI
 
             // 이벤트 핸들러 연결
             btnOpenFolder.Click += btnOpenFolder_Click;
+            btnDelete.Click += btnDelete_Click;
+            btnSetFilter.Click += btnSetFilter_Click;
+            btnClearFilter.Click += btnClearFilter_Click;
+            btnSetLeft.Click += btnSetLeft_Click;
+            btnSetRight.Click += btnSetRight_Click;
+            btnDeleteRange.Click += btnDeleteRange_Click;
+            btnRestore.Click += btnRestore_Click;
+            btnReload.Click += btnReload_Click;
+            btnPrev.Click += btnPrev_Click;
+            btnNext.Click += btnNext_Click;
+            btnPlayForward.Click += btnPlayForward_Click;
+            btnPlayBackward.Click += btnPlayBackward_Click;
+            btnStop.Click += btnStop_Click;
+            nudSpeed.ValueChanged += nudSpeed_ValueChanged;
             listBoxFrames.SelectedIndexChanged += listBoxFrames_SelectedIndexChanged;
             trackBarFrame.Scroll += trackBarFrame_Scroll;
+
+            // Chart 초기화
+            InitializeChart();
+
+            // lblRange 기본값
+            lblRange.Text = "[0, 0]";
+
+            // Timer 초기화
+            timerPlayback = new System.Windows.Forms.Timer();
+            timerPlayback.Interval = 100; // 기본 100ms
+            timerPlayback.Tick += TimerPlayback_Tick;
         }
 
-        // 테스트용 JSON 파일 자동 생성: 이미지 파일명에 맞춰 .json 파일 생성
+        // ParseCondition: returns a tuple of (operator, value) or null if invalid
+        private (string op, double val)? ParseCondition(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return null;
+
+            var s = input.Trim();
+            // allow space between operator and number
+            // operators: >=, <=, >, <, ==
+            string[] ops = new[] { ">=", "<=", ">", "<", "==" };
+            foreach (var op in ops)
+            {
+                if (s.StartsWith(op))
+                {
+                    var numPart = s.Substring(op.Length).Trim();
+                    if (double.TryParse(numPart, NumberStyles.Float, CultureInfo.InvariantCulture, out var v))
+                        return (op, v);
+                    return null;
+                }
+            }
+
+            // Might be in format like "> 0.5" (space before op)
+            foreach (var op in ops)
+            {
+                int idx = s.IndexOf(op);
+                if (idx >= 0)
+                {
+                    var rest = s.Substring(idx + op.Length).Trim();
+                    if (double.TryParse(rest, NumberStyles.Float, CultureInfo.InvariantCulture, out var v))
+                        return (op, v);
+                    return null;
+                }
+            }
+
+            return null;
+        }
+
+        private bool CompareValue(double value, (string op, double val) cond)
+        {
+            switch (cond.op)
+            {
+                case ">": return value > cond.val;
+                case "<": return value < cond.val;
+                case ">=": return value >= cond.val;
+                case "<=": return value <= cond.val;
+                case "==": return Math.Abs(value - cond.val) < 1e-9;
+                default: return false;
+            }
+        }
+
+        private void btnSetFilter_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                ApplyFilter();
+            }
+            catch (Exception ex)
+            {
+                AddLog($"필터 적용 오류: {ex.Message}");
+            }
+        }
+
+        private void btnClearFilter_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                ResetFilter();
+            }
+            catch (Exception ex)
+            {
+                AddLog($"필터 해제 오류: {ex.Message}");
+            }
+        }
+
+        private void ApplyFilter()
+        {
+            // parse conditions
+            var angleCond = ParseCondition(txtAngleFilter.Text ?? string.Empty);
+            var thrCond = ParseCondition(txtThrottleFilter.Text ?? string.Empty);
+
+            if (txtAngleFilter.Text != null && txtAngleFilter.Text.Trim().Length > 0 && angleCond == null)
+            {
+                MessageBox.Show("조건 형식이 잘못되었습니다 (Angle)", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if (txtThrottleFilter.Text != null && txtThrottleFilter.Text.Trim().Length > 0 && thrCond == null)
+            {
+                MessageBox.Show("조건 형식이 잘못되었습니다 (Throttle)", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // ensure originals saved
+            if (originalImagePaths.Count == 0)
+            {
+                originalImagePaths = new List<string>(imagePaths);
+                originalAngles = new List<double?>(angles);
+                originalThrottles = new List<double?>(throttles);
+            }
+
+            filteredImagePaths.Clear();
+            filteredAngles.Clear();
+            filteredThrottles.Clear();
+
+            int n = Math.Max(imagePaths.Count, Math.Max(angles.Count, throttles.Count));
+            for (int i = 0; i < n; i++)
+            {
+                double a = (i < angles.Count && angles[i].HasValue) ? angles[i].Value : double.NaN;
+                double t = (i < throttles.Count && throttles[i].HasValue) ? throttles[i].Value : double.NaN;
+
+                bool ok = true;
+                if (angleCond.HasValue)
+                {
+                    if (double.IsNaN(a)) ok = false;
+                    else ok = CompareValue(a, angleCond.Value);
+                }
+                if (ok && thrCond.HasValue)
+                {
+                    if (double.IsNaN(t)) ok = false;
+                    else ok = CompareValue(t, thrCond.Value);
+                }
+
+                if (ok)
+                {
+                    if (i < imagePaths.Count) filteredImagePaths.Add(imagePaths[i]);
+                    filteredAngles.Add(double.IsNaN(a) ? (double?)null : a);
+                    filteredThrottles.Add(double.IsNaN(t) ? (double?)null : t);
+                }
+            }
+
+            // swap lists to filtered view
+            imagePaths = new List<string>(filteredImagePaths);
+            angles = new List<double?>(filteredAngles);
+            throttles = new List<double?>(filteredThrottles);
+
+            RebuildListBoxFrames();
+            trackBarFrame.Minimum = 0;
+            trackBarFrame.Maximum = Math.Max(0, imagePaths.Count - 1);
+
+            int before = originalImagePaths.Count;
+            int after = imagePaths.Count;
+            AddLog($"[필터 적용] {txtAngleFilter.Text} { (string.IsNullOrWhiteSpace(txtAngleFilter.Text) ? "" : "") }");
+            AddLog($"[필터 적용] {txtThrottleFilter.Text}");
+            AddLog($"[필터 결과] {before}개 → {after}개");
+
+            if (imagePaths.Count > 0)
+            {
+                listBoxFrames.SelectedIndex = 0;
+                trackBarFrame.Value = 0;
+                ShowImage(0);
+            }
+            else
+            {
+                ClearImageDisplay();
+            }
+        }
+
+        private void ResetFilter()
+        {
+            if (originalImagePaths.Count == 0)
+            {
+                AddLog("원본 데이터가 없습니다");
+                return;
+            }
+
+            imagePaths = new List<string>(originalImagePaths);
+            angles = new List<double?>(originalAngles);
+            throttles = new List<double?>(originalThrottles);
+
+            originalImagePaths.Clear();
+            originalAngles.Clear();
+            originalThrottles.Clear();
+
+            RebuildListBoxFrames();
+            trackBarFrame.Minimum = 0;
+            trackBarFrame.Maximum = Math.Max(0, imagePaths.Count - 1);
+            if (imagePaths.Count > 0)
+            {
+                listBoxFrames.SelectedIndex = 0;
+                trackBarFrame.Value = 0;
+                ShowImage(0);
+            }
+            AddLog("[필터 해제]");
+        }
+
+        // Chart 초기화 (패널 기반 간단 드로잉)
+        private void InitializeChart()
+        {
+            try
+            {
+                chartPanel.Paint += ChartPanel_Paint;
+                // prepare cache
+                cachedChartBitmap = null;
+                lastHighlightedIndex = -1;
+            }
+            catch (Exception ex)
+            {
+                AddLog($"차트 초기화 오류: {ex.Message}");
+            }
+        }
+
+        private Bitmap? cachedChartBitmap = null;
+        private int lastHighlightedIndex = -1;
+
+        private void UpdateChart()
+        {
+            try
+            {
+                // rebuild cached bitmap for static parts (axes, lines, labels)
+                int w = Math.Max(10, chartPanel.Width);
+                int h = Math.Max(10, chartPanel.Height);
+                var bmp = new Bitmap(w, h);
+                using (var g = Graphics.FromImage(bmp))
+                {
+                    g.Clear(chartPanel.BackColor);
+
+                    int margin = 40;
+                    int plotW = Math.Max(10, w - margin * 2);
+                    int plotH = Math.Max(10, h - margin * 2);
+
+                    // background for plot area
+                    using (var brush = new SolidBrush(Color.FromArgb(30, 30, 30)))
+                    {
+                        g.FillRectangle(brush, margin, margin, plotW, plotH);
+                    }
+
+                    // axes
+                    using (var pen = new Pen(Color.White))
+                    {
+                        g.DrawLine(pen, margin, margin + plotH, margin + plotW, margin + plotH); // x axis
+                        g.DrawLine(pen, margin, margin, margin, margin + plotH); // y axis
+                    }
+
+                    int n = Math.Max(1, Math.Max(angles.Count, throttles.Count));
+
+                    if (n > 0)
+                    {
+                        // compute points
+                        PointF[] ptsA = new PointF[n];
+                        PointF[] ptsT = new PointF[n];
+                        for (int i = 0; i < n; i++)
+                        {
+                            float x = margin + (n == 1 ? plotW / 2f : (float)i * (plotW - 1) / (n - 1));
+                            double a = (i < angles.Count && angles[i].HasValue) ? angles[i].Value : 0.0;
+                            double t = (i < throttles.Count && throttles[i].HasValue) ? throttles[i].Value : 0.0;
+                            float yA = margin + plotH / 2f - (float)(a * (plotH / 2f));
+                            float yT = margin + plotH / 2f - (float)(t * (plotH / 2f));
+                            ptsA[i] = new PointF(x, yA);
+                            ptsT[i] = new PointF(x, yT);
+                        }
+
+                        // draw lines
+                        if (n > 1)
+                        {
+                            using (var penA = new Pen(Color.Blue, 2))
+                                g.DrawLines(penA, ptsA);
+                            using (var penT = new Pen(Color.Yellow, 2))
+                                g.DrawLines(penT, ptsT);
+                        }
+                        else
+                        {
+                            // single sample: draw tiny horizontal ticks (no marker) for performance
+                            using (var penA = new Pen(Color.Blue, 2))
+                                g.DrawLine(penA, ptsA[0].X - 2, ptsA[0].Y, ptsA[0].X + 2, ptsA[0].Y);
+                            using (var penT = new Pen(Color.Yellow, 2))
+                                g.DrawLine(penT, ptsT[0].X - 2, ptsT[0].Y, ptsT[0].X + 2, ptsT[0].Y);
+                        }
+
+                        // draw zero baseline
+                        using (var zeroPen = new Pen(Color.WhiteSmoke, 1))
+                        {
+                            float y0 = margin + plotH / 2f;
+                            zeroPen.DashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
+                            g.DrawLine(zeroPen, margin, y0, margin + plotW, y0);
+                        }
+
+                        // X-axis labels
+                        using (var font = new Font("Segoe UI", 8))
+                        using (var brush = new SolidBrush(Color.White))
+                        {
+                            int approx = Math.Max(1, n / 10);
+                            for (int i = 0; i < n; i += approx)
+                            {
+                                float x = margin + (n == 1 ? plotW / 2f : (float)i * (plotW - 1) / (n - 1));
+                                var text = i.ToString();
+                                var sz = g.MeasureString(text, font);
+                                g.DrawString(text, font, brush, x - sz.Width / 2f, margin + plotH + 2);
+                            }
+                        }
+                    }
+                }
+
+                // swap cache
+                var old = cachedChartBitmap;
+                cachedChartBitmap = bmp;
+                if (old != null) old.Dispose();
+
+                // reset highlighted index to force full repaint
+                lastHighlightedIndex = -1;
+                chartPanel.Invalidate();
+                AddLog("[그래프 업데이트 완료]");
+            }
+            catch (Exception ex)
+            {
+                AddLog($"그래프 업데이트 오류: {ex.Message}");
+            }
+        }
+
+        private void HighlightCurrentIndex(int index)
+        {
+            try
+            {
+                if (cachedChartBitmap == null)
+                {
+                    chartPanel.Invalidate();
+                    return;
+                }
+
+                int n = Math.Max(1, Math.Max(angles.Count, throttles.Count));
+                if (index < 0 || index >= n)
+                {
+                    // remove previous strip by invalidating previous area
+                    if (lastHighlightedIndex >= 0 && lastHighlightedIndex < n)
+                    {
+                        var rect = GetStripRect(lastHighlightedIndex);
+                        chartPanel.Invalidate(rect);
+                        lastHighlightedIndex = -1;
+                    }
+                    return;
+                }
+
+                // invalidate old and new strip areas only
+                var oldRect = Rectangle.Empty;
+                if (lastHighlightedIndex >= 0)
+                    oldRect = GetStripRect(lastHighlightedIndex);
+                var newRect = GetStripRect(index);
+
+                if (!oldRect.IsEmpty)
+                {
+                    chartPanel.Invalidate(oldRect);
+                }
+                chartPanel.Invalidate(newRect);
+                lastHighlightedIndex = index;
+            }
+            catch (Exception ex)
+            {
+                AddLog($"하이라이트 오류: {ex.Message}");
+            }
+        }
+
+        private Rectangle GetStripRect(int idx)
+        {
+            int w = chartPanel.Width;
+            int h = chartPanel.Height;
+            int margin = 40;
+            int plotW = Math.Max(10, w - margin * 2);
+            int plotH = Math.Max(10, h - margin * 2);
+            int n = Math.Max(1, Math.Max(angles.Count, throttles.Count));
+            float x = margin + (n == 1 ? plotW / 2f : (float)idx * (plotW - 1) / (n - 1));
+            int half = 6;
+            return new Rectangle((int)(x) - half, margin, half * 2, plotH + 1);
+        }
+
+        private void ChartPanel_Paint(object? sender, PaintEventArgs e)
+        {
+            try
+            {
+                var g = e.Graphics;
+                // draw cached static bitmap if available (axes/lines/labels)
+                if (cachedChartBitmap != null)
+                {
+                    g.DrawImageUnscaled(cachedChartBitmap, 0, 0);
+                }
+                else
+                {
+                    // fallback: clear background
+                    g.Clear(chartPanel.BackColor);
+                }
+
+                // draw only highlight strip (no markers or grid)
+                int n = Math.Max(1, Math.Max(angles.Count, throttles.Count));
+                int idx = listBoxFrames.SelectedIndex >= 0 ? listBoxFrames.SelectedIndex : currentIndex;
+                if (cachedChartBitmap != null && idx >= 0 && idx < n)
+                {
+                    var rect = GetStripRect(idx);
+                    using (var sb = new SolidBrush(Color.FromArgb(80, Color.Red)))
+                    {
+                        g.FillRectangle(sb, rect);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                AddLog($"Chart paint 오류: {ex.Message}");
+            }
+        }
+
+        private void btnSetLeft_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                int idx = listBoxFrames.SelectedIndex >= 0 ? listBoxFrames.SelectedIndex : currentIndex;
+                if (idx < 0 || idx >= imagePaths.Count)
+                {
+                    MessageBox.Show("범위를 설정할 프레임을 선택하세요", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                leftIndex = idx;
+                UpdateRangeLabel();
+                AddLog($"[Set Left] {leftIndex}");
+            }
+            catch (Exception ex)
+            {
+                AddLog($"Set Left 오류: {ex.Message}");
+            }
+        }
+
+        private void btnSetRight_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                int idx = listBoxFrames.SelectedIndex >= 0 ? listBoxFrames.SelectedIndex : currentIndex;
+                if (idx < 0 || idx >= imagePaths.Count)
+                {
+                    MessageBox.Show("범위를 설정할 프레임을 선택하세요", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                rightIndex = idx;
+                UpdateRangeLabel();
+                AddLog($"[Set Right] {rightIndex}");
+            }
+            catch (Exception ex)
+            {
+                AddLog($"Set Right 오류: {ex.Message}");
+            }
+        }
+
+        private void UpdateRangeLabel()
+        {
+            try
+            {
+                // If either side not set, show default [0, 0]
+                if (leftIndex < 0 || rightIndex < 0)
+                {
+                    lblRange.Text = "[0, 0]";
+                    return;
+                }
+
+                int l = Math.Min(leftIndex, rightIndex);
+                int r = Math.Max(leftIndex, rightIndex);
+                lblRange.Text = $"[{l}, {r}]";
+            }
+            catch (Exception ex)
+            {
+                AddLog($"범위 레이블 업데이트 오류: {ex.Message}");
+            }
+        }
+
+        private void btnDeleteRange_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                if (leftIndex < 0 || rightIndex < 0)
+                {
+                    MessageBox.Show("삭제할 범위를 먼저 설정하세요", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                int l = leftIndex, r = rightIndex;
+                if (l > r)
+                {
+                    var t = l; l = r; r = t;
+                }
+
+                if (imagePaths.Count == 0)
+                {
+                    MessageBox.Show("삭제할 이미지가 없습니다", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                l = Math.Max(0, l);
+                r = Math.Min(imagePaths.Count - 1, r);
+
+                // collect deleted items in order
+                var tempPaths = new List<string>();
+                var tempAngles = new List<double>();
+                var tempThrottles = new List<double>();
+                var tempIndices = new List<int>();
+
+                for (int i = l; i <= r; i++)
+                {
+                    tempPaths.Add(imagePaths[i]);
+                    double a = (angles.Count > i && angles[i].HasValue) ? angles[i].Value : double.NaN;
+                    double tval = (throttles.Count > i && throttles[i].HasValue) ? throttles[i].Value : double.NaN;
+                    tempAngles.Add(a);
+                    tempThrottles.Add(tval);
+                    tempIndices.Add(i);
+                }
+
+                // delete from end to start to preserve indices
+                for (int i = r; i >= l; i--)
+                {
+                    imagePaths.RemoveAt(i);
+                    if (angles.Count > i) angles.RemoveAt(i);
+                    if (throttles.Count > i) throttles.RemoveAt(i);
+                }
+
+                // append to deleted lists (keep original order)
+                deletedImagePaths.AddRange(tempPaths);
+                deletedAngles.AddRange(tempAngles);
+                deletedThrottles.AddRange(tempThrottles);
+                deletedIndices.AddRange(tempIndices);
+
+                // UI refresh
+                RebuildListBoxFrames();
+                trackBarFrame.Minimum = 0;
+                trackBarFrame.Maximum = Math.Max(0, imagePaths.Count - 1);
+
+                int newIdx = Math.Min(l, imagePaths.Count - 1);
+                if (imagePaths.Count == 0)
+                {
+                    ClearImageDisplay();
+                    trackBarFrame.Value = 0;
+                }
+                else
+                {
+                    listBoxFrames.SelectedIndex = newIdx;
+                    trackBarFrame.Value = newIdx;
+                }
+
+                AddLog($"[삭제 완료] {l} ~ {r} 프레임 삭제");
+
+                // reset range
+                leftIndex = -1; rightIndex = -1;
+                UpdateRangeLabel();
+                UpdateChart();
+            }
+            catch (Exception ex)
+            {
+                AddLog($"범위 삭제 오류: {ex.Message}");
+            }
+        }
+
+        private void btnRestore_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                if (deletedImagePaths.Count == 0)
+                {
+                    MessageBox.Show("복원할 데이터가 없습니다", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                // restore in order using saved indices; if index > current count, append
+                for (int i = 0; i < deletedImagePaths.Count; i++)
+                {
+                    int idx = (i < deletedIndices.Count) ? deletedIndices[i] : imagePaths.Count;
+                    idx = Math.Min(idx, imagePaths.Count);
+                    imagePaths.Insert(idx, deletedImagePaths[i]);
+                    double a = deletedAngles[i];
+                    double t = deletedThrottles[i];
+                    if (double.IsNaN(a))
+                        angles.Insert(idx, null);
+                    else
+                        angles.Insert(idx, a);
+
+                    if (double.IsNaN(t))
+                        throttles.Insert(idx, null);
+                    else
+                        throttles.Insert(idx, t);
+                }
+
+                int restoredCount = deletedImagePaths.Count;
+
+                // clear deleted lists
+                deletedImagePaths.Clear();
+                deletedAngles.Clear();
+                deletedThrottles.Clear();
+                deletedIndices.Clear();
+
+                RebuildListBoxFrames();
+                trackBarFrame.Minimum = 0;
+                trackBarFrame.Maximum = Math.Max(0, imagePaths.Count - 1);
+
+                if (imagePaths.Count > 0)
+                {
+                    int sel = 0;
+                    listBoxFrames.SelectedIndex = sel;
+                    trackBarFrame.Value = sel;
+                }
+
+                AddLog($"[복구 완료] {restoredCount}개 복원");
+                UpdateChart();
+            }
+            catch (Exception ex)
+            {
+                AddLog($"복구 오류: {ex.Message}");
+            }
+        }
+
+        private void btnReload_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(currentFolder))
+                {
+                    MessageBox.Show("먼저 폴더를 로드하세요", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                LoadImages(currentFolder);
+                AddLog("[Reload] 폴더 재로드 완료");
+            }
+            catch (Exception ex)
+            {
+                AddLog($"Reload 오류: {ex.Message}");
+            }
+        }
+
+        private void RebuildListBoxFrames()
+        {
+            try
+            {
+                listBoxFrames.Items.Clear();
+                foreach (var p in imagePaths)
+                    listBoxFrames.Items.Add(Path.GetFileName(p));
+            }
+            catch (Exception ex)
+            {
+                AddLog($"리스트 재구성 오류: {ex.Message}");
+            }
+        }
+
+        private void nudSpeed_ValueChanged(object? sender, EventArgs e)
+        {
+            try
+            {
+                playbackSpeed = (double)nudSpeed.Value;
+                UpdateTimerIntervalFromSpeed();
+                lblSpeed.Text = $"{playbackSpeed:F2}x";
+            }
+            catch (Exception ex)
+            {
+                AddLog($"속도 설정 오류: {ex.Message}");
+            }
+        }
+
+        private void UpdateTimerIntervalFromSpeed()
+        {
+            try
+            {
+                var interval = (int)Math.Max(10, 100.0 / playbackSpeed);
+                timerPlayback.Interval = interval;
+            }
+            catch (Exception ex)
+            {
+                AddLog($"타이머 간격 설정 오류: {ex.Message}");
+            }
+        }
+
+        private void btnPrev_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                if (imagePaths.Count == 0) return;
+                int idx = Math.Max(0, (listBoxFrames.SelectedIndex >= 0 ? listBoxFrames.SelectedIndex : currentIndex));
+                idx = Math.Max(0, idx - 1);
+                listBoxFrames.SelectedIndex = idx;
+                trackBarFrame.Value = idx;
+            }
+            catch (Exception ex)
+            {
+                AddLog($"이전 프레임 이동 오류: {ex.Message}");
+            }
+        }
+
+        private void btnNext_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                if (imagePaths.Count == 0) return;
+                int idx = Math.Min(imagePaths.Count - 1, (listBoxFrames.SelectedIndex >= 0 ? listBoxFrames.SelectedIndex : currentIndex));
+                idx = Math.Min(imagePaths.Count - 1, idx + 1);
+                listBoxFrames.SelectedIndex = idx;
+                trackBarFrame.Value = idx;
+            }
+            catch (Exception ex)
+            {
+                AddLog($"다음 프레임 이동 오류: {ex.Message}");
+            }
+        }
+
+        private void btnPlayForward_Click(object? sender, EventArgs e)
+        {
+            if (imagePaths.Count == 0)
+            {
+                AddLog("재생 불가: 이미지가 없습니다.");
+                return;
+            }
+            isPlayingForward = true;
+            isPlayingBackward = false;
+            UpdateTimerIntervalFromSpeed();
+            timerPlayback.Start();
+            AddLog("[재생 시작 >>]");
+        }
+
+        private void btnPlayBackward_Click(object? sender, EventArgs e)
+        {
+            if (imagePaths.Count == 0)
+            {
+                AddLog("재생 불가: 이미지가 없습니다.");
+                return;
+            }
+            isPlayingForward = false;
+            isPlayingBackward = true;
+            UpdateTimerIntervalFromSpeed();
+            timerPlayback.Start();
+            AddLog("[역재생 시작 <<]");
+        }
+
+        private void btnStop_Click(object? sender, EventArgs e)
+        {
+            timerPlayback.Stop();
+            isPlayingForward = false;
+            isPlayingBackward = false;
+            AddLog("[정지]");
+        }
+
+        private void TimerPlayback_Tick(object? sender, EventArgs e)
+        {
+            try
+            {
+                if (imagePaths.Count == 0)
+                    return;
+
+                int idx = (listBoxFrames.SelectedIndex >= 0 ? listBoxFrames.SelectedIndex : currentIndex);
+                if (idx < 0) idx = 0;
+
+                if (isPlayingForward)
+                {
+                    if (idx < imagePaths.Count - 1)
+                        idx++;
+                    else
+                    {
+                        // 끝 도달 시 재생 중지
+                        btnStop_Click(null, EventArgs.Empty);
+                        return;
+                    }
+                }
+                else if (isPlayingBackward)
+                {
+                    if (idx > 0)
+                        idx--;
+                    else
+                    {
+                        btnStop_Click(null, EventArgs.Empty);
+                        return;
+                    }
+                }
+
+                // UI 동기화
+                if (idx >= 0 && idx < imagePaths.Count)
+                {
+                    // Setting SelectedIndex triggers ShowImage via event
+                    if (listBoxFrames.SelectedIndex != idx)
+                        listBoxFrames.SelectedIndex = idx;
+                    trackBarFrame.Value = idx;
+                }
+            }
+            catch (Exception ex)
+            {
+                AddLog($"재생 중 오류: {ex.Message}");
+                btnStop_Click(null, EventArgs.Empty);
+            }
+        }
+
+        // 삭제 버튼 클릭
+        private void btnDelete_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                if (listBoxFrames.SelectedIndex < 0 || listBoxFrames.SelectedIndex >= imagePaths.Count)
+                {
+                    MessageBox.Show("삭제할 항목을 선택하세요", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                var dr = MessageBox.Show("정말 삭제하시겠습니까?", "확인", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (dr != DialogResult.Yes)
+                    return;
+
+                int idx = listBoxFrames.SelectedIndex;
+                string imagePath = imagePaths[idx];
+                string imageFileName = Path.GetFileName(imagePath);
+
+                // 이미지 파일 먼저 삭제
+                try
+                {
+                    if (File.Exists(imagePath))
+                        File.Delete(imagePath);
+                }
+                catch (Exception ex)
+                {
+                    AddLog($"[삭제 실패] {imageFileName}: {ex.Message}");
+                    return;
+                }
+
+                // 동일 이름의 JSON 파일 삭제 시도
+                string jsonPath = Path.ChangeExtension(imagePath, ".json");
+                if (File.Exists(jsonPath))
+                {
+                    try
+                    {
+                        File.Delete(jsonPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        AddLog($"[삭제 실패] {Path.GetFileName(jsonPath)}: {ex.Message}");
+                        // JSON 삭제 실패하더라도 이미지가 이미 삭제되었으므로 계속 진행
+                    }
+                }
+
+                // UI 및 내부 리스트 동기화
+                try
+                {
+                    // Remove from imagePaths and listBox
+                    imagePaths.RemoveAt(idx);
+                    listBoxFrames.Items.RemoveAt(idx);
+
+                    // Remove from angles/throttles if available
+                    if (angles.Count > idx)
+                        angles.RemoveAt(idx);
+                    if (throttles.Count > idx)
+                        throttles.RemoveAt(idx);
+
+                    AddLog($"[삭제 완료] {imageFileName}");
+
+                    // 트랙바 최대값 갱신
+                    trackBarFrame.Minimum = 0;
+                    trackBarFrame.Maximum = Math.Max(0, imagePaths.Count - 1);
+
+                    if (imagePaths.Count == 0)
+                    {
+                        // 모든 항목 삭제됨
+                        ClearImageDisplay();
+                        trackBarFrame.Value = 0;
+                    }
+                    else
+                    {
+                        int newIdx = Math.Min(idx, imagePaths.Count - 1);
+                        // 선택 변경을 통해 ShowImage 호출
+                        listBoxFrames.SelectedIndex = newIdx;
+                        trackBarFrame.Value = newIdx;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    AddLog($"[삭제 실패] 내부 동기화 오류: {ex.Message}");
+                }
+            }
+            catch (Exception ex)
+            {
+                AddLog($"[삭제 실패] 알수없는 오류: {ex.Message}");
+            }
+        }
+
+        private void ClearImageDisplay()
+        {
+            try
+            {
+                if (picFrame.Image != null)
+                {
+                    var old = picFrame.Image;
+                    picFrame.Image = null;
+                    old.Dispose();
+                }
+
+                currentIndex = -1;
+                lblFrame.Text = "Frame: N/A";
+                lblAngle.Text = "Angle: N/A";
+                lblThrottle.Text = "Throttle: N/A";
+                AddLog("이미지 화면 초기화");
+            }
+            catch (Exception ex)
+            {
+                AddLog($"이미지 초기화 오류: {ex.Message}");
+            }
+        }
+
+        /*// 테스트용 JSON 파일 자동 생성: 이미지 파일명에 맞춰 .json 파일 생성
         private void GenerateTestJson(string folderPath)
         {
             if (!Directory.Exists(folderPath))
@@ -79,6 +1013,7 @@ namespace Team4prog.UI
 
             AddLog($"테스트 JSON 생성 완료: {created}개");
         }
+        */
 
         // 폴더 선택 버튼 클릭
         private void btnOpenFolder_Click(object? sender, EventArgs e)
@@ -102,6 +1037,19 @@ namespace Team4prog.UI
                 listBoxFrames.Items.Clear();
                 imagePaths.Clear();
                 currentIndex = -1;
+                // tub cleaner reset
+                leftIndex = -1;
+                rightIndex = -1;
+                deletedImagePaths.Clear();
+                deletedAngles.Clear();
+                deletedThrottles.Clear();
+                deletedIndices.Clear();
+                UpdateRangeLabel();
+                // remember folder for reload
+                currentFolder = folderPath;
+                // also clear angle/throttle until loaded
+                angles.Clear();
+                throttles.Clear();
 
                 if (!Directory.Exists(folderPath))
                 {
@@ -165,6 +1113,8 @@ namespace Team4prog.UI
 
                 // JSON 데이터 로드 시도 (같은 폴더)
                 LoadJsonData(folderPath);
+                // 차트 업데이트
+                UpdateChart();
             }
             catch (Exception ex)
             {
@@ -334,6 +1284,8 @@ namespace Team4prog.UI
                     lblThrottle.Text = "Throttle: N/A";
 
                 AddLog($"이미지 표시: {Path.GetFileName(imagePaths[index])} (인덱스 {index})");
+                // 하이라이트 업데이트
+                HighlightCurrentIndex(index);
             }
             catch (Exception ex)
             {
@@ -385,6 +1337,9 @@ namespace Team4prog.UI
                     listBoxFrames.SelectedIndex = idx;
                 else
                     ShowImage(idx);
+
+                // only update highlight strip to avoid full redraw
+                HighlightCurrentIndex(idx);
             }
         }
 
