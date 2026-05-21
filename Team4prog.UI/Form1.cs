@@ -46,6 +46,17 @@ namespace Team4prog.UI
             // 이미지가 PictureBox 크기에 맞게 보이도록 설정
             picFrame.SizeMode = PictureBoxSizeMode.Zoom;
 
+            //combobox 연산자 추가
+            cmbAngleOp.Items.AddRange(new string[] { ">", "<", ">=", "<=", "==" });
+            cmbThrottleOp.Items.AddRange(new string[] { ">", "<", ">=", "<=", "==" });
+
+            cmbAngleOp.SelectedIndex = -1;
+            cmbThrottleOp.SelectedIndex = -1;
+
+            // 입력 검증 이벤트 연결
+            txtAngleFilter.TextChanged += ValidateInput;
+            txtThrottleFilter.TextChanged += ValidateInput;
+
             // 이벤트 핸들러 연결
             btnOpenFolder.Click += btnOpenFolder_Click;
             btnDelete.Click += btnDelete_Click;
@@ -77,55 +88,8 @@ namespace Team4prog.UI
             timerPlayback.Tick += TimerPlayback_Tick;
         }
 
-        // ParseCondition: returns a tuple of (operator, value) or null if invalid
-        private (string op, double val)? ParseCondition(string input)
-        {
-            if (string.IsNullOrWhiteSpace(input))
-                return null;
+       
 
-            var s = input.Trim();
-            // allow space between operator and number
-            // operators: >=, <=, >, <, ==
-            string[] ops = new[] { ">=", "<=", ">", "<", "==" };
-            foreach (var op in ops)
-            {
-                if (s.StartsWith(op))
-                {
-                    var numPart = s.Substring(op.Length).Trim();
-                    if (double.TryParse(numPart, NumberStyles.Float, CultureInfo.InvariantCulture, out var v))
-                        return (op, v);
-                    return null;
-                }
-            }
-
-            // Might be in format like "> 0.5" (space before op)
-            foreach (var op in ops)
-            {
-                int idx = s.IndexOf(op);
-                if (idx >= 0)
-                {
-                    var rest = s.Substring(idx + op.Length).Trim();
-                    if (double.TryParse(rest, NumberStyles.Float, CultureInfo.InvariantCulture, out var v))
-                        return (op, v);
-                    return null;
-                }
-            }
-
-            return null;
-        }
-
-        private bool CompareValue(double value, (string op, double val) cond)
-        {
-            switch (cond.op)
-            {
-                case ">": return value > cond.val;
-                case "<": return value < cond.val;
-                case ">=": return value >= cond.val;
-                case "<=": return value <= cond.val;
-                case "==": return Math.Abs(value - cond.val) < 1e-9;
-                default: return false;
-            }
-        }
 
         private void btnSetFilter_Click(object? sender, EventArgs e)
         {
@@ -151,85 +115,133 @@ namespace Team4prog.UI
             }
         }
 
+
         private void ApplyFilter()
         {
-            // parse conditions
-            var angleCond = ParseCondition(txtAngleFilter.Text ?? string.Empty);
-            var thrCond = ParseCondition(txtThrottleFilter.Text ?? string.Empty);
-
-            if (txtAngleFilter.Text != null && txtAngleFilter.Text.Trim().Length > 0 && angleCond == null)
+            try
             {
-                MessageBox.Show("조건 형식이 잘못되었습니다 (Angle)", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                bool useAngle = double.TryParse(txtAngleFilter.Text, out double angleVal);
+                bool useThrottle = double.TryParse(txtThrottleFilter.Text, out double throttleVal);
+
+                // 범위 제한
+                if (useAngle && (angleVal < -1.0 || angleVal > 1.0))
+                {
+                    MessageBox.Show("Angle 값은 -1.0 ~ 1.0 사이여야 합니다");
+                    return;
+                }
+
+                if (useThrottle && (throttleVal < -1.0 || throttleVal > 1.0))
+                {
+                    MessageBox.Show("Throttle 값은 -1.0 ~ 1.0 사이여야 합니다");
+                    return;
+                }
+
+                if (originalImagePaths.Count == 0)
+                {
+                    originalImagePaths = new List<string>(imagePaths);
+                    originalAngles = new List<double?>(angles);
+                    originalThrottles = new List<double?>(throttles);
+                }
+
+                filteredImagePaths.Clear();
+                filteredAngles.Clear();
+                filteredThrottles.Clear();
+
+                for (int i = 0; i < originalAngles.Count; i++)
+                {
+                    bool ok = true;
+
+                    if (useAngle)
+                    {
+                        if (!originalAngles[i].HasValue)
+                            ok = false;
+                        else
+                            ok = Compare(originalAngles[i].Value, cmbAngleOp.Text, angleVal);
+                    }
+
+                    if (ok && useThrottle)
+                    {
+                        if (!originalThrottles[i].HasValue)
+                            ok = false;
+                        else
+                            ok = Compare(originalThrottles[i].Value, cmbThrottleOp.Text, throttleVal);
+                    }
+
+                    if (ok)
+                    {
+                        filteredImagePaths.Add(originalImagePaths[i]);
+                        filteredAngles.Add(originalAngles[i]);
+                        filteredThrottles.Add(originalThrottles[i]);
+                    }
+                }
+
+                imagePaths = new List<string>(filteredImagePaths);
+                angles = new List<double?>(filteredAngles);
+                throttles = new List<double?>(filteredThrottles);
+
+                RebuildListBoxFrames();
+                trackBarFrame.Maximum = Math.Max(0, imagePaths.Count - 1);
+
+                if (imagePaths.Count > 0)
+                {
+                    listBoxFrames.SelectedIndex = 0;
+                    trackBarFrame.Value = 0;
+                    ShowImage(0);
+                }
+                else
+                {
+                    ClearImageDisplay();
+                }
+
+                AddLog($"[필터 결과] {originalImagePaths.Count} → {imagePaths.Count}");
+            }
+            catch (Exception ex)
+            {
+                AddLog($"필터 오류: {ex.Message}");
+            }
+        }
+
+        private void ValidateInput(object sender, EventArgs e)
+        {
+            TextBox tb = sender as TextBox;
+
+            if (tb == null) return;
+
+            // 빈 값이면 기본색
+            if (string.IsNullOrWhiteSpace(tb.Text))
+            {
+                tb.BackColor = SystemColors.Window;
                 return;
             }
-            if (txtThrottleFilter.Text != null && txtThrottleFilter.Text.Trim().Length > 0 && thrCond == null)
+
+            // 숫자 검사
+            if (double.TryParse(tb.Text, out double value))
             {
-                MessageBox.Show("조건 형식이 잘못되었습니다 (Throttle)", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            // ensure originals saved
-            if (originalImagePaths.Count == 0)
-            {
-                originalImagePaths = new List<string>(imagePaths);
-                originalAngles = new List<double?>(angles);
-                originalThrottles = new List<double?>(throttles);
-            }
-
-            filteredImagePaths.Clear();
-            filteredAngles.Clear();
-            filteredThrottles.Clear();
-
-            int n = Math.Max(imagePaths.Count, Math.Max(angles.Count, throttles.Count));
-            for (int i = 0; i < n; i++)
-            {
-                double a = (i < angles.Count && angles[i].HasValue) ? angles[i].Value : double.NaN;
-                double t = (i < throttles.Count && throttles[i].HasValue) ? throttles[i].Value : double.NaN;
-
-                bool ok = true;
-                if (angleCond.HasValue)
+                if (value < -1.0 || value > 1.0)
                 {
-                    if (double.IsNaN(a)) ok = false;
-                    else ok = CompareValue(a, angleCond.Value);
+                    tb.BackColor = Color.LightCoral; // 빨간색
                 }
-                if (ok && thrCond.HasValue)
+                else
                 {
-                    if (double.IsNaN(t)) ok = false;
-                    else ok = CompareValue(t, thrCond.Value);
+                    tb.BackColor = SystemColors.Window; // 정상
                 }
-
-                if (ok)
-                {
-                    if (i < imagePaths.Count) filteredImagePaths.Add(imagePaths[i]);
-                    filteredAngles.Add(double.IsNaN(a) ? (double?)null : a);
-                    filteredThrottles.Add(double.IsNaN(t) ? (double?)null : t);
-                }
-            }
-
-            // swap lists to filtered view
-            imagePaths = new List<string>(filteredImagePaths);
-            angles = new List<double?>(filteredAngles);
-            throttles = new List<double?>(filteredThrottles);
-
-            RebuildListBoxFrames();
-            trackBarFrame.Minimum = 0;
-            trackBarFrame.Maximum = Math.Max(0, imagePaths.Count - 1);
-
-            int before = originalImagePaths.Count;
-            int after = imagePaths.Count;
-            AddLog($"[필터 적용] {txtAngleFilter.Text} { (string.IsNullOrWhiteSpace(txtAngleFilter.Text) ? "" : "") }");
-            AddLog($"[필터 적용] {txtThrottleFilter.Text}");
-            AddLog($"[필터 결과] {before}개 → {after}개");
-
-            if (imagePaths.Count > 0)
-            {
-                listBoxFrames.SelectedIndex = 0;
-                trackBarFrame.Value = 0;
-                ShowImage(0);
             }
             else
             {
-                ClearImageDisplay();
+                tb.BackColor = Color.LightCoral; // 숫자 아님
+            }
+        }
+
+        private bool Compare(double value, string op, double target)
+        {
+            switch (op)
+            {
+                case ">": return value > target;
+                case "<": return value < target;
+                case ">=": return value >= target;
+                case "<=": return value <= target;
+                case "==": return Math.Abs(value - target) < 0.0001;
+                default: return true;
             }
         }
 
@@ -964,7 +976,7 @@ namespace Team4prog.UI
             }
         }
 
-        /*// 테스트용 JSON 파일 자동 생성: 이미지 파일명에 맞춰 .json 파일 생성
+        // 테스트용 JSON 파일 자동 생성: 이미지 파일명에 맞춰 .json 파일 생성
         private void GenerateTestJson(string folderPath)
         {
             if (!Directory.Exists(folderPath))
@@ -1013,7 +1025,7 @@ namespace Team4prog.UI
 
             AddLog($"테스트 JSON 생성 완료: {created}개");
         }
-        */
+        
 
         // 폴더 선택 버튼 클릭
         private void btnOpenFolder_Click(object? sender, EventArgs e)

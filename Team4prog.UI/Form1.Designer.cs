@@ -50,15 +50,18 @@
             groupBoxPlayControls = new GroupBox();
             txtTubNavigator = new TextBox();
             groupBox1 = new GroupBox();
+            cmbThrottleOp = new ComboBox();
+            cmbAngleOp = new ComboBox();
             lblRange = new Label();
             btnReload = new Button();
             btnRestore = new Button();
             btnDeleteRange = new Button();
             btnSetRight = new Button();
             btnSetLeft = new Button();
-            btnSetFilter = new Button();
             txtAngleFilter = new TextBox();
             txtThrottleFilter = new TextBox();
+            btnSetFilter = new Button();
+            btnClearFilter = new Button();
             ((System.ComponentModel.ISupportInitialize)picFrame).BeginInit();
             ((System.ComponentModel.ISupportInitialize)trackBarFrame).BeginInit();
             groupBoxData.SuspendLayout();
@@ -292,16 +295,14 @@
             // 
             // groupBox1
             // 
-            groupBox1.Controls.Add(txtThrottleFilter);
-            groupBox1.Controls.Add(txtAngleFilter);
-            groupBox1.Controls.Add(btnSetFilter);
+            groupBox1.Controls.Add(cmbThrottleOp);
+            groupBox1.Controls.Add(cmbAngleOp);
             groupBox1.Controls.Add(lblRange);
             groupBox1.Controls.Add(btnReload);
             groupBox1.Controls.Add(btnRestore);
             groupBox1.Controls.Add(btnDeleteRange);
             groupBox1.Controls.Add(btnSetRight);
             groupBox1.Controls.Add(btnSetLeft);
-            // filter controls
             groupBox1.Controls.Add(txtAngleFilter);
             groupBox1.Controls.Add(txtThrottleFilter);
             groupBox1.Controls.Add(btnSetFilter);
@@ -315,6 +316,22 @@
             groupBox1.TabStop = false;
             groupBox1.Text = "Tub Cleaner";
             // 
+            // cmbThrottleOp
+            // 
+            cmbThrottleOp.FormattingEnabled = true;
+            cmbThrottleOp.Location = new Point(421, 118);
+            cmbThrottleOp.Name = "cmbThrottleOp";
+            cmbThrottleOp.Size = new Size(89, 39);
+            cmbThrottleOp.TabIndex = 23;
+            // 
+            // cmbAngleOp
+            // 
+            cmbAngleOp.FormattingEnabled = true;
+            cmbAngleOp.Location = new Point(178, 118);
+            cmbAngleOp.Name = "cmbAngleOp";
+            cmbAngleOp.Size = new Size(89, 39);
+            cmbAngleOp.TabIndex = 22;
+            // 
             // lblRange
             // 
             lblRange.AutoSize = true;
@@ -323,46 +340,6 @@
             lblRange.Size = new Size(77, 31);
             lblRange.TabIndex = 17;
             lblRange.Text = "[0, 0]";
-            // 
-            // txtAngleFilter
-            // 
-            txtAngleFilter = new TextBox();
-            txtAngleFilter.Location = new Point(22, 18);
-            txtAngleFilter.Name = "txtAngleFilter";
-            txtAngleFilter.Size = new Size(180, 30);
-            txtAngleFilter.TabIndex = 18;
-            txtAngleFilter.PlaceholderText = "Angle condition (e.g. > 0.2)";
-            // 
-            // txtThrottleFilter
-            // 
-            txtThrottleFilter = new TextBox();
-            txtThrottleFilter.Location = new Point(210, 18);
-            txtThrottleFilter.Name = "txtThrottleFilter";
-            txtThrottleFilter.Size = new Size(180, 30);
-            txtThrottleFilter.TabIndex = 19;
-            txtThrottleFilter.PlaceholderText = "Throttle condition (e.g. < 0.5)";
-            // 
-            // btnSetFilter
-            // 
-            btnSetFilter = new Button();
-            btnSetFilter.Location = new Point(452, 14);
-            btnSetFilter.Name = "btnSetFilter";
-            btnSetFilter.Size = new Size(132, 36);
-            btnSetFilter.TabIndex = 20;
-            btnSetFilter.Text = "Set Filter";
-            btnSetFilter.UseVisualStyleBackColor = false;
-            btnSetFilter.BackColor = Color.DimGray;
-            // 
-            // btnClearFilter
-            // 
-            btnClearFilter = new Button();
-            btnClearFilter.Location = new Point(590, 14);
-            btnClearFilter.Name = "btnClearFilter";
-            btnClearFilter.Size = new Size(132, 36);
-            btnClearFilter.TabIndex = 21;
-            btnClearFilter.Text = "Clear";
-            btnClearFilter.UseVisualStyleBackColor = false;
-            btnClearFilter.BackColor = Color.DimGray;
             // 
             // btnReload
             // 
@@ -414,31 +391,43 @@
             btnSetLeft.Text = "Set left";
             btnSetLeft.UseVisualStyleBackColor = false;
             // 
+            // txtAngleFilter
+            // 
+            txtAngleFilter.BackColor = Color.Gray;
+            txtAngleFilter.Location = new Point(273, 118);
+            txtAngleFilter.Name = "txtAngleFilter";
+            txtAngleFilter.PlaceholderText = "Angle";
+            txtAngleFilter.Size = new Size(133, 39);
+            txtAngleFilter.TabIndex = 19;
+            // 
+            // txtThrottleFilter
+            // 
+            txtThrottleFilter.BackColor = Color.Gray;
+            txtThrottleFilter.Location = new Point(516, 118);
+            txtThrottleFilter.Name = "txtThrottleFilter";
+            txtThrottleFilter.PlaceholderText = "Throttle";
+            txtThrottleFilter.Size = new Size(159, 39);
+            txtThrottleFilter.TabIndex = 20;
+            // 
             // btnSetFilter
             // 
             btnSetFilter.BackColor = Color.DimGray;
-            btnSetFilter.Location = new Point(22, 106);
+            btnSetFilter.Location = new Point(22, 113);
             btnSetFilter.Name = "btnSetFilter";
             btnSetFilter.Size = new Size(137, 46);
             btnSetFilter.TabIndex = 18;
             btnSetFilter.Text = "Set Filter";
             btnSetFilter.UseVisualStyleBackColor = false;
             // 
-            // txtAngleFilter
+            // btnClearFilter
             // 
-            txtAngleFilter.BackColor = Color.Gray;
-            txtAngleFilter.Location = new Point(178, 113);
-            txtAngleFilter.Name = "txtAngleFilter";
-            txtAngleFilter.Size = new Size(341, 39);
-            txtAngleFilter.TabIndex = 19;
-            // 
-            // txtThrottleFilter
-            // 
-            txtThrottleFilter.BackColor = Color.Gray;
-            txtThrottleFilter.Location = new Point(525, 113);
-            txtThrottleFilter.Name = "txtThrottleFilter";
-            txtThrottleFilter.Size = new Size(351, 39);
-            txtThrottleFilter.TabIndex = 20;
+            btnClearFilter.BackColor = Color.DimGray;
+            btnClearFilter.Location = new Point(690, 113);
+            btnClearFilter.Name = "btnClearFilter";
+            btnClearFilter.Size = new Size(136, 44);
+            btnClearFilter.TabIndex = 21;
+            btnClearFilter.Text = "Clear";
+            btnClearFilter.UseVisualStyleBackColor = false;
             // 
             // Form1
             // 
@@ -507,5 +496,7 @@
         private Button btnSetFilter;
         private TextBox txtThrottleFilter;
         private TextBox txtAngleFilter;
+        private ComboBox cmbAngleOp;
+        private ComboBox cmbThrottleOp;
     }
 }
