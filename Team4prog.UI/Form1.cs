@@ -41,7 +41,12 @@ namespace Team4prog.UI
 
         public Form1()
         {
-            InitializeComponent();
+            InitializeComponent(); // 폼 초기화
+
+            chartPanel.MouseClick += ChartPanel_MouseClick; // 차트 클릭 이벤트 연결
+
+            listBoxLog.HorizontalScrollbar = true; //   로그 리스트박스 가로 스크롤 허용
+            listBoxLog.ScrollAlwaysVisible = true; // 로그 리스트박스 스크롤바 항상 표시
 
             // 이미지가 PictureBox 크기에 맞게 보이도록 설정
             picFrame.SizeMode = PictureBoxSizeMode.Zoom;
@@ -75,6 +80,9 @@ namespace Team4prog.UI
             nudSpeed.ValueChanged += nudSpeed_ValueChanged;
             listBoxFrames.SelectedIndexChanged += listBoxFrames_SelectedIndexChanged;
             trackBarFrame.Scroll += trackBarFrame_Scroll;
+
+            // 폼 크기 고정
+            this.MinimumSize = this.Size;
 
             // Chart 초기화
             InitializeChart();
@@ -194,6 +202,7 @@ namespace Team4prog.UI
                 }
 
                 AddLog($"[필터 결과] {originalImagePaths.Count} → {imagePaths.Count}");
+                UpdateChart();
             }
             catch (Exception ex)
             {
@@ -271,6 +280,7 @@ namespace Team4prog.UI
                 ShowImage(0);
             }
             AddLog("[필터 해제]");
+            UpdateChart();
         }
 
         // Chart 초기화 (패널 기반 간단 드로잉)
@@ -482,6 +492,39 @@ namespace Team4prog.UI
             catch (Exception ex)
             {
                 AddLog($"Chart paint 오류: {ex.Message}");
+            }
+        }
+
+        // 그래프 클릭 → 해당 프레임으로 이동
+        private void ChartPanel_MouseClick(object? sender, MouseEventArgs e)
+        {
+            try
+            {
+                int margin = 40;
+                int w = chartPanel.Width;
+                int plotW = Math.Max(10, w - margin * 2);
+
+                int n = Math.Max(1, Math.Max(angles.Count, throttles.Count));
+
+                // 클릭 위치가 그래프 영역 밖이면 무시
+                if (e.X < margin || e.X > margin + plotW)
+                    return;
+
+                // X좌표 → index 변환
+                float relativeX = e.X - margin;
+                int index = (int)Math.Round(relativeX / (plotW - 1) * (n - 1));
+
+                index = Math.Max(0, Math.Min(index, n - 1));
+
+                // 🔥 UI 동기화
+                listBoxFrames.SelectedIndex = index;
+                trackBarFrame.Value = index;
+
+                AddLog($"[그래프 클릭 이동] → {index}");
+            }
+            catch (Exception ex)
+            {
+                AddLog($"그래프 클릭 오류: {ex.Message}");
             }
         }
 
@@ -1353,11 +1396,6 @@ namespace Team4prog.UI
                 // only update highlight strip to avoid full redraw
                 HighlightCurrentIndex(idx);
             }
-        }
-
-        private void listBoxLog_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
         }
     }
 }

@@ -72,6 +72,7 @@
             // 
             // picFrame
             // 
+            picFrame.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             picFrame.BackColor = Color.White;
             picFrame.Location = new Point(323, 91);
             picFrame.Name = "picFrame";
@@ -81,6 +82,7 @@
             // 
             // trackBarFrame
             // 
+            trackBarFrame.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             trackBarFrame.Location = new Point(323, 524);
             trackBarFrame.Name = "trackBarFrame";
             trackBarFrame.Size = new Size(882, 69);
@@ -88,6 +90,7 @@
             // 
             // btnOpenFolder
             // 
+            btnOpenFolder.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnOpenFolder.BackColor = Color.Silver;
             btnOpenFolder.Font = new Font("한컴 고딕", 16F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnOpenFolder.Location = new Point(965, 12);
@@ -101,7 +104,7 @@
             // 
             btnStartTraining.BackColor = Color.Silver;
             btnStartTraining.Font = new Font("한컴 고딕", 16F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            btnStartTraining.Location = new Point(92, 644);
+            btnStartTraining.Location = new Point(150, 696);
             btnStartTraining.Name = "btnStartTraining";
             btnStartTraining.Size = new Size(167, 55);
             btnStartTraining.TabIndex = 3;
@@ -121,6 +124,7 @@
             // 
             // groupBoxData
             // 
+            groupBoxData.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             groupBoxData.Controls.Add(lblThrottle);
             groupBoxData.Controls.Add(lblAngle);
             groupBoxData.Controls.Add(lblFrame);
@@ -135,6 +139,7 @@
             // 
             // lblThrottle
             // 
+            lblThrottle.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             lblThrottle.AutoSize = true;
             lblThrottle.Location = new Point(438, 35);
             lblThrottle.Name = "lblThrottle";
@@ -144,6 +149,7 @@
             // 
             // lblAngle
             // 
+            lblAngle.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             lblAngle.AutoSize = true;
             lblAngle.Location = new Point(233, 35);
             lblAngle.Name = "lblAngle";
@@ -162,6 +168,8 @@
             // 
             // listBoxFrames
             // 
+            listBoxFrames.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
+            listBoxFrames.BackColor = Color.Silver;
             listBoxFrames.Font = new Font("Tahoma", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
             listBoxFrames.FormattingEnabled = true;
             listBoxFrames.Location = new Point(12, 141);
@@ -171,20 +179,22 @@
             // 
             // listBoxLog
             // 
+            listBoxLog.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            listBoxLog.BackColor = Color.Silver;
             listBoxLog.Font = new Font("Tahoma", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
             listBoxLog.FormattingEnabled = true;
-            listBoxLog.Location = new Point(12, 413);
+            listBoxLog.Location = new Point(12, 422);
             listBoxLog.Name = "listBoxLog";
-            listBoxLog.Size = new Size(305, 196);
+            listBoxLog.Size = new Size(305, 268);
             listBoxLog.TabIndex = 6;
-            listBoxLog.SelectedIndexChanged += listBoxLog_SelectedIndexChanged;
             // 
             // chartPanel
             // 
+            chartPanel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             chartPanel.BackColor = Color.Black;
-            chartPanel.Location = new Point(12, 760);
+            chartPanel.Location = new Point(12, 776);
             chartPanel.Name = "chartPanel";
-            chartPanel.Size = new Size(1193, 217);
+            chartPanel.Size = new Size(1193, 360);
             chartPanel.TabIndex = 15;
             // 
             // btnPrev
@@ -265,6 +275,7 @@
             // 
             // groupBoxPlayControls
             // 
+            groupBoxPlayControls.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             groupBoxPlayControls.Controls.Add(nudSpeed);
             groupBoxPlayControls.Controls.Add(btnStop);
             groupBoxPlayControls.Controls.Add(btnPlayForward);
@@ -273,7 +284,7 @@
             groupBoxPlayControls.Controls.Add(btnPrev);
             groupBoxPlayControls.Controls.Add(lblSpeed);
             groupBoxPlayControls.Font = new Font("함초롬바탕 확장", 13.9999981F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            groupBoxPlayControls.ForeColor = Color.White;
+            groupBoxPlayControls.ForeColor = Color.FromArgb(192, 192, 255);
             groupBoxPlayControls.Location = new Point(965, 91);
             groupBoxPlayControls.Name = "groupBoxPlayControls";
             groupBoxPlayControls.Size = new Size(240, 316);
@@ -295,6 +306,7 @@
             // 
             // groupBox1
             // 
+            groupBox1.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             groupBox1.Controls.Add(cmbThrottleOp);
             groupBox1.Controls.Add(cmbAngleOp);
             groupBox1.Controls.Add(lblRange);
@@ -309,7 +321,7 @@
             groupBox1.Controls.Add(btnClearFilter);
             groupBox1.Font = new Font("한컴 고딕", 11.999999F, FontStyle.Bold, GraphicsUnit.Point, 129);
             groupBox1.ForeColor = Color.FromArgb(192, 192, 255);
-            groupBox1.Location = new Point(323, 583);
+            groupBox1.Location = new Point(323, 590);
             groupBox1.Name = "groupBox1";
             groupBox1.Size = new Size(882, 171);
             groupBox1.TabIndex = 11;
@@ -318,6 +330,7 @@
             // 
             // cmbThrottleOp
             // 
+            cmbThrottleOp.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             cmbThrottleOp.FormattingEnabled = true;
             cmbThrottleOp.Location = new Point(421, 118);
             cmbThrottleOp.Name = "cmbThrottleOp";
@@ -326,6 +339,7 @@
             // 
             // cmbAngleOp
             // 
+            cmbAngleOp.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             cmbAngleOp.FormattingEnabled = true;
             cmbAngleOp.Location = new Point(178, 118);
             cmbAngleOp.Name = "cmbAngleOp";
@@ -334,8 +348,9 @@
             // 
             // lblRange
             // 
+            lblRange.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             lblRange.AutoSize = true;
-            lblRange.Location = new Point(335, 60);
+            lblRange.Location = new Point(329, 60);
             lblRange.Name = "lblRange";
             lblRange.Size = new Size(77, 31);
             lblRange.TabIndex = 17;
@@ -343,6 +358,7 @@
             // 
             // btnReload
             // 
+            btnReload.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             btnReload.BackColor = Color.DimGray;
             btnReload.Location = new Point(732, 51);
             btnReload.Name = "btnReload";
@@ -353,6 +369,7 @@
             // 
             // btnRestore
             // 
+            btnRestore.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             btnRestore.BackColor = Color.DimGray;
             btnRestore.Location = new Point(590, 51);
             btnRestore.Name = "btnRestore";
@@ -363,6 +380,7 @@
             // 
             // btnDeleteRange
             // 
+            btnDeleteRange.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             btnDeleteRange.BackColor = Color.DimGray;
             btnDeleteRange.Location = new Point(452, 51);
             btnDeleteRange.Name = "btnDeleteRange";
@@ -373,6 +391,7 @@
             // 
             // btnSetRight
             // 
+            btnSetRight.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             btnSetRight.BackColor = Color.DimGray;
             btnSetRight.Location = new Point(178, 54);
             btnSetRight.Name = "btnSetRight";
@@ -383,6 +402,7 @@
             // 
             // btnSetLeft
             // 
+            btnSetLeft.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             btnSetLeft.BackColor = Color.DimGray;
             btnSetLeft.Location = new Point(22, 54);
             btnSetLeft.Name = "btnSetLeft";
@@ -393,6 +413,7 @@
             // 
             // txtAngleFilter
             // 
+            txtAngleFilter.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             txtAngleFilter.BackColor = Color.Gray;
             txtAngleFilter.Location = new Point(273, 118);
             txtAngleFilter.Name = "txtAngleFilter";
@@ -402,6 +423,7 @@
             // 
             // txtThrottleFilter
             // 
+            txtThrottleFilter.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             txtThrottleFilter.BackColor = Color.Gray;
             txtThrottleFilter.Location = new Point(516, 118);
             txtThrottleFilter.Name = "txtThrottleFilter";
@@ -411,6 +433,7 @@
             // 
             // btnSetFilter
             // 
+            btnSetFilter.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             btnSetFilter.BackColor = Color.DimGray;
             btnSetFilter.Location = new Point(22, 113);
             btnSetFilter.Name = "btnSetFilter";
@@ -421,6 +444,7 @@
             // 
             // btnClearFilter
             // 
+            btnClearFilter.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             btnClearFilter.BackColor = Color.DimGray;
             btnClearFilter.Location = new Point(690, 113);
             btnClearFilter.Name = "btnClearFilter";
@@ -434,7 +458,7 @@
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(64, 64, 64);
-            ClientSize = new Size(1231, 989);
+            ClientSize = new Size(1231, 1148);
             Controls.Add(groupBox1);
             Controls.Add(txtTubNavigator);
             Controls.Add(listBoxFrames);
