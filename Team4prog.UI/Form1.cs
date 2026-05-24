@@ -38,10 +38,48 @@ namespace Team4prog.UI
         private List<string> filteredImagePaths = new List<string>();
         private List<double?> filteredAngles = new List<double?>();
         private List<double?> filteredThrottles = new List<double?>();
+        // (panel fields are defined in Designer; will reference designer controls directly)
 
         public Form1()
         {
             InitializeComponent(); // 폼 초기화
+            // topBar, panelTubManager and panelTrainer are expected to be created in Designer.
+            // Ensure buttons and panels are wired and visible state is set.
+            try
+            {
+                // Try to enable topBar if exists
+                if (this.Controls.Find("topBar", true).FirstOrDefault() is Control topBar)
+                    topBar.Enabled = true;
+
+                if (btnTubManager != null)
+                {
+                    // avoid accidentally adding duplicate handlers (best-effort)
+                    btnTubManager.Click += (s, e) => ShowTubManager();
+                }
+
+                if (btnTrainer != null)
+                {
+                    btnTrainer.Click += (s, e) => ShowTrainer(); // 탭 버튼 이벤트 연결
+                }
+
+                // Ensure panels are parented and have correct initial visibility
+                if (panelTubManager != null)
+                {
+                    panelTubManager.Dock = DockStyle.Fill;
+                    panelTubManager.Parent = this;
+                    panelTubManager.Visible = true;
+                }
+                if (panelTrainer != null)
+                {
+                    panelTrainer.Dock = DockStyle.Fill;
+                    panelTrainer.Parent = this;
+                    panelTrainer.Visible = false; // 초기에는 Tub Manager 패널만 보이도록 설정
+                }
+            }
+            catch (Exception ex)
+            {
+                AddLog($"UI 패널 초기화 오류: {ex.Message}");
+            }
 
             chartPanel.MouseClick += ChartPanel_MouseClick; // 차트 클릭 이벤트 연결
 
@@ -94,9 +132,40 @@ namespace Team4prog.UI
             timerPlayback = new System.Windows.Forms.Timer();
             timerPlayback.Interval = 100; // 기본 100ms
             timerPlayback.Tick += TimerPlayback_Tick;
+            
         }
 
-       
+        private void ShowTubManager()
+        {
+            try
+            {
+                panelTubManager.Visible = true;
+                panelTubManager.BringToFront();
+
+                panelTrainer.Visible = false;
+            }
+            catch (Exception ex)
+            {
+                AddLog($"ShowTubManager 오류: {ex.Message}");
+            }
+        }
+
+        private void ShowTrainer()
+        {
+            try
+            {
+                panelTrainer.Visible = true;
+                panelTrainer.BringToFront();
+
+                panelTubManager.Visible = false;
+            }
+            catch (Exception ex)
+            {
+                AddLog($"ShowTrainer 오류: {ex.Message}");
+            }
+        }
+
+
 
 
         private void btnSetFilter_Click(object? sender, EventArgs e)
