@@ -66,6 +66,22 @@
             listBoxFrames = new ListBox();
             panelTubManager = new Panel();
             panelTrainer = new Panel();
+            groupBoxPilotManager = new GroupBox();
+            btnUpdateComment = new Button();
+            btnDeleteModel = new Button();
+            cmbModelList = new ComboBox();
+            chartLoss = new Panel();
+            groupBoxTrainer = new GroupBox();
+            btnSelectCarFolder = new Button();
+            txtComment = new TextBox();
+            btnTrain = new Button();
+            btnLoadModel = new Button();
+            cmbModelType = new ComboBox();
+            groupBoxConfigEditor = new GroupBox();
+            flowconfig = new FlowLayoutPanel();
+            btnAddConfig = new Button();
+            btnSaveConfig = new Button();
+            innerPanel = new Panel();
             ((System.ComponentModel.ISupportInitialize)picFrame).BeginInit();
             ((System.ComponentModel.ISupportInitialize)trackBarFrame).BeginInit();
             groupBoxData.SuspendLayout();
@@ -74,6 +90,12 @@
             groupBox1.SuspendLayout();
             topBar.SuspendLayout();
             panelTubManager.SuspendLayout();
+            panelTrainer.SuspendLayout();
+            groupBoxPilotManager.SuspendLayout();
+            groupBoxTrainer.SuspendLayout();
+            groupBoxConfigEditor.SuspendLayout();
+            flowconfig.SuspendLayout();
+            innerPanel.SuspendLayout();
             SuspendLayout();
             // 
             // picFrame
@@ -82,24 +104,23 @@
             picFrame.BackColor = Color.White;
             picFrame.Location = new Point(323, 39);
             picFrame.Name = "picFrame";
-            picFrame.Size = new Size(636, 316);
+            picFrame.Size = new Size(636, 347);
             picFrame.TabIndex = 0;
             picFrame.TabStop = false;
             // 
             // trackBarFrame
             // 
             trackBarFrame.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            trackBarFrame.Location = new Point(323, 490);
+            trackBarFrame.Location = new Point(321, 534);
             trackBarFrame.Name = "trackBarFrame";
             trackBarFrame.Size = new Size(882, 69);
             trackBarFrame.TabIndex = 1;
             // 
             // btnOpenFolder
             // 
-            btnOpenFolder.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnOpenFolder.BackColor = Color.Silver;
             btnOpenFolder.Font = new Font("한컴 고딕", 16F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            btnOpenFolder.Location = new Point(111, 611);
+            btnOpenFolder.Location = new Point(111, 736);
             btnOpenFolder.Name = "btnOpenFolder";
             btnOpenFolder.Size = new Size(204, 55);
             btnOpenFolder.TabIndex = 2;
@@ -125,9 +146,9 @@
             groupBoxData.Controls.Add(lblFrame);
             groupBoxData.Font = new Font("Yu Gothic UI", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
             groupBoxData.ForeColor = Color.FromArgb(192, 192, 255);
-            groupBoxData.Location = new Point(329, 370);
+            groupBoxData.Location = new Point(323, 407);
             groupBoxData.Name = "groupBoxData";
-            groupBoxData.Size = new Size(876, 105);
+            groupBoxData.Size = new Size(882, 105);
             groupBoxData.TabIndex = 4;
             groupBoxData.TabStop = false;
             groupBoxData.Text = "Driving Data";
@@ -136,7 +157,7 @@
             // 
             lblThrottle.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             lblThrottle.AutoSize = true;
-            lblThrottle.Location = new Point(432, 35);
+            lblThrottle.Location = new Point(438, 35);
             lblThrottle.Name = "lblThrottle";
             lblThrottle.Size = new Size(101, 32);
             lblThrottle.TabIndex = 2;
@@ -146,7 +167,7 @@
             // 
             lblAngle.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             lblAngle.AutoSize = true;
-            lblAngle.Location = new Point(230, 35);
+            lblAngle.Location = new Point(233, 35);
             lblAngle.Name = "lblAngle";
             lblAngle.Size = new Size(77, 32);
             lblAngle.TabIndex = 1;
@@ -167,18 +188,18 @@
             listBoxLog.BackColor = Color.Silver;
             listBoxLog.Font = new Font("Tahoma", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
             listBoxLog.FormattingEnabled = true;
-            listBoxLog.Location = new Point(10, 330);
+            listBoxLog.Location = new Point(12, 428);
             listBoxLog.Name = "listBoxLog";
-            listBoxLog.Size = new Size(305, 268);
+            listBoxLog.Size = new Size(305, 292);
             listBoxLog.TabIndex = 6;
             // 
             // chartPanel
             // 
             chartPanel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             chartPanel.BackColor = Color.Black;
-            chartPanel.Location = new Point(12, 744);
+            chartPanel.Location = new Point(12, 814);
             chartPanel.Name = "chartPanel";
-            chartPanel.Size = new Size(1193, 338);
+            chartPanel.Size = new Size(1199, 281);
             chartPanel.TabIndex = 15;
             // 
             // btnPrev
@@ -269,9 +290,9 @@
             groupBoxPlayControls.Controls.Add(lblSpeed);
             groupBoxPlayControls.Font = new Font("함초롬바탕 확장", 13.9999981F, FontStyle.Bold, GraphicsUnit.Point, 129);
             groupBoxPlayControls.ForeColor = Color.FromArgb(192, 192, 255);
-            groupBoxPlayControls.Location = new Point(965, 39);
+            groupBoxPlayControls.Location = new Point(971, 39);
             groupBoxPlayControls.Name = "groupBoxPlayControls";
-            groupBoxPlayControls.Size = new Size(240, 316);
+            groupBoxPlayControls.Size = new Size(240, 347);
             groupBoxPlayControls.TabIndex = 9;
             groupBoxPlayControls.TabStop = false;
             groupBoxPlayControls.Text = "PlayControls";
@@ -305,8 +326,10 @@
             groupBox1.Controls.Add(btnClearFilter);
             groupBox1.Font = new Font("한컴 고딕", 11.999999F, FontStyle.Bold, GraphicsUnit.Point, 129);
             groupBox1.ForeColor = Color.FromArgb(192, 192, 255);
-            groupBox1.Location = new Point(329, 551);
+            groupBox1.Location = new Point(321, 620);
+            groupBox1.Margin = new Padding(0);
             groupBox1.Name = "groupBox1";
+            groupBox1.Padding = new Padding(0);
             groupBox1.Size = new Size(882, 171);
             groupBox1.TabIndex = 11;
             groupBox1.TabStop = false;
@@ -445,26 +468,30 @@
             topBar.Enabled = false;
             topBar.Location = new Point(0, 0);
             topBar.Name = "topBar";
-            topBar.Size = new Size(1231, 47);
+            topBar.Size = new Size(1231, 35);
             topBar.TabIndex = 16;
             // 
             // btnTrainer
             // 
-            btnTrainer.Location = new Point(140, 5);
+            btnTrainer.BackColor = Color.Silver;
+            btnTrainer.Font = new Font("Impact", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            btnTrainer.Location = new Point(140, 0);
             btnTrainer.Name = "btnTrainer";
             btnTrainer.Size = new Size(124, 36);
             btnTrainer.TabIndex = 1;
-            btnTrainer.Text = "button2";
-            btnTrainer.UseVisualStyleBackColor = true;
+            btnTrainer.Text = "[Trainer]";
+            btnTrainer.UseVisualStyleBackColor = false;
             // 
             // btnTubManager
             // 
-            btnTubManager.Location = new Point(10, 5);
+            btnTubManager.BackColor = Color.Silver;
+            btnTubManager.Font = new Font("Impact", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            btnTubManager.Location = new Point(10, -1);
             btnTubManager.Name = "btnTubManager";
             btnTubManager.Size = new Size(124, 36);
             btnTubManager.TabIndex = 0;
-            btnTubManager.Text = "button1";
-            btnTubManager.UseVisualStyleBackColor = true;
+            btnTubManager.Text = "[Tub Manage]";
+            btnTubManager.UseVisualStyleBackColor = false;
             // 
             // listBoxFrames
             // 
@@ -472,47 +499,226 @@
             listBoxFrames.BackColor = Color.Silver;
             listBoxFrames.Font = new Font("Tahoma", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
             listBoxFrames.FormattingEnabled = true;
+            listBoxFrames.IntegralHeight = false;
             listBoxFrames.Location = new Point(12, 80);
+            listBoxFrames.Margin = new Padding(0);
             listBoxFrames.Name = "listBoxFrames";
-            listBoxFrames.Size = new Size(305, 244);
+            listBoxFrames.Size = new Size(305, 316);
             listBoxFrames.TabIndex = 5;
             // 
             // panelTubManager
             // 
-            panelTubManager.Controls.Add(listBoxLog);
-            panelTubManager.Controls.Add(groupBoxPlayControls);
-            panelTubManager.Controls.Add(picFrame);
-            panelTubManager.Controls.Add(trackBarFrame);
-            panelTubManager.Controls.Add(btnOpenFolder);
-            panelTubManager.Controls.Add(btnDelete);
-            panelTubManager.Controls.Add(chartPanel);
-            panelTubManager.Controls.Add(listBoxFrames);
-            panelTubManager.Controls.Add(groupBoxData);
-            panelTubManager.Controls.Add(txtTubNavigator);
-            panelTubManager.Controls.Add(groupBox1);
+            panelTubManager.AutoScroll = true;
+            panelTubManager.Controls.Add(innerPanel);
             panelTubManager.Dock = DockStyle.Fill;
-            panelTubManager.Location = new Point(0, 47);
+            panelTubManager.Location = new Point(0, 0);
             panelTubManager.Name = "panelTubManager";
-            panelTubManager.Size = new Size(1231, 1101);
+            panelTubManager.Size = new Size(1231, 1114);
             panelTubManager.TabIndex = 17;
             // 
             // panelTrainer
             // 
+            panelTrainer.Controls.Add(groupBoxPilotManager);
+            panelTrainer.Controls.Add(chartLoss);
+            panelTrainer.Controls.Add(groupBoxTrainer);
+            panelTrainer.Controls.Add(groupBoxConfigEditor);
             panelTrainer.Dock = DockStyle.Fill;
-            panelTrainer.Location = new Point(0, 47);
+            panelTrainer.Location = new Point(0, 0);
             panelTrainer.Name = "panelTrainer";
-            panelTrainer.Size = new Size(1231, 1101);
+            panelTrainer.Size = new Size(1231, 1114);
             panelTrainer.TabIndex = 18;
+            // 
+            // groupBoxPilotManager
+            // 
+            groupBoxPilotManager.Controls.Add(btnUpdateComment);
+            groupBoxPilotManager.Controls.Add(btnDeleteModel);
+            groupBoxPilotManager.Controls.Add(cmbModelList);
+            groupBoxPilotManager.Font = new Font("Verdana", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            groupBoxPilotManager.ForeColor = Color.FromArgb(192, 192, 255);
+            groupBoxPilotManager.Location = new Point(12, 833);
+            groupBoxPilotManager.Name = "groupBoxPilotManager";
+            groupBoxPilotManager.Size = new Size(1198, 221);
+            groupBoxPilotManager.TabIndex = 0;
+            groupBoxPilotManager.TabStop = false;
+            groupBoxPilotManager.Text = "Pilot Manager";
+            // 
+            // btnUpdateComment
+            // 
+            btnUpdateComment.BackColor = Color.DimGray;
+            btnUpdateComment.Location = new Point(729, 53);
+            btnUpdateComment.Name = "btnUpdateComment";
+            btnUpdateComment.Size = new Size(267, 34);
+            btnUpdateComment.TabIndex = 2;
+            btnUpdateComment.Text = "UpdateComment";
+            btnUpdateComment.UseVisualStyleBackColor = false;
+            // 
+            // btnDeleteModel
+            // 
+            btnDeleteModel.BackColor = Color.DimGray;
+            btnDeleteModel.Location = new Point(486, 55);
+            btnDeleteModel.Name = "btnDeleteModel";
+            btnDeleteModel.Size = new Size(237, 34);
+            btnDeleteModel.TabIndex = 1;
+            btnDeleteModel.Text = "Delete Model";
+            btnDeleteModel.UseVisualStyleBackColor = false;
+            // 
+            // cmbModelList
+            // 
+            cmbModelList.BackColor = Color.DimGray;
+            cmbModelList.FormattingEnabled = true;
+            cmbModelList.Location = new Point(54, 55);
+            cmbModelList.Name = "cmbModelList";
+            cmbModelList.Size = new Size(397, 33);
+            cmbModelList.TabIndex = 0;
+            // 
+            // chartLoss
+            // 
+            chartLoss.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            chartLoss.BackColor = Color.Black;
+            chartLoss.Location = new Point(10, 470);
+            chartLoss.Name = "chartLoss";
+            chartLoss.Size = new Size(1205, 338);
+            chartLoss.TabIndex = 16;
+            // 
+            // groupBoxTrainer
+            // 
+            groupBoxTrainer.Controls.Add(btnSelectCarFolder);
+            groupBoxTrainer.Controls.Add(txtComment);
+            groupBoxTrainer.Controls.Add(btnTrain);
+            groupBoxTrainer.Controls.Add(btnLoadModel);
+            groupBoxTrainer.Controls.Add(cmbModelType);
+            groupBoxTrainer.Font = new Font("Verdana", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            groupBoxTrainer.ForeColor = Color.FromArgb(192, 192, 255);
+            groupBoxTrainer.Location = new Point(10, 274);
+            groupBoxTrainer.Name = "groupBoxTrainer";
+            groupBoxTrainer.Size = new Size(1209, 141);
+            groupBoxTrainer.TabIndex = 1;
+            groupBoxTrainer.TabStop = false;
+            groupBoxTrainer.Text = "Trainer";
+            // 
+            // btnSelectCarFolder
+            // 
+            btnSelectCarFolder.BackColor = Color.DimGray;
+            btnSelectCarFolder.Location = new Point(28, 43);
+            btnSelectCarFolder.Name = "btnSelectCarFolder";
+            btnSelectCarFolder.Size = new Size(259, 37);
+            btnSelectCarFolder.TabIndex = 20;
+            btnSelectCarFolder.Text = "Select Car Folder";
+            btnSelectCarFolder.UseVisualStyleBackColor = false;
+            btnSelectCarFolder.Click += btnSelectCarFolder_Click;
+            // 
+            // txtComment
+            // 
+            txtComment.BackColor = Color.Snow;
+            txtComment.Location = new Point(642, 48);
+            txtComment.Name = "txtComment";
+            txtComment.PlaceholderText = "Comment";
+            txtComment.Size = new Size(539, 32);
+            txtComment.TabIndex = 19;
+            // 
+            // btnTrain
+            // 
+            btnTrain.BackColor = Color.FromArgb(128, 255, 128);
+            btnTrain.ForeColor = Color.Black;
+            btnTrain.Location = new Point(642, 87);
+            btnTrain.Name = "btnTrain";
+            btnTrain.Size = new Size(543, 40);
+            btnTrain.TabIndex = 2;
+            btnTrain.Text = "Train";
+            btnTrain.UseVisualStyleBackColor = false;
+            btnTrain.Click += btnTrain_Click;
+            // 
+            // btnLoadModel
+            // 
+            btnLoadModel.BackColor = Color.DimGray;
+            btnLoadModel.Location = new Point(28, 87);
+            btnLoadModel.Name = "btnLoadModel";
+            btnLoadModel.Size = new Size(525, 40);
+            btnLoadModel.TabIndex = 1;
+            btnLoadModel.Text = "Choose Model";
+            btnLoadModel.UseVisualStyleBackColor = false;
+            // 
+            // cmbModelType
+            // 
+            cmbModelType.BackColor = Color.DimGray;
+            cmbModelType.FormattingEnabled = true;
+            cmbModelType.Items.AddRange(new object[] { "linear", "categorical" });
+            cmbModelType.Location = new Point(311, 48);
+            cmbModelType.Name = "cmbModelType";
+            cmbModelType.Size = new Size(241, 33);
+            cmbModelType.TabIndex = 0;
+            // 
+            // groupBoxConfigEditor
+            // 
+            groupBoxConfigEditor.Controls.Add(flowconfig);
+            groupBoxConfigEditor.Font = new Font("Verdana", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            groupBoxConfigEditor.ForeColor = Color.FromArgb(192, 192, 255);
+            groupBoxConfigEditor.Location = new Point(10, 69);
+            groupBoxConfigEditor.Margin = new Padding(0);
+            groupBoxConfigEditor.Name = "groupBoxConfigEditor";
+            groupBoxConfigEditor.Padding = new Padding(6);
+            groupBoxConfigEditor.Size = new Size(1214, 141);
+            groupBoxConfigEditor.TabIndex = 0;
+            groupBoxConfigEditor.TabStop = false;
+            groupBoxConfigEditor.Text = "Config Editor";
+            // 
+            // flowconfig
+            // 
+            flowconfig.AutoScroll = true;
+            flowconfig.Controls.Add(btnAddConfig);
+            flowconfig.Controls.Add(btnSaveConfig);
+            flowconfig.Dock = DockStyle.Fill;
+            flowconfig.Location = new Point(6, 31);
+            flowconfig.Name = "flowconfig";
+            flowconfig.Size = new Size(1202, 104);
+            flowconfig.TabIndex = 1;
+            // 
+            // btnAddConfig
+            // 
+            btnAddConfig.BackColor = Color.DimGray;
+            btnAddConfig.Location = new Point(3, 3);
+            btnAddConfig.Name = "btnAddConfig";
+            btnAddConfig.Size = new Size(58, 49);
+            btnAddConfig.TabIndex = 0;
+            btnAddConfig.Text = "+";
+            btnAddConfig.UseVisualStyleBackColor = false;
+            // 
+            // btnSaveConfig
+            // 
+            btnSaveConfig.BackColor = Color.DimGray;
+            btnSaveConfig.Location = new Point(67, 3);
+            btnSaveConfig.Name = "btnSaveConfig";
+            btnSaveConfig.Size = new Size(254, 49);
+            btnSaveConfig.TabIndex = 1;
+            btnSaveConfig.Text = "Save myconfig";
+            btnSaveConfig.UseVisualStyleBackColor = false;
+            // 
+            // innerPanel
+            // 
+            innerPanel.Controls.Add(groupBox1);
+            innerPanel.Controls.Add(txtTubNavigator);
+            innerPanel.Controls.Add(groupBoxData);
+            innerPanel.Controls.Add(listBoxFrames);
+            innerPanel.Controls.Add(chartPanel);
+            innerPanel.Controls.Add(btnDelete);
+            innerPanel.Controls.Add(btnOpenFolder);
+            innerPanel.Controls.Add(trackBarFrame);
+            innerPanel.Controls.Add(picFrame);
+            innerPanel.Controls.Add(listBoxLog);
+            innerPanel.Controls.Add(groupBoxPlayControls);
+            innerPanel.Location = new Point(0, 0);
+            innerPanel.Name = "innerPanel";
+            innerPanel.Size = new Size(1231, 1111);
+            innerPanel.TabIndex = 24;
             // 
             // Form1
             // 
-            AutoScaleDimensions = new SizeF(10F, 25F);
-            AutoScaleMode = AutoScaleMode.Font;
+            AutoScaleMode = AutoScaleMode.None;
             BackColor = Color.FromArgb(64, 64, 64);
-            ClientSize = new Size(1231, 1148);
+            ClientSize = new Size(1231, 1114);
+            Controls.Add(topBar);
             Controls.Add(panelTubManager);
             Controls.Add(panelTrainer);
-            Controls.Add(topBar);
             Name = "Form1";
             Text = "DonkeyCar UI";
             ((System.ComponentModel.ISupportInitialize)picFrame).EndInit();
@@ -526,7 +732,14 @@
             groupBox1.PerformLayout();
             topBar.ResumeLayout(false);
             panelTubManager.ResumeLayout(false);
-            panelTubManager.PerformLayout();
+            panelTrainer.ResumeLayout(false);
+            groupBoxPilotManager.ResumeLayout(false);
+            groupBoxTrainer.ResumeLayout(false);
+            groupBoxTrainer.PerformLayout();
+            groupBoxConfigEditor.ResumeLayout(false);
+            flowconfig.ResumeLayout(false);
+            innerPanel.ResumeLayout(false);
+            innerPanel.PerformLayout();
             ResumeLayout(false);
         }
 
@@ -570,5 +783,21 @@
         private ListBox listBoxFrames;
         private Panel panelTubManager;
         private Panel panelTrainer;
+        private GroupBox groupBoxConfigEditor;
+        private FlowLayoutPanel flowconfig;
+        private Button btnAddConfig;
+        private GroupBox groupBoxTrainer;
+        private ComboBox cmbModelType;
+        private Button btnSaveConfig;
+        private Button btnLoadModel;
+        private Button btnTrain;
+        private TextBox txtComment;
+        private GroupBox groupBoxPilotManager;
+        private Panel chartLoss;
+        private Button btnUpdateComment;
+        private Button btnDeleteModel;
+        private ComboBox cmbModelList;
+        private Button btnSelectCarFolder;
+        private Panel innerPanel;
     }
 }

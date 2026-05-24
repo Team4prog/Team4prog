@@ -1,12 +1,14 @@
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Windows.Forms;
-using Newtonsoft.Json.Linq;
-using System.Globalization;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
+using System.Threading.Tasks;
 
 namespace Team4prog.UI
 {
@@ -38,13 +40,14 @@ namespace Team4prog.UI
         private List<string> filteredImagePaths = new List<string>();
         private List<double?> filteredAngles = new List<double?>();
         private List<double?> filteredThrottles = new List<double?>();
+        private string carFolderPath = "";
         // (panel fields are defined in Designer; will reference designer controls directly)
 
         public Form1()
         {
             InitializeComponent(); // 폼 초기화
-            // topBar, panelTubManager and panelTrainer are expected to be created in Designer.
-            // Ensure buttons and panels are wired and visible state is set.
+
+            // UI 패널 초기화 및 이벤트 연결
             try
             {
                 // Try to enable topBar if exists
@@ -62,7 +65,7 @@ namespace Team4prog.UI
                     btnTrainer.Click += (s, e) => ShowTrainer(); // 탭 버튼 이벤트 연결
                 }
 
-                // Ensure panels are parented and have correct initial visibility
+                // Set initial visibility and docking for panels
                 if (panelTubManager != null)
                 {
                     panelTubManager.Dock = DockStyle.Fill;
@@ -132,7 +135,9 @@ namespace Team4prog.UI
             timerPlayback = new System.Windows.Forms.Timer();
             timerPlayback.Interval = 100; // 기본 100ms
             timerPlayback.Tick += TimerPlayback_Tick;
-            
+
+            // Log 초기화
+
         }
 
         private void ShowTubManager()
@@ -1088,56 +1093,12 @@ namespace Team4prog.UI
             }
         }
 
-        // 테스트용 JSON 파일 자동 생성: 이미지 파일명에 맞춰 .json 파일 생성
+        // GenerateTestJson is intentionally disabled. Kept for reference but does nothing to avoid creating test JSON files.
         private void GenerateTestJson(string folderPath)
         {
-            if (!Directory.Exists(folderPath))
-            {
-                AddLog($"JSON 생성 실패: 폴더가 존재하지 않음: {folderPath}");
-                return;
-            }
-
-            var jsonFiles = Directory.EnumerateFiles(folderPath, "*.json").ToArray();
-            if (jsonFiles.Length > 0)
-            {
-                AddLog("JSON 파일이 이미 존재하여 생성하지 않습니다.");
-                return;
-            }
-
-            int created = 0;
-            var rnd = new Random();
-
-            foreach (var imgPath in imagePaths)
-            {
-                try
-                {
-                    var jsonPath = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(imgPath) + ".json");
-
-                    if (File.Exists(jsonPath))
-                        continue;
-
-                    // 랜덤 값 생성
-                    double angle = Math.Round((rnd.NextDouble() * 2.0) - 1.0, 2); // -1.0 ~ 1.0
-                    double throttle = Math.Round(rnd.NextDouble(), 2); // 0.0 ~ 1.0
-
-                    var jobj = new JObject
-                    {
-                        ["user/angle"] = angle,
-                        ["user/throttle"] = throttle
-                    };
-
-                    File.WriteAllText(jsonPath, jobj.ToString());
-                    created++;
-                }
-                catch (Exception ex)
-                {
-                    AddLog($"테스트 JSON 생성 실패 ({Path.GetFileName(imgPath)}): {ex.Message}");
-                }
-            }
-
-            AddLog($"테스트 JSON 생성 완료: {created}개");
+            // Intentionally left blank to prevent automatic test JSON creation.
         }
-        
+
 
         // 폴더 선택 버튼 클릭
         private void btnOpenFolder_Click(object? sender, EventArgs e)
@@ -1225,16 +1186,7 @@ namespace Team4prog.UI
                 listBoxFrames.SelectedIndex = 0;
 
                 AddLog($"이미지 로드 완료: {imagePaths.Count}개");
-                // JSON 파일이 없으면 테스트용 JSON 생성 후 로드
-                try
-                {
-                    GenerateTestJson(folderPath);
-                }
-                catch (Exception ex)
-                {
-                    AddLog($"테스트 JSON 생성 오류: {ex.Message}");
-                }
-
+                // 테스트용 JSON 자동 생성은 비활성화됨 (실제 JSON 파일만 사용)
                 // JSON 데이터 로드 시도 (같은 폴더)
                 LoadJsonData(folderPath);
                 // 차트 업데이트
@@ -1464,6 +1416,90 @@ namespace Team4prog.UI
 
                 // only update highlight strip to avoid full redraw
                 HighlightCurrentIndex(idx);
+            }
+        }
+
+        private async void btnTrain_Click(object sender, EventArgs e)
+        {
+            await RunTraining();
+        }
+
+
+
+        private async Task RunTraining()
+        {
+            try
+            {
+                string modelType = cmbModelType.Text;   // linear 등
+                string comment = txtComment.Text;
+
+                if (string.IsNullOrEmpty(modelType))
+                {
+                    MessageBox.Show("모델 타입 선택해라");
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(carFolderPath))
+                {
+                    MessageBox.Show("먼저 폴더 선택해라");
+                    return;
+                }
+
+                string workingDir = carFolderPath;
+
+                string command = $"manage.py train --model {modelType}";
+
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "python",
+                    Arguments = command,
+                    WorkingDirectory = workingDir,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                var process = new Process();
+                process.StartInfo = psi;
+
+                process.OutputDataReceived += (s, e) =>
+                {
+                    if (!string.IsNullOrEmpty(e.Data))
+                    {
+                        this.Invoke(new Action(() =>
+                        {
+                            listBoxLog.Items.Add(e.Data);
+                            listBoxLog.TopIndex = listBoxLog.Items.Count - 1;
+                        }));
+                    }
+                };
+
+                process.Start();
+
+                process.BeginOutputReadLine();
+
+                await Task.Run(() => process.WaitForExit());
+
+                MessageBox.Show("학습 완료");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("에러: " + ex.Message);
+            }
+        }
+
+        private void btnSelectCarFolder_Click(object sender, EventArgs e)
+        {
+            using (var fbd = new FolderBrowserDialog())
+            {
+                fbd.Description = "mycar 폴더 선택해라";
+
+                if (fbd.ShowDialog() == DialogResult.OK)
+                {
+                    carFolderPath = fbd.SelectedPath;
+                    MessageBox.Show("선택됨: " + carFolderPath);
+                }
             }
         }
     }
