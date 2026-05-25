@@ -78,16 +78,16 @@ namespace Team4prog.UI
                     {
                         if (!originalAngles[i].HasValue)
                             ok = false;
-                        else
-                            ok = Compare(originalAngles[i].Value, cmbAngleOp.Text, angleVal);
+                        else if (originalAngles[i] is double angle)
+                            ok = Compare(angle, cmbAngleOp.Text, angleVal);
                     }
 
                     if (ok && useThrottle)
                     {
                         if (!originalThrottles[i].HasValue)
                             ok = false;
-                        else
-                            ok = Compare(originalThrottles[i].Value, cmbThrottleOp.Text, throttleVal);
+                        else if (originalThrottles[i] is double throttle)
+                            ok = Compare(throttle, cmbThrottleOp.Text, throttleVal);
                     }
 
                     if (ok)
@@ -125,11 +125,10 @@ namespace Team4prog.UI
             }
         }
 
-        private void ValidateInput(object sender, EventArgs e)
+        private void ValidateInput(object? sender, EventArgs e)
         {
-            TextBox tb = sender as TextBox;
-
-            if (tb == null) return;
+            if (sender is not TextBox tb)
+                return;
 
             // Empty input means "do not filter by this field".
             if (string.IsNullOrWhiteSpace(tb.Text))

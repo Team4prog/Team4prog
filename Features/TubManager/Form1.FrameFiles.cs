@@ -28,6 +28,10 @@ namespace Team4prog.UI
                 if (dr != DialogResult.Yes)
                     return;
 
+                dr = MessageBox.Show("이미지와 연결된 JSON 파일이 실제로 삭제됩니다. 계속하시겠습니까?", "삭제 재확인", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (dr != DialogResult.Yes)
+                    return;
+
                 int idx = listBoxFrames.SelectedIndex;
                 string imagePath = imagePaths[idx];
                 string imageFileName = Path.GetFileName(imagePath);
@@ -36,7 +40,25 @@ namespace Team4prog.UI
                 try
                 {
                     if (File.Exists(imagePath))
+                    {
                         File.Delete(imagePath);
+                    }
+                    else
+                    {
+                        AddLog($"[삭제 경고] 이미지 파일이 이미 없습니다: {imageFileName}");
+                    }
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    MessageBox.Show("파일 삭제 권한이 없습니다.\n" + ex.Message, "삭제 실패", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    AddLog($"[삭제 실패] 권한 오류 - {imageFileName}: {ex.Message}");
+                    return;
+                }
+                catch (IOException ex)
+                {
+                    MessageBox.Show("파일이 사용 중이거나 접근할 수 없습니다.\n" + ex.Message, "삭제 실패", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    AddLog($"[삭제 실패] I/O 오류 - {imageFileName}: {ex.Message}");
+                    return;
                 }
                 catch (Exception ex)
                 {
@@ -165,6 +187,7 @@ namespace Team4prog.UI
 
                 if (!Directory.Exists(folderPath))
                 {
+                    MessageBox.Show("선택한 폴더가 존재하지 않습니다.", "로드 실패", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     AddLog($"폴더가 존재하지 않습니다: {folderPath}");
                     return;
                 }
@@ -194,9 +217,11 @@ namespace Team4prog.UI
 
                 if (files.Length == 0)
                 {
+                    MessageBox.Show("선택한 폴더에 jpg/png 이미지가 없습니다.", "로드 실패", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     AddLog("이미지 파일이 없습니다.");
                     trackBarFrame.Minimum = 0;
                     trackBarFrame.Maximum = 0;
+                    ClearImageDisplay();
                     return;
                 }
 
@@ -280,10 +305,14 @@ namespace Team4prog.UI
                 if (jsonFiles.Length == 0)
                 {
                     AddLog("JSON 파일이 없습니다.");
+                    while (angles.Count < imagePaths.Count)
+                        angles.Add(null);
+                    while (throttles.Count < imagePaths.Count)
+                        throttles.Add(null);
                     return;
                 }
 
-                foreach (var jf in jsonFiles)
+                foreach (var jf in jsonFiles.Take(imagePaths.Count))
                 {
                     try
                     {
@@ -338,6 +367,12 @@ namespace Team4prog.UI
                     AddLog($"경고: 이미지 개수({imagePaths.Count})와 JSON 개수({jsonFiles.Length})가 다릅니다.");
                 }
 
+                // Keep metadata lists aligned with imagePaths so frame navigation can stay index-safe.
+                while (angles.Count < imagePaths.Count)
+                    angles.Add(null);
+                while (throttles.Count < imagePaths.Count)
+                    throttles.Add(null);
+
             }
             catch (Exception ex)
             {
@@ -366,6 +401,12 @@ namespace Team4prog.UI
 
                 // Load via stream and copy to a bitmap so the source file is not kept locked.
                 string path = imagePaths[index];
+                if (!File.Exists(path))
+                {
+                    AddLog($"이미지 파일이 없습니다: {path}");
+                    return;
+                }
+
                 using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
                 using (var img = Image.FromStream(fs))
                 {
@@ -376,18 +417,34 @@ namespace Team4prog.UI
                 lblFrame.Text = $"Frame: {currentIndex}";
 
                 // Display driving values when JSON metadata exists for this frame.
-                if (angles.Count > index && angles[index].HasValue)
-                    lblAngle.Text = $"Angle: {angles[index].Value.ToString("F2", CultureInfo.InvariantCulture)}";
+                if (angles.Count > index && angles[index] is double angle)
+                    lblAngle.Text = $"Angle: {angle.ToString("F2", CultureInfo.InvariantCulture)}";
                 else
                     lblAngle.Text = "Angle: N/A";
 
-                if (throttles.Count > index && throttles[index].HasValue)
-                    lblThrottle.Text = $"Throttle: {throttles[index].Value.ToString("F2", CultureInfo.InvariantCulture)}";
+                if (throttles.Count > index && throttles[index] is double throttle)
+                    lblThrottle.Text = $"Throttle: {throttle.ToString("F2", CultureInfo.InvariantCulture)}";
                 else
                     lblThrottle.Text = "Throttle: N/A";
 
                 AddLog($"이미지 표시: {Path.GetFileName(imagePaths[index])} (인덱스 {index})");
                 HighlightCurrentIndex(index);
+            }
+            catch (FileNotFoundException ex)
+            {
+                AddLog($"이미지 파일 없음: {ex.Message}");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                AddLog($"이미지 접근 권한 오류: {ex.Message}");
+            }
+            catch (IOException ex)
+            {
+                AddLog($"이미지 I/O 오류: {ex.Message}");
+            }
+            catch (OutOfMemoryException ex)
+            {
+                AddLog($"이미지 형식 오류 또는 메모리 부족: {ex.Message}");
             }
             catch (Exception ex)
             {

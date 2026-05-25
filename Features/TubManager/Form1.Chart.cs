@@ -60,7 +60,7 @@ namespace Team4prog.UI
                         g.DrawLine(pen, margin, margin, margin, margin + plotH); // y axis
                     }
 
-                    int n = Math.Max(1, Math.Max(angles.Count, throttles.Count));
+                    int n = Math.Max(1, imagePaths.Count);
 
                     if (n > 0)
                     {
@@ -70,8 +70,8 @@ namespace Team4prog.UI
                         for (int i = 0; i < n; i++)
                         {
                             float x = margin + (n == 1 ? plotW / 2f : (float)i * (plotW - 1) / (n - 1));
-                            double a = (i < angles.Count && angles[i].HasValue) ? angles[i].Value : 0.0;
-                            double t = (i < throttles.Count && throttles[i].HasValue) ? throttles[i].Value : 0.0;
+                            double a = (i < angles.Count && angles[i] is double angle) ? angle : 0.0;
+                            double t = (i < throttles.Count && throttles[i] is double throttle) ? throttle : 0.0;
                             float yA = margin + plotH / 2f - (float)(a * (plotH / 2f));
                             float yT = margin + plotH / 2f - (float)(t * (plotH / 2f));
                             ptsA[i] = new PointF(x, yA);
@@ -144,7 +144,7 @@ namespace Team4prog.UI
                     return;
                 }
 
-                int n = Math.Max(1, Math.Max(angles.Count, throttles.Count));
+                int n = Math.Max(1, imagePaths.Count);
                 if (index < 0 || index >= n)
                 {
                     // Remove the previous strip by invalidating only its old area.
@@ -183,7 +183,7 @@ namespace Team4prog.UI
             int margin = 40;
             int plotW = Math.Max(10, w - margin * 2);
             int plotH = Math.Max(10, h - margin * 2);
-            int n = Math.Max(1, Math.Max(angles.Count, throttles.Count));
+            int n = Math.Max(1, imagePaths.Count);
             float x = margin + (n == 1 ? plotW / 2f : (float)idx * (plotW - 1) / (n - 1));
             int half = 6;
             return new Rectangle((int)(x) - half, margin, half * 2, plotH + 1);
@@ -205,7 +205,7 @@ namespace Team4prog.UI
                 }
 
                 // Draw only the current frame highlight on top of the cached chart.
-                int n = Math.Max(1, Math.Max(angles.Count, throttles.Count));
+                int n = Math.Max(1, imagePaths.Count);
                 int idx = listBoxFrames.SelectedIndex >= 0 ? listBoxFrames.SelectedIndex : currentIndex;
                 if (cachedChartBitmap != null && idx >= 0 && idx < n)
                 {
@@ -231,7 +231,7 @@ namespace Team4prog.UI
                 int w = chartPanel.Width;
                 int plotW = Math.Max(10, w - margin * 2);
 
-                int n = Math.Max(1, Math.Max(angles.Count, throttles.Count));
+                int n = Math.Max(1, imagePaths.Count);
 
                 // Ignore clicks outside the plotted x-axis range.
                 if (e.X < margin || e.X > margin + plotW)

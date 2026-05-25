@@ -24,6 +24,7 @@ namespace Team4prog.UI
         private bool isPlayingForward = false;
         private bool isPlayingBackward = false;
         private double playbackSpeed = 1.0;
+        private bool isTrainingRunning = false;
 
         // Range deletion state for Tub Cleaner.
         private int leftIndex = -1;
