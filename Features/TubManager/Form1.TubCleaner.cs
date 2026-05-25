@@ -109,8 +109,8 @@ namespace Team4prog.UI
                 for (int i = l; i <= r; i++)
                 {
                     tempPaths.Add(imagePaths[i]);
-                    double a = (angles.Count > i && angles[i].HasValue) ? angles[i].Value : double.NaN;
-                    double tval = (throttles.Count > i && throttles[i].HasValue) ? throttles[i].Value : double.NaN;
+                    double a = (angles.Count > i && angles[i] is double angle) ? angle : double.NaN;
+                    double tval = (throttles.Count > i && throttles[i] is double throttle) ? throttle : double.NaN;
                     tempAngles.Add(a);
                     tempThrottles.Add(tval);
                     tempIndices.Add(i);

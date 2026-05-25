@@ -23,10 +23,15 @@ namespace Team4prog.UI
 
         private async Task RunTraining()
         {
+            if (isTrainingRunning)
+            {
+                MessageBox.Show("이미 학습 프로세스가 실행 중입니다.");
+                return;
+            }
+
             try
             {
                 string modelType = cmbModelType.Text;
-                string comment = txtComment.Text;
 
                 if (string.IsNullOrEmpty(modelType))
                 {
@@ -40,7 +45,20 @@ namespace Team4prog.UI
                     return;
                 }
 
+                if (!Directory.Exists(carFolderPath))
+                {
+                    MessageBox.Show("선택한 폴더가 존재하지 않습니다.");
+                    return;
+                }
+
                 string workingDir = carFolderPath;
+                string managePyPath = Path.Combine(workingDir, "manage.py");
+
+                if (!File.Exists(managePyPath))
+                {
+                    MessageBox.Show("선택한 폴더에서 manage.py를 찾을 수 없습니다.");
+                    return;
+                }
 
                 // Run DonkeyCar training from the selected car folder.
                 string command = $"manage.py train --model {modelType}";
@@ -56,7 +74,7 @@ namespace Team4prog.UI
                     CreateNoWindow = true
                 };
 
-                var process = new Process();
+                using var process = new Process();
                 process.StartInfo = psi;
 
                 process.OutputDataReceived += (s, e) =>
@@ -71,17 +89,61 @@ namespace Team4prog.UI
                     }
                 };
 
-                process.Start();
+                process.ErrorDataReceived += (s, e) =>
+                {
+                    if (!string.IsNullOrEmpty(e.Data))
+                    {
+                        this.Invoke(new Action(() =>
+                        {
+                            AddLog("[학습 오류] " + e.Data);
+                        }));
+                    }
+                };
+
+                isTrainingRunning = true;
+                btnTrain.Enabled = false;
+                AddLog("[학습 시작]");
+
+                if (!process.Start())
+                {
+                    MessageBox.Show("학습 프로세스를 시작하지 못했습니다.");
+                    return;
+                }
 
                 process.BeginOutputReadLine();
-
+                process.BeginErrorReadLine();
                 await Task.Run(() => process.WaitForExit());
 
-                MessageBox.Show("학습 완료");
+                if (process.ExitCode == 0)
+                {
+                    MessageBox.Show("학습 완료");
+                    AddLog("[학습 완료]");
+                }
+                else
+                {
+                    MessageBox.Show($"학습 프로세스가 오류 코드 {process.ExitCode}로 종료되었습니다.");
+                    AddLog($"[학습 실패] ExitCode={process.ExitCode}");
+                }
+            }
+            catch (System.ComponentModel.Win32Exception ex)
+            {
+                MessageBox.Show("python 실행 파일을 찾을 수 없습니다. Python 또는 가상환경 설정을 확인하세요.\n" + ex.Message);
+                AddLog($"Python 실행 오류: {ex.Message}");
+            }
+            catch (InvalidOperationException ex)
+            {
+                MessageBox.Show("학습 프로세스 실행 상태가 올바르지 않습니다.\n" + ex.Message);
+                AddLog($"학습 프로세스 상태 오류: {ex.Message}");
             }
             catch (Exception ex)
             {
                 MessageBox.Show("오류: " + ex.Message);
+                AddLog($"학습 실행 오류: {ex.Message}");
+            }
+            finally
+            {
+                isTrainingRunning = false;
+                btnTrain.Enabled = true;
             }
         }
 
