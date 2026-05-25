@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Team4prog.UI.Features.Catalog;
 namespace Team4prog.UI
 {
     // Tub Manager frame IO: folder selection, image/JSON loading, frame display, and list/trackbar sync.
@@ -194,8 +195,28 @@ namespace Team4prog.UI
 
                 currentFolder = folderPath;
 
-                var files = Directory.EnumerateFiles(folderPath, "*.*")
-                    .Where(f => f.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+                // Prefer DonkeyCar JSON Lines catalog when present (donkeyui style).
+                var catalogPath = Path.Combine(folderPath, "catalog_0.catalog");
+                if (File.Exists(catalogPath))
+                {
+                    if (LoadFromCatalogJsonl(folderPath, catalogPath))
+                    {
+                        AddLog("catalog_0.catalog 로드 완료");
+                        return;
+                    }
+                    AddLog("catalog_0.catalog 로드 실패: 이미지 스캔 방식으로 fallback 합니다.");
+                }
+
+                // Fallback: scan image files. Prefer "images/" subfolder when present to avoid picking up unrelated PNGs.
+                var imagesDir = Path.Combine(folderPath, "images");
+                var scanRoot = Directory.Exists(imagesDir) ? imagesDir : folderPath;
+
+                var files = Directory.EnumerateFiles(scanRoot, "*.*")
+                    .Where(f =>
+                        f.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
+                        f.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+                    // Avoid non-frame images (icons, thumbnails) when scanning the whole folder.
+                    .Where(f => Directory.Exists(imagesDir) || Path.GetFileName(f).Contains("_cam-image_array_", StringComparison.OrdinalIgnoreCase))
                     .ToArray();
 
                 // Sort by leading numeric filename first, then by name for stable ordering.
@@ -239,14 +260,105 @@ namespace Team4prog.UI
                 listBoxFrames.SelectedIndex = 0;
 
                 AddLog($"이미지 로드 완료: {imagePaths.Count}개");
-                // Load matching driving metadata from JSON files in the same folder.
-                LoadJsonData(folderPath);
+                // Load matching driving metadata from JSON files only when the folder looks like per-frame JSON layout.
+                // (Some folders contain unrelated JSON files like database.json.)
+                if (Directory.EnumerateFiles(folderPath, "*.json").Any(f => Path.GetFileName(f).EndsWith(".json", StringComparison.OrdinalIgnoreCase) &&
+                                                                         Path.GetFileName(f).Contains("_", StringComparison.OrdinalIgnoreCase) == false))
+                {
+                    // Heuristic: if JSON files are not frame-indexed, skip parsing to avoid noisy errors.
+                    AddLog("JSON 메타데이터 파싱 스킵(프레임 JSON 레이아웃 아님)");
+                }
+                else
+                {
+                    LoadJsonData(folderPath);
+                }
                 UpdateChart();
             }
             catch (Exception ex)
             {
                 AddLog($"이미지 로드 오류: {ex.Message}");
             }
+        }
+
+        // Returns true if catalog load succeeded and produced at least one frame.
+        private bool LoadFromCatalogJsonl(string folderPath, string catalogPath)
+        {
+            try
+            {
+                var frames = new List<FrameData>();
+                foreach (var f in CatalogJsonlReader.ReadFrames(catalogPath))
+                    frames.Add(f);
+
+                if (frames.Count == 0)
+                    return false;
+
+                // Catalog order is usually already correct, but enforce index ordering for stability.
+                frames.Sort((a, b) => a.Index.CompareTo(b.Index));
+
+                var imagesDir = Path.Combine(folderPath, "images");
+                int skippedMissing = 0;
+
+                foreach (var frame in frames)
+                {
+                    if (string.IsNullOrWhiteSpace(frame.ImagePath))
+                        continue;
+
+                    // cam/image_array is typically a relative path like "images/123_cam-image_array_.jpg".
+                    var abs = ResolveCatalogImagePath(folderPath, imagesDir, frame.ImagePath);
+                    if (abs == null || !File.Exists(abs))
+                    {
+                        skippedMissing++;
+                        continue;
+                    }
+
+                    imagePaths.Add(abs);
+                    listBoxFrames.Items.Add(Path.GetFileName(abs));
+                    angles.Add(frame.Angle);
+                    throttles.Add(frame.Throttle);
+                }
+
+                if (imagePaths.Count == 0)
+                    return false;
+
+                trackBarFrame.Minimum = 0;
+                trackBarFrame.Maximum = Math.Max(0, imagePaths.Count - 1);
+                trackBarFrame.Value = 0;
+                listBoxFrames.SelectedIndex = 0;
+
+                if (skippedMissing > 0)
+                    AddLog($"catalog 경고: 이미지 누락으로 {skippedMissing}개 프레임 스킵");
+
+                UpdateChart();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                AddLog($"catalog 파싱 오류: {ex.Message}");
+                return false;
+            }
+        }
+
+        private static string? ResolveCatalogImagePath(string folderPath, string imagesDir, string imagePathFromCatalog)
+        {
+            // If already absolute, use as-is.
+            if (Path.IsPathRooted(imagePathFromCatalog))
+                return imagePathFromCatalog;
+
+            // Common case: "images/xxx.jpg" relative to tub folder.
+            var combined = Path.Combine(folderPath, imagePathFromCatalog);
+            if (File.Exists(combined))
+                return combined;
+
+            // Sometimes the catalog stores only filename; try under images/ as well.
+            var fileName = Path.GetFileName(imagePathFromCatalog);
+            if (!string.IsNullOrEmpty(fileName))
+            {
+                var underImages = Path.Combine(imagesDir, fileName);
+                if (File.Exists(underImages))
+                    return underImages;
+            }
+
+            return combined;
         }
 
         // Extract the leading number from a filename for natural tub-frame sorting.
