@@ -102,6 +102,7 @@ namespace Team4prog.UI
 
                 // Capture deleted data first so Restore can rebuild the same frame entries.
                 var tempPaths = new List<string>();
+                var tempCatalogPaths = new List<string?>();
                 var tempAngles = new List<double>();
                 var tempThrottles = new List<double>();
                 var tempIndices = new List<int>();
@@ -109,6 +110,7 @@ namespace Team4prog.UI
                 for (int i = l; i <= r; i++)
                 {
                     tempPaths.Add(imagePaths[i]);
+                    tempCatalogPaths.Add(catalogImagePaths.Count > i ? catalogImagePaths[i] : null);
                     double a = (angles.Count > i && angles[i] is double angle) ? angle : double.NaN;
                     double tval = (throttles.Count > i && throttles[i] is double throttle) ? throttle : double.NaN;
                     tempAngles.Add(a);
@@ -120,12 +122,14 @@ namespace Team4prog.UI
                 for (int i = r; i >= l; i--)
                 {
                     imagePaths.RemoveAt(i);
+                    if (catalogImagePaths.Count > i) catalogImagePaths.RemoveAt(i);
                     if (angles.Count > i) angles.RemoveAt(i);
                     if (throttles.Count > i) throttles.RemoveAt(i);
                 }
 
                 // Keep the deleted frames in their original order for restoration.
                 deletedImagePaths.AddRange(tempPaths);
+                deletedCatalogImagePaths.AddRange(tempCatalogPaths);
                 deletedAngles.AddRange(tempAngles);
                 deletedThrottles.AddRange(tempThrottles);
                 deletedIndices.AddRange(tempIndices);
@@ -176,6 +180,7 @@ namespace Team4prog.UI
                     int idx = (i < deletedIndices.Count) ? deletedIndices[i] : imagePaths.Count;
                     idx = Math.Min(idx, imagePaths.Count);
                     imagePaths.Insert(idx, deletedImagePaths[i]);
+                    catalogImagePaths.Insert(idx, i < deletedCatalogImagePaths.Count ? deletedCatalogImagePaths[i] : null);
                     double a = deletedAngles[i];
                     double t = deletedThrottles[i];
                     if (double.IsNaN(a))
@@ -193,6 +198,7 @@ namespace Team4prog.UI
 
                 // Clear restore buffers after they are applied.
                 deletedImagePaths.Clear();
+                deletedCatalogImagePaths.Clear();
                 deletedAngles.Clear();
                 deletedThrottles.Clear();
                 deletedIndices.Clear();
@@ -250,4 +256,3 @@ namespace Team4prog.UI
         }
     }
 }
-

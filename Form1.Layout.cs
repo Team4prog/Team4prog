@@ -18,17 +18,21 @@ namespace Team4prog.UI
             StartPosition = FormStartPosition.CenterScreen;
             MinimumSize = new Size(980, 720);
 
+            topBar.Enabled = true;
+            btnTubManager.Enabled = true;
+            btnTrainer.Enabled = true;
             topBar.Dock = DockStyle.Top;
             topBar.Height = TopBarHeight;
             topBar.BringToFront();
+            Controls.SetChildIndex(topBar, 0);
 
-            panelTubManager.Dock = DockStyle.Fill;
+            panelTubManager.Dock = DockStyle.None;
             panelTubManager.AutoScroll = true;
             panelTubManager.Padding = new Padding(0);
 
-            panelTrainer.Dock = DockStyle.Fill;
+            panelTrainer.Dock = DockStyle.None;
             panelTrainer.AutoScroll = true;
-            panelTrainer.Padding = new Padding(0, TopBarHeight, 0, 0);
+            panelTrainer.Padding = new Padding(0);
 
             innerPanel.Anchor = AnchorStyles.Top | AnchorStyles.Left;
             innerPanel.MinimumSize = new Size(960, 660);
@@ -76,8 +80,21 @@ namespace Team4prog.UI
             if (panelTubManager == null || innerPanel == null)
                 return;
 
+            int panelTop = TopBarHeight;
+            int panelWidth = Math.Max(0, ClientSize.Width);
+            int panelHeight = Math.Max(0, ClientSize.Height - TopBarHeight);
+
+            panelTubManager.Location = new Point(0, panelTop);
+            panelTubManager.Size = new Size(panelWidth, panelHeight);
+            panelTubManager.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+
+            panelTrainer.Location = new Point(0, panelTop);
+            panelTrainer.Size = new Size(panelWidth, panelHeight);
+            panelTrainer.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+
             LayoutTubManager();
             LayoutTrainer();
+            topBar.BringToFront();
         }
 
         private void LayoutTubManager()
@@ -87,7 +104,7 @@ namespace Team4prog.UI
             int contentWidth = Math.Max(960, availableWidth);
             int contentHeight = Math.Max(660, availableHeight - TopBarHeight);
 
-            innerPanel.Location = new Point(0, TopBarHeight);
+            innerPanel.Location = new Point(0, 0);
             innerPanel.Size = new Size(contentWidth, contentHeight);
 
             int left = LayoutMargin;
@@ -167,16 +184,25 @@ namespace Team4prog.UI
             groupBoxTrainer.Location = new Point(LayoutMargin, groupBoxConfigEditor.Bottom + 64);
             groupBoxTrainer.Size = new Size(width, 141);
 
-            int half = Math.Max(280, (groupBoxTrainer.ClientSize.Width - 84) / 2);
+            int half = Math.Max(520, (groupBoxTrainer.ClientSize.Width - 84) / 2);
+            int rightLeft = 28 + half + 24;
+            int rightWidth = Math.Max(220, groupBoxTrainer.ClientSize.Width - rightLeft - 28);
+
             btnSelectCarFolder.Location = new Point(28, 43);
+            btnSelectCarFolder.Size = new Size(259, 37);
+
+            cmbModelType.Location = new Point(btnSelectCarFolder.Right + 16, 46);
+            cmbModelType.Size = new Size(Math.Max(180, half - btnSelectCarFolder.Width - 16), 33);
+            cmbModelType.BringToFront();
+
             btnLoadModel.Location = new Point(28, 87);
             btnLoadModel.Size = new Size(half, 40);
-            cmbModelType.Location = new Point(28 + half + 24, 48);
-            cmbModelType.Size = new Size(Math.Min(241, half), 33);
-            txtComment.Location = new Point(28 + half + 24, 87);
-            txtComment.Size = new Size(Math.Max(220, groupBoxTrainer.ClientSize.Width - txtComment.Left - 28), 32);
-            btnTrain.Location = new Point(txtComment.Left, 43);
-            btnTrain.Size = new Size(txtComment.Width, 40);
+
+            btnTrain.Location = new Point(rightLeft, 43);
+            btnTrain.Size = new Size(rightWidth, 40);
+
+            txtComment.Location = new Point(rightLeft, 87);
+            txtComment.Size = new Size(rightWidth, 32);
 
             chartLoss.Location = new Point(LayoutMargin, groupBoxTrainer.Bottom + 55);
             chartLoss.Size = new Size(width, Math.Max(220, Math.Min(338, panelTrainer.ClientSize.Height / 3)));

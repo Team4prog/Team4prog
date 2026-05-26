@@ -13,7 +13,7 @@ namespace Team4prog.UI.Components
         {
             Dock = DockStyle.Top;
             Height = 35;
-            Enabled = false;
+            Enabled = true;
 
             TubManagerButton = CreateButton("btnTubManager", "[Tub Manage]", new Point(10, -1), 9F, 0);
             TrainerButton = CreateButton("btnTrainer", "[Trainer]", new Point(140, 0), 10F, 1);

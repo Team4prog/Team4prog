@@ -35,6 +35,7 @@ namespace Team4prog.UI
 
                 int idx = listBoxFrames.SelectedIndex;
                 string imagePath = imagePaths[idx];
+                string? catalogImagePath = catalogImagePaths.Count > idx ? catalogImagePaths[idx] : null;
                 string imageFileName = Path.GetFileName(imagePath);
 
                 // Delete the image file first; if this fails, leave UI state unchanged.
@@ -82,10 +83,15 @@ namespace Team4prog.UI
                     }
                 }
 
+                RemoveCatalogEntries(new[] { imagePath }, new[] { catalogImagePath });
+                RemoveFromFilterCache(imagePath);
+
                 // Remove the deleted frame from in-memory lists and visible controls.
                 try
                 {
                     imagePaths.RemoveAt(idx);
+                    if (catalogImagePaths.Count > idx)
+                        catalogImagePaths.RemoveAt(idx);
                     listBoxFrames.Items.RemoveAt(idx);
 
                     if (angles.Count > idx)
@@ -173,13 +179,20 @@ namespace Team4prog.UI
                 // Clear previous session state before loading a new folder.
                 listBoxFrames.Items.Clear();
                 imagePaths.Clear();
+                catalogImagePaths.Clear();
                 currentIndex = -1;
                 leftIndex = -1;
                 rightIndex = -1;
                 deletedImagePaths.Clear();
+                deletedCatalogImagePaths.Clear();
                 deletedAngles.Clear();
                 deletedThrottles.Clear();
                 deletedIndices.Clear();
+                currentCatalogPath = null;
+                originalImagePaths.Clear();
+                originalCatalogImagePaths.Clear();
+                originalAngles.Clear();
+                originalThrottles.Clear();
                 UpdateRangeLabel();
 
                 // Clear driving values until JSON metadata is loaded.
@@ -249,6 +262,7 @@ namespace Team4prog.UI
                 foreach (var f in files)
                 {
                     imagePaths.Add(f);
+                    catalogImagePaths.Add(null);
                     listBoxFrames.Items.Add(Path.GetFileName(f));
                 }
 
@@ -312,6 +326,7 @@ namespace Team4prog.UI
                     }
 
                     imagePaths.Add(abs);
+                    catalogImagePaths.Add(frame.ImagePath);
                     listBoxFrames.Items.Add(Path.GetFileName(abs));
                     angles.Add(frame.Angle);
                     throttles.Add(frame.Throttle);
@@ -320,6 +335,7 @@ namespace Team4prog.UI
                 if (imagePaths.Count == 0)
                     return false;
 
+                currentCatalogPath = catalogPath;
                 trackBarFrame.Minimum = 0;
                 trackBarFrame.Maximum = Math.Max(0, imagePaths.Count - 1);
                 trackBarFrame.Value = 0;
@@ -359,6 +375,110 @@ namespace Team4prog.UI
             }
 
             return combined;
+        }
+
+        private void RemoveCatalogEntries(IEnumerable<string> removedImagePaths, IEnumerable<string?> removedCatalogImagePaths)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(currentCatalogPath) || !File.Exists(currentCatalogPath))
+                    return;
+
+                var removedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var path in removedImagePaths)
+                {
+                    var name = Path.GetFileName(path);
+                    if (!string.IsNullOrWhiteSpace(name))
+                        removedNames.Add(name);
+                }
+
+                var removedCatalogNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var catalogPath in removedCatalogImagePaths)
+                {
+                    if (string.IsNullOrWhiteSpace(catalogPath))
+                        continue;
+
+                    removedCatalogNames.Add(catalogPath);
+                    var name = Path.GetFileName(catalogPath);
+                    if (!string.IsNullOrWhiteSpace(name))
+                        removedCatalogNames.Add(name);
+                }
+
+                if (removedNames.Count == 0 && removedCatalogNames.Count == 0)
+                    return;
+
+                string backupPath = currentCatalogPath + ".bak";
+                if (!File.Exists(backupPath))
+                    File.Copy(currentCatalogPath, backupPath);
+
+                var keptLines = new List<string>();
+                int removedCount = 0;
+
+                foreach (var line in File.ReadLines(currentCatalogPath))
+                {
+                    if (string.IsNullOrWhiteSpace(line))
+                    {
+                        keptLines.Add(line);
+                        continue;
+                    }
+
+                    bool removeLine = false;
+                    try
+                    {
+                        var jobj = JObject.Parse(line);
+                        string? catalogImage = jobj["cam/image_array"]?.ToString();
+                        string? catalogFileName = string.IsNullOrWhiteSpace(catalogImage) ? null : Path.GetFileName(catalogImage);
+
+                        removeLine =
+                            (!string.IsNullOrWhiteSpace(catalogImage) && removedCatalogNames.Contains(catalogImage)) ||
+                            (!string.IsNullOrWhiteSpace(catalogFileName) && (removedCatalogNames.Contains(catalogFileName) || removedNames.Contains(catalogFileName)));
+                    }
+                    catch
+                    {
+                        removeLine = removedNames.Any(name => line.Contains(name, StringComparison.OrdinalIgnoreCase));
+                    }
+
+                    if (removeLine)
+                        removedCount++;
+                    else
+                        keptLines.Add(line);
+                }
+
+                if (removedCount == 0)
+                {
+                    AddLog("[catalog] 삭제 대상 라인을 찾지 못했습니다.");
+                    return;
+                }
+
+                File.WriteAllLines(currentCatalogPath, keptLines);
+                AddLog($"[catalog] {removedCount}개 라인 삭제 완료 (백업: {Path.GetFileName(backupPath)})");
+            }
+            catch (Exception ex)
+            {
+                AddLog($"catalog 삭제 반영 오류: {ex.Message}");
+            }
+        }
+
+        private void RemoveFromFilterCache(string imagePath)
+        {
+            try
+            {
+                int originalIndex = originalImagePaths.FindIndex(path => string.Equals(path, imagePath, StringComparison.OrdinalIgnoreCase));
+                if (originalIndex < 0)
+                    return;
+
+                originalImagePaths.RemoveAt(originalIndex);
+                if (originalCatalogImagePaths.Count > originalIndex)
+                    originalCatalogImagePaths.RemoveAt(originalIndex);
+                if (originalAngles.Count > originalIndex)
+                    originalAngles.RemoveAt(originalIndex);
+                if (originalThrottles.Count > originalIndex)
+                    originalThrottles.RemoveAt(originalIndex);
+            }
+            catch (Exception ex)
+            {
+                AddLog($"필터 캐시 삭제 반영 오류: {ex.Message}");
+            }
         }
 
         // Extract the leading number from a filename for natural tub-frame sorting.
@@ -594,4 +714,3 @@ namespace Team4prog.UI
         }
     }
 }
-

@@ -17,6 +17,7 @@ namespace Team4prog.UI
     public partial class Form1 : Form
     {
         private List<string> imagePaths = new List<string>();
+        private List<string?> catalogImagePaths = new List<string?>();
         private List<double?> angles = new List<double?>();
         private List<double?> throttles = new List<double?>();
         private int currentIndex = -1;
@@ -30,6 +31,7 @@ namespace Team4prog.UI
         private int leftIndex = -1;
         private int rightIndex = -1;
         private List<string> deletedImagePaths = new List<string>();
+        private List<string?> deletedCatalogImagePaths = new List<string?>();
         private List<double> deletedAngles = new List<double>();
         private List<double> deletedThrottles = new List<double>();
 
@@ -41,13 +43,16 @@ namespace Team4prog.UI
 
         // Filter backup lists. The active lists are replaced while a filter is applied.
         private List<string> originalImagePaths = new List<string>();
+        private List<string?> originalCatalogImagePaths = new List<string?>();
         private List<double?> originalAngles = new List<double?>();
         private List<double?> originalThrottles = new List<double?>();
 
         private List<string> filteredImagePaths = new List<string>();
+        private List<string?> filteredCatalogImagePaths = new List<string?>();
         private List<double?> filteredAngles = new List<double?>();
         private List<double?> filteredThrottles = new List<double?>();
         private string carFolderPath = "";
+        private string? currentCatalogPath = null;
 
         public Form1()
         {
@@ -100,8 +105,16 @@ namespace Team4prog.UI
             cmbAngleOp.Items.AddRange(new string[] { ">", "<", ">=", "<=", "==" });
             cmbThrottleOp.Items.AddRange(new string[] { ">", "<", ">=", "<=", "==" });
 
+            cmbAngleOp.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbThrottleOp.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbModelType.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbModelType.Items.Clear();
+            cmbModelType.Items.AddRange(new object[] { "linear", "inferred", "tensorrt_linear", "tflite_linear" });
             cmbAngleOp.SelectedIndex = -1;
-            cmbThrottleOp.SelectedIndex = -1;
+            cmbThrottleOp.SelectedIndex = 0;
+            if (cmbModelType.Items.Count > 0)
+                cmbModelType.SelectedIndex = 0;
+            txtThrottleFilter.Text = "0";
 
             // Validate filter inputs as the user types.
             txtAngleFilter.TextChanged += ValidateInput;
@@ -122,6 +135,9 @@ namespace Team4prog.UI
             btnPlayForward.Click += btnPlayForward_Click;
             btnPlayBackward.Click += btnPlayBackward_Click;
             btnStop.Click += btnStop_Click;
+            btnLoadModel.Click += btnLoadModel_Click;
+            btnDeleteModel.Click += btnDeleteModel_Click;
+            btnUpdateComment.Click += btnUpdateComment_Click;
             nudSpeed.ValueChanged += nudSpeed_ValueChanged;
             listBoxFrames.SelectedIndexChanged += listBoxFrames_SelectedIndexChanged;
             trackBarFrame.Scroll += trackBarFrame_Scroll;
