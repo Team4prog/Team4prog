@@ -179,7 +179,7 @@ namespace Team4prog.UI
                     wslModelArgument = convertedModelPath;
 
                 string pythonExecutable = string.IsNullOrWhiteSpace(wslPython)
-                    ? "/home/anw/miniconda3/envs/e2e_env/bin/python"
+                    ? "~/miniconda3/envs/e2e_env/bin/python"
                     : wslPython;
 
                 var psi = new ProcessStartInfo
