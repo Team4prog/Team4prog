@@ -1,4 +1,4 @@
-namespace Team4prog
+namespace Team4prog.UI
 {
     internal static class Program
     {
