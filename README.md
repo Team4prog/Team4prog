@@ -1,4 +1,4 @@
-자율주행 데이터 정제 및 UI 학습기 (SimpleTrainer)
+Team 4 프로그래밍 언어 및 실습 기말 과제
 
 ## 1. 개요
 * **C# 프로그래밍 및 Windows Forms 기반 실무 프로젝트**
