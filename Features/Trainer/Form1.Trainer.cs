@@ -72,11 +72,37 @@ namespace Team4prog.UI
                 {
                     if (!string.IsNullOrEmpty(e.Data))
                     {
-                        trainingOutput.Add(e.Data);
                         this.Invoke(new Action(() =>
                         {
+                            // 1. 로그 창에 텍스트 출력
                             listBoxLog.Items.Add(e.Data);
                             listBoxLog.TopIndex = listBoxLog.Items.Count - 1;
+                            ParseLossLine(e.Data);
+
+                            // 2. 실시간 Loss 파싱 및 차트 연동
+                            try
+                            {
+                                // DonkeyCar 학습 로그 예시: "loss: 0.4523 - val_loss: 0.4812"
+                                var lossMatch = System.Text.RegularExpressions.Regex.Match(e.Data, @"loss:\s*([0-9.]+)");
+                                if (lossMatch.Success)
+                                {
+                                    double lossVal = double.Parse(lossMatch.Groups[1].Value);
+                                    double valLossVal = 0.0;
+
+                                    var valLossMatch = System.Text.RegularExpressions.Regex.Match(e.Data, @"(?:val_loss|v_loss):\s*([0-9.]+)");
+                                    if (valLossMatch.Success)
+                                    {
+                                        valLossVal = double.Parse(valLossMatch.Groups[1].Value);
+                                    }
+
+                                    // [중요] Form.losschart.cs에 선언된 인스턴스와 메서드 호출
+                                    // 만약 loss차트 폼을 가리키는 변수명이 다르면 해당 변수명으로 수정해줘
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.WriteLine("Loss 파싱 및 차트 업데이트 오류: " + ex.Message);
+                            }
                         }));
                     }
                 };
@@ -95,6 +121,9 @@ namespace Team4prog.UI
 
                 isTrainingRunning = true;
                 btnTrain.Enabled = false;
+
+                ResetLossChart();
+
                 AddLog("[학습 시작]");
 
                 if (!process.Start())

@@ -57,6 +57,7 @@ namespace Team4prog.UI
         public Form1()
         {
             InitializeComponent();
+            InitializeLossChart();
 
             try
             {
@@ -143,6 +144,17 @@ namespace Team4prog.UI
             trackBarFrame.Scroll += trackBarFrame_Scroll;
 
             InitializeChart();
+
+
+            // 추가ㅏㅏㅏㅏㅏㅏㅏ
+            InitializeLossChart();
+            FixTrainerLayout();
+
+            if (panelTrainer != null)
+            {
+                panelTrainer.Resize += (s, e) => FixTrainerLayout();
+            }
+            // End of additional
 
             lblRange.Text = "[0, 0]";
 
