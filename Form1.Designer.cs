@@ -688,7 +688,7 @@ namespace Team4prog.UI
             // 
             // Form1
             // 
-            AutoScaleMode = AutoScaleMode.None;
+            AutoScaleMode = AutoScaleMode.Dpi;
             BackColor = Color.FromArgb(64, 64, 64);
             ClientSize = new Size(1231, 1114);
             Controls.Add(topBar);
