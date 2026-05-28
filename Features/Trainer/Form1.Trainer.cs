@@ -6,9 +6,11 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+
 namespace Team4prog.UI
 {
     // Trainer view actions: select a DonkeyCar folder and run the training command.
@@ -16,6 +18,13 @@ namespace Team4prog.UI
     {
         private Process? trainingProcess = null;
         private bool trainingStopRequested = false;
+
+        private enum TrainingPathMode
+        {
+            LocalWindows,
+            WslUnc,
+            WslLinux
+        }
 
         private async void btnTrain_Click(object sender, EventArgs e)
         {
@@ -46,8 +55,6 @@ namespace Team4prog.UI
             }
         }
 
-
-
         private async Task RunTraining()
         {
             if (isTrainingRunning)
@@ -73,18 +80,18 @@ namespace Team4prog.UI
                     return;
                 }
 
-                if (!Directory.Exists(carFolderPath))
+                string workingDir = NormalizeUserPath(carFolderPath);
+                TrainingPathMode pathMode = GetTrainingPathMode(workingDir);
+
+                if (!DirectoryExistsForTrainingPath(workingDir, pathMode))
                 {
-                    MessageBox.Show("선택한 폴더가 존재하지 않습니다.");
+                    MessageBox.Show("선택한 폴더가 존재하지 않습니다.\n\n" + workingDir);
                     return;
                 }
 
-                string workingDir = carFolderPath;
-                string managePyPath = Path.Combine(workingDir, "manage.py");
-
-                if (!File.Exists(managePyPath))
+                if (!TrainingFileExists(workingDir, pathMode, "manage.py"))
                 {
-                    MessageBox.Show("선택한 폴더에서 manage.py를 찾을 수 없습니다.");
+                    MessageBox.Show("선택한 폴더에서 manage.py를 찾을 수 없습니다.\n\n" + workingDir);
                     return;
                 }
 
@@ -92,7 +99,7 @@ namespace Team4prog.UI
                 FixTrainerLayout();
 
                 string? selectedModelPath = GetSelectedTrainingModelPath();
-                var psi = BuildTrainingStartInfo(workingDir, modelType, selectedModelPath);
+                var psi = BuildTrainingStartInfo(workingDir, modelType, selectedModelPath, pathMode);
 
                 using var process = new Process();
                 process.StartInfo = psi;
@@ -110,7 +117,6 @@ namespace Team4prog.UI
                         {
                             listBoxLog.Items.Add(e.Data);
                             listBoxLog.TopIndex = listBoxLog.Items.Count - 1;
-
                             ParseLossLine(e.Data);
                         }));
                     }
@@ -124,7 +130,6 @@ namespace Team4prog.UI
                         this.Invoke(new Action(() =>
                         {
                             AddLog("[학습 오류] " + e.Data);
-
                             ParseLossLine(e.Data);
                         }));
                     }
@@ -150,7 +155,6 @@ namespace Team4prog.UI
 
                 if (trainingStopRequested)
                 {
-    
                     AddLog("[학습 중지됨]");
                 }
                 else if (process.ExitCode == 0)
@@ -174,8 +178,8 @@ namespace Team4prog.UI
             }
             catch (System.ComponentModel.Win32Exception ex)
             {
-                MessageBox.Show("python 실행 파일을 찾을 수 없습니다. Python 또는 가상환경 설정을 확인하세요.\n" + ex.Message);
-                AddLog($"Python 실행 오류: {ex.Message}");
+                MessageBox.Show("python 또는 wsl 실행 파일을 찾을 수 없습니다. Python, WSL, 가상환경 설정을 확인하세요.\n" + ex.Message);
+                AddLog($"실행 파일 오류: {ex.Message}");
             }
             catch (InvalidOperationException ex)
             {
@@ -207,60 +211,60 @@ namespace Team4prog.UI
 
                 if (fbd.ShowDialog() == DialogResult.OK)
                 {
-                    carFolderPath = fbd.SelectedPath;
+                    carFolderPath = NormalizeUserPath(fbd.SelectedPath);
                     MessageBox.Show("선택됨: " + carFolderPath);
                     LoadModelList();
                 }
             }
         }
 
-        private ProcessStartInfo BuildTrainingStartInfo(string workingDir, string modelType, string? selectedModelPath)
+        private ProcessStartInfo BuildTrainingStartInfo(string workingDir, string modelType, string? selectedModelPath, TrainingPathMode pathMode)
         {
-            string modelArgument = ResolveTrainingModelArgument(workingDir, modelType, selectedModelPath);
-            string trainScript = File.Exists(Path.Combine(workingDir, "train.py")) ? "train.py" : "manage.py";
+            string normalizedWorkingDir = NormalizeUserPath(workingDir);
+            string modelArgument = ResolveTrainingModelArgument(normalizedWorkingDir, modelType, selectedModelPath, pathMode);
+            string trainScript = TrainingFileExists(normalizedWorkingDir, pathMode, "train.py") ? "train.py" : "manage.py";
 
-            // [수정] TryConvertWslUncPath 정의 순서에 맞게 변수 위치 교정
-            // 정의: (string path, out string linuxPath, out string? distroName)
-            bool isWslPath = TryConvertWslUncPath(workingDir, out string linuxWorkingDir, out string? wslDistro);
-
-            if (isWslPath)
+            if (pathMode == TrainingPathMode.WslUnc || pathMode == TrainingPathMode.WslLinux)
             {
-                string wslModelArgument = modelArgument;
-                if (TryConvertWslUncPath(modelArgument, out string convertedModelPath, out _))
-                    wslModelArgument = convertedModelPath;
+                string distro = GetPreferredWslDistro(normalizedWorkingDir);
+                string linuxWorkingDir = ConvertPathForWsl(normalizedWorkingDir, distro);
+                string wslModelArgument = ConvertPathForWsl(modelArgument, distro);
 
-                // 배포판 이름 유효성 검사 및 기본값 처리
-                string distro = string.IsNullOrWhiteSpace(wslDistro) ? "Ubuntu-22.04" : wslDistro;
-
-                // 동적 학습 스크립트 파라미터 조립 (경로 띄어쓰기 대비 작은따옴표 처리)
                 string scriptCmd = trainScript == "train.py"
-                    ? $"python train.py --tubs data --model '{wslModelArgument}' --type {modelType}"
-                    : $"python manage.py train --model '{wslModelArgument}'";
+                    ? $"python train.py --tubs data --model {BashQuote(wslModelArgument)} --type {BashQuote(modelType)}"
+                    : $"python manage.py train --model {BashQuote(wslModelArgument)}";
 
-                // [핵심 해결책] bash -ic 조합으로 .bashrc를 강제 로드하여 conda 환경을 확실하게 켜고 진입합니다.
-                string bshCommand = $"conda activate e2e_env && cd '{linuxWorkingDir}' && {scriptCmd}";
+                string bshCommand =
+                    "source ~/.bashrc >/dev/null 2>&1; " +
+                    "source ~/miniconda3/etc/profile.d/conda.sh >/dev/null 2>&1 || " +
+                    "source ~/anaconda3/etc/profile.d/conda.sh >/dev/null 2>&1 || true; " +
+                    $"conda activate e2e_env && cd {BashQuote(linuxWorkingDir)} && mkdir -p models && {scriptCmd}";
 
                 var psi = new ProcessStartInfo
                 {
                     FileName = "wsl.exe",
-                    // ArgumentList 대신 단일 Arguments 문자열 스트링 방식을 사용하여 공백 및 이스케이프 안정성 확보
-                    Arguments = $"-d {distro} -- bash -ic \"{bshCommand}\"",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
                     CreateNoWindow = true
                 };
 
-                AddLog("[학습 명령 (WSL)] " + psi.FileName + " " + psi.Arguments);
+                psi.ArgumentList.Add("-d");
+                psi.ArgumentList.Add(distro);
+                psi.ArgumentList.Add("--");
+                psi.ArgumentList.Add("bash");
+                psi.ArgumentList.Add("-ic");
+                psi.ArgumentList.Add(bshCommand);
+
+                AddLog("[학습 명령 (WSL)] " + FormatProcessStartInfo(psi));
                 return psi;
             }
 
-            // 로컬 윈도우 환경인 경우 기존 로직 유지
             string pythonExe = Environment.GetEnvironmentVariable("DONKEYCAR_PYTHON") ?? "python";
             var localPsi = new ProcessStartInfo
             {
                 FileName = pythonExe,
-                WorkingDirectory = workingDir,
+                WorkingDirectory = normalizedWorkingDir,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -292,7 +296,12 @@ namespace Team4prog.UI
         private static string FormatProcessStartInfo(ProcessStartInfo psi)
         {
             var parts = new List<string> { psi.FileName };
-            parts.AddRange(psi.ArgumentList.Select(QuoteArgument));
+
+            if (psi.ArgumentList.Count > 0)
+                parts.AddRange(psi.ArgumentList.Select(QuoteArgument));
+            else if (!string.IsNullOrWhiteSpace(psi.Arguments))
+                parts.Add(psi.Arguments);
+
             return string.Join(" ", parts);
         }
 
@@ -303,12 +312,25 @@ namespace Team4prog.UI
                 if (string.IsNullOrWhiteSpace(carFolderPath))
                     return null;
 
-                string logFolder = Path.Combine(carFolderPath, "logs");
+                string normalizedPath = NormalizeUserPath(carFolderPath);
+                string logFolder;
+
+                if (IsLinuxAbsolutePath(normalizedPath))
+                {
+                    logFolder = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                        "Team4progTrainingLogs");
+                }
+                else
+                {
+                    logFolder = Path.Combine(normalizedPath, "logs");
+                }
+
                 Directory.CreateDirectory(logFolder);
-                string logPath = Path.Combine(logFolder, $"training_{DateTime.Now:yyyyMMdd_HHmmss}.log");
-                File.WriteAllLines(logPath, trainingOutput);
-                AddLog("[학습 로그] " + logPath);
-                return logPath;
+                string logFilePath = Path.Combine(logFolder, $"training_{DateTime.Now:yyyyMMdd_HHmmss}.log");
+                File.WriteAllLines(logFilePath, trainingOutput);
+                AddLog("[학습 로그] " + logFilePath);
+                return logFilePath;
             }
             catch (Exception ex)
             {
@@ -317,37 +339,116 @@ namespace Team4prog.UI
             }
         }
 
-        private string ResolveTrainingModelArgument(string workingDir, string modelType, string? selectedModelPath)
+        private string ResolveTrainingModelArgument(string workingDir, string modelType, string? selectedModelPath, TrainingPathMode pathMode)
         {
             if (!string.IsNullOrWhiteSpace(selectedModelPath))
             {
-                AddLog("[학습 모델] " + Path.GetFileName(selectedModelPath));
-                return selectedModelPath;
+                string normalizedSelectedModelPath = NormalizeUserPath(selectedModelPath);
+                AddLog("[학습 모델] " + Path.GetFileName(normalizedSelectedModelPath));
+                return normalizedSelectedModelPath;
             }
 
-            string modelsDir = Path.Combine(workingDir, "models");
-            Directory.CreateDirectory(modelsDir);
             string fileName = $"pilot_{modelType}_{DateTime.Now:yyyyMMdd_HHmmss}.h5";
-            string modelPath = Path.Combine(modelsDir, fileName);
+
+            if (pathMode == TrainingPathMode.WslLinux)
+            {
+                string linuxModelFilePath = CombineLinuxPath(workingDir, "models", fileName);
+                AddLog("[학습 모델 자동 생성] " + fileName);
+                return linuxModelFilePath;
+            }
+
+            string modelsDirectoryPath = Path.Combine(workingDir, "models");
+            Directory.CreateDirectory(modelsDirectoryPath);
+            string createdModelFilePath = Path.Combine(modelsDirectoryPath, fileName);
             AddLog("[학습 모델 자동 생성] " + fileName);
-            return modelPath;
+            return createdModelFilePath;
         }
 
         private string? GetSelectedTrainingModelPath()
         {
-            string? selectedModelPath = cmbModelList.SelectedItem?.ToString();
-            if (string.IsNullOrWhiteSpace(selectedModelPath))
+            string? selectedModelFilePath = cmbModelList.SelectedItem?.ToString();
+            if (string.IsNullOrWhiteSpace(selectedModelFilePath))
                 return null;
 
-            string ext = Path.GetExtension(selectedModelPath);
+            string normalizedSelectedModelPath = NormalizeUserPath(selectedModelFilePath);
+            string ext = Path.GetExtension(normalizedSelectedModelPath);
+
             if (ext.Equals(".h5", StringComparison.OrdinalIgnoreCase) ||
                 ext.Equals(".keras", StringComparison.OrdinalIgnoreCase))
             {
-                return selectedModelPath;
+                return normalizedSelectedModelPath;
             }
 
             AddLog($"[학습] {ext} 모델은 학습 저장 대상으로 쓰지 않고 새 .h5 모델을 생성합니다.");
             return null;
+        }
+
+        private static TrainingPathMode GetTrainingPathMode(string path)
+        {
+            if (IsLinuxAbsolutePath(path))
+                return TrainingPathMode.WslLinux;
+
+            if (TryConvertWslUncPath(path, out _, out _))
+                return TrainingPathMode.WslUnc;
+
+            return TrainingPathMode.LocalWindows;
+        }
+
+        private static bool DirectoryExistsForTrainingPath(string path, TrainingPathMode mode)
+        {
+            string normalizedPath = NormalizeUserPath(path);
+
+            if (mode == TrainingPathMode.WslLinux)
+            {
+                string distro = GetPreferredWslDistro(normalizedPath);
+                return TestWslPath(distro, normalizedPath, isDirectory: true);
+            }
+
+            return Directory.Exists(normalizedPath);
+        }
+
+        private static bool TrainingFileExists(string workingDir, TrainingPathMode mode, string fileName)
+        {
+            string normalizedWorkingDir = NormalizeUserPath(workingDir);
+
+            if (mode == TrainingPathMode.WslLinux)
+            {
+                string distro = GetPreferredWslDistro(normalizedWorkingDir);
+                string linuxFilePath = CombineLinuxPath(normalizedWorkingDir, fileName);
+                return TestWslPath(distro, linuxFilePath, isDirectory: false);
+            }
+
+            return File.Exists(Path.Combine(normalizedWorkingDir, fileName));
+        }
+
+        private static bool TestWslPath(string distro, string linuxPath, bool isDirectory)
+        {
+            string flag = isDirectory ? "-d" : "-f";
+            string command = $"test {flag} {BashQuote(linuxPath)}";
+            return RunWslCommand(distro, command, out _) == 0;
+        }
+
+        private static string ConvertPathForWsl(string path, string distro)
+        {
+            string normalizedPath = NormalizeUserPath(path);
+
+            if (TryConvertWslUncPath(normalizedPath, out string linuxPathFromUnc, out _))
+                return linuxPathFromUnc;
+
+            if (IsLinuxAbsolutePath(normalizedPath))
+                return normalizedPath.Replace('\\', '/');
+
+            if (normalizedPath.Length >= 3 &&
+                char.IsLetter(normalizedPath[0]) &&
+                normalizedPath[1] == ':' &&
+                (normalizedPath[2] == '\\' || normalizedPath[2] == '/'))
+            {
+                char drive = char.ToLowerInvariant(normalizedPath[0]);
+                string rest = normalizedPath.Substring(2).Replace('\\', '/').TrimStart('/');
+                return $"/mnt/{drive}/{rest}";
+            }
+
+            return normalizedPath.Replace('\\', '/');
         }
 
         private static bool TryConvertWslUncPath(string path, out string linuxPath, out string? distroName)
@@ -379,6 +480,128 @@ namespace Team4prog.UI
             return true;
         }
 
+        private static string NormalizeUserPath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return string.Empty;
+
+            string trimmed = path.Trim().Trim('"');
+            return Environment.ExpandEnvironmentVariables(trimmed);
+        }
+
+        private static bool IsLinuxAbsolutePath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return false;
+
+            string normalized = path.Replace('\\', '/');
+            return normalized.StartsWith("/", StringComparison.Ordinal) &&
+                   !normalized.StartsWith("//", StringComparison.Ordinal);
+        }
+
+        private static string CombineLinuxPath(params string[] parts)
+        {
+            return string.Join("/", parts
+                .Where(part => !string.IsNullOrWhiteSpace(part))
+                .Select((part, index) => index == 0 ? part.TrimEnd('/') : part.Trim('/')));
+        }
+
+        private static string GetPreferredWslDistro(string path = "")
+        {
+            string? envDistro = Environment.GetEnvironmentVariable("DONKEYCAR_WSL_DISTRO");
+            if (!string.IsNullOrWhiteSpace(envDistro))
+                return envDistro.Trim();
+
+            if (TryConvertWslUncPath(path, out _, out string? distroFromPath) && !string.IsNullOrWhiteSpace(distroFromPath))
+                return distroFromPath;
+
+            string firstDistro = GetFirstInstalledWslDistro();
+            return string.IsNullOrWhiteSpace(firstDistro) ? "Ubuntu-22.04" : firstDistro;
+        }
+
+        private static string GetFirstInstalledWslDistro()
+        {
+            try
+            {
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "wsl.exe",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+                psi.ArgumentList.Add("-l");
+                psi.ArgumentList.Add("-q");
+
+                using var process = Process.Start(psi);
+                if (process == null)
+                    return string.Empty;
+
+                string output = process.StandardOutput.ReadToEnd();
+                process.WaitForExit(3000);
+
+                string cleaned = output.Replace("\0", "").Trim();
+                string? first = cleaned
+                    .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(line => line.Trim())
+                    .FirstOrDefault(line => !string.IsNullOrWhiteSpace(line));
+
+                return first ?? string.Empty;
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+
+        private static int RunWslCommand(string distro, string command, out string output)
+        {
+            output = string.Empty;
+
+            try
+            {
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "wsl.exe",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                psi.ArgumentList.Add("-d");
+                psi.ArgumentList.Add(distro);
+                psi.ArgumentList.Add("--");
+                psi.ArgumentList.Add("bash");
+                psi.ArgumentList.Add("-lc");
+                psi.ArgumentList.Add(command);
+
+                using var process = Process.Start(psi);
+                if (process == null)
+                    return -1;
+
+                string stdout = process.StandardOutput.ReadToEnd();
+                string stderr = process.StandardError.ReadToEnd();
+                process.WaitForExit(5000);
+                output = stdout + stderr;
+                return process.ExitCode;
+            }
+            catch (Exception ex)
+            {
+                output = ex.Message;
+                return -1;
+            }
+        }
+
+        private static string BashQuote(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return "''";
+
+            return "'" + value.Replace("'", "'\\''") + "'";
+        }
+
         private static string QuoteArgument(string value)
         {
             return "\"" + value.Replace("\"", "\\\"") + "\"";
@@ -391,14 +614,19 @@ namespace Team4prog.UI
                 using var dialog = new OpenFileDialog();
                 dialog.Title = "모델 파일 선택";
                 dialog.Filter = "Model files (*.h5;*.keras;*.tflite;*.onnx;*.pt;*.pkl)|*.h5;*.keras;*.tflite;*.onnx;*.pt;*.pkl|All files (*.*)|*.*";
-                dialog.InitialDirectory = GetModelSearchFolder();
+
+                string initialDirectory = GetModelSearchFolder();
+                dialog.InitialDirectory = IsLinuxAbsolutePath(initialDirectory)
+                    ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+                    : initialDirectory;
 
                 if (dialog.ShowDialog() != DialogResult.OK)
                     return;
 
-                AddModelToCombo(dialog.FileName);
-                cmbModelList.SelectedItem = dialog.FileName;
-                AddLog("[모델 선택] " + Path.GetFileName(dialog.FileName));
+                string selectedModelFilePath = NormalizeUserPath(dialog.FileName);
+                AddModelToCombo(selectedModelFilePath);
+                cmbModelList.SelectedItem = selectedModelFilePath;
+                AddLog("[모델 선택] " + Path.GetFileName(selectedModelFilePath));
             }
             catch (Exception ex)
             {
@@ -410,15 +638,32 @@ namespace Team4prog.UI
         {
             try
             {
-                string? modelPath = cmbModelList.SelectedItem?.ToString();
-                if (string.IsNullOrWhiteSpace(modelPath) || !File.Exists(modelPath))
+                string? selectedModelFilePath = cmbModelList.SelectedItem?.ToString();
+                if (string.IsNullOrWhiteSpace(selectedModelFilePath))
                 {
                     MessageBox.Show("삭제할 모델을 선택하세요.");
                     return;
                 }
 
+                string normalizedSelectedModelPath = NormalizeUserPath(selectedModelFilePath);
+
+                if (IsLinuxAbsolutePath(normalizedSelectedModelPath))
+                {
+                    string distro = GetPreferredWslDistro(carFolderPath);
+                    if (!TestWslPath(distro, normalizedSelectedModelPath, isDirectory: false))
+                    {
+                        MessageBox.Show("삭제할 모델 파일을 찾을 수 없습니다.");
+                        return;
+                    }
+                }
+                else if (!File.Exists(normalizedSelectedModelPath))
+                {
+                    MessageBox.Show("삭제할 모델 파일을 찾을 수 없습니다.");
+                    return;
+                }
+
                 var result = MessageBox.Show(
-                    $"{Path.GetFileName(modelPath)} 파일을 삭제할까요?",
+                    $"{Path.GetFileName(normalizedSelectedModelPath)} 파일을 삭제할까요?",
                     "모델 삭제",
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Warning);
@@ -426,8 +671,17 @@ namespace Team4prog.UI
                 if (result != DialogResult.Yes)
                     return;
 
-                File.Delete(modelPath);
-                AddLog("[모델 삭제] " + Path.GetFileName(modelPath));
+                if (IsLinuxAbsolutePath(normalizedSelectedModelPath))
+                {
+                    string distro = GetPreferredWslDistro(carFolderPath);
+                    RunWslCommand(distro, $"rm -f {BashQuote(normalizedSelectedModelPath)}", out _);
+                }
+                else
+                {
+                    File.Delete(normalizedSelectedModelPath);
+                }
+
+                AddLog("[모델 삭제] " + Path.GetFileName(normalizedSelectedModelPath));
                 LoadModelList();
             }
             catch (Exception ex)
@@ -441,16 +695,35 @@ namespace Team4prog.UI
         {
             try
             {
-                string? modelPath = cmbModelList.SelectedItem?.ToString();
-                if (string.IsNullOrWhiteSpace(modelPath) || !File.Exists(modelPath))
+                string? selectedModelFilePath = cmbModelList.SelectedItem?.ToString();
+                if (string.IsNullOrWhiteSpace(selectedModelFilePath))
                 {
                     MessageBox.Show("코멘트를 저장할 모델을 선택하세요.");
                     return;
                 }
 
-                string commentPath = modelPath + ".comment.txt";
-                File.WriteAllText(commentPath, txtComment.Text ?? string.Empty);
-                AddLog("[모델 코멘트 저장] " + Path.GetFileName(commentPath));
+                string normalizedSelectedModelPath = NormalizeUserPath(selectedModelFilePath);
+                string commentText = txtComment.Text ?? string.Empty;
+
+                if (IsLinuxAbsolutePath(normalizedSelectedModelPath))
+                {
+                    string distro = GetPreferredWslDistro(carFolderPath);
+                    string commentPath = normalizedSelectedModelPath + ".comment.txt";
+                    string command = $"cat > {BashQuote(commentPath)} <<'EOF_COMMENT'\n{commentText.Replace("\r", "")}\nEOF_COMMENT";
+                    RunWslCommand(distro, command, out _);
+                    AddLog("[모델 코멘트 저장] " + Path.GetFileName(commentPath));
+                    return;
+                }
+
+                if (!File.Exists(normalizedSelectedModelPath))
+                {
+                    MessageBox.Show("코멘트를 저장할 모델 파일을 찾을 수 없습니다.");
+                    return;
+                }
+
+                string localCommentPath = normalizedSelectedModelPath + ".comment.txt";
+                File.WriteAllText(localCommentPath, commentText);
+                AddLog("[모델 코멘트 저장] " + Path.GetFileName(localCommentPath));
             }
             catch (Exception ex)
             {
@@ -466,17 +739,14 @@ namespace Team4prog.UI
                 cmbModelList.Items.Clear();
 
                 string searchFolder = GetModelSearchFolder();
-                if (!Directory.Exists(searchFolder))
-                    return;
-
-                var models = Directory.EnumerateFiles(searchFolder, "*.*", SearchOption.TopDirectoryOnly)
+                var models = EnumerateModelFiles(searchFolder)
                     .Where(IsModelFile)
                     .OrderBy(path => IsTrainableModelFile(path) ? 0 : 1)
-                    .ThenByDescending(File.GetLastWriteTime)
+                    .ThenByDescending(GetModelLastWriteTimeSafe)
                     .ToArray();
 
-                foreach (var model in models)
-                    AddModelToCombo(model);
+                foreach (var modelFile in models)
+                    AddModelToCombo(modelFile);
 
                 if (cmbModelList.Items.Count > 0)
                     cmbModelList.SelectedIndex = 0;
@@ -494,14 +764,79 @@ namespace Team4prog.UI
             if (string.IsNullOrWhiteSpace(carFolderPath))
                 return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
-            string modelsFolder = Path.Combine(carFolderPath, "models");
-            return Directory.Exists(modelsFolder) ? modelsFolder : carFolderPath;
+            string normalizedCarFolderPath = NormalizeUserPath(carFolderPath);
+
+            if (IsLinuxAbsolutePath(normalizedCarFolderPath))
+            {
+                string linuxModelsFolder = CombineLinuxPath(normalizedCarFolderPath, "models");
+                string distro = GetPreferredWslDistro(normalizedCarFolderPath);
+                return TestWslPath(distro, linuxModelsFolder, isDirectory: true)
+                    ? linuxModelsFolder
+                    : normalizedCarFolderPath;
+            }
+
+            string modelsFolder = Path.Combine(normalizedCarFolderPath, "models");
+            return Directory.Exists(modelsFolder) ? modelsFolder : normalizedCarFolderPath;
         }
 
-        private void AddModelToCombo(string modelPath)
+        private IEnumerable<string> EnumerateModelFiles(string folderPath)
         {
-            if (!cmbModelList.Items.Cast<object>().Any(item => string.Equals(item.ToString(), modelPath, StringComparison.OrdinalIgnoreCase)))
-                cmbModelList.Items.Add(modelPath);
+            string normalizedFolderPath = NormalizeUserPath(folderPath);
+
+            if (IsLinuxAbsolutePath(normalizedFolderPath))
+            {
+                string distro = GetPreferredWslDistro(carFolderPath);
+                string command =
+                    $"find {BashQuote(normalizedFolderPath)} -maxdepth 1 -type f " +
+                    "\\( -iname '*.h5' -o -iname '*.keras' -o -iname '*.tflite' -o -iname '*.onnx' -o -iname '*.pt' -o -iname '*.pkl' \\) -print";
+
+                if (RunWslCommand(distro, command, out string output) != 0)
+                    return Enumerable.Empty<string>();
+
+                return output
+                    .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(line => line.Trim())
+                    .Where(line => !string.IsNullOrWhiteSpace(line));
+            }
+
+            if (!Directory.Exists(normalizedFolderPath))
+                return Enumerable.Empty<string>();
+
+            return Directory.EnumerateFiles(normalizedFolderPath, "*.*", SearchOption.TopDirectoryOnly);
+        }
+
+        private DateTime GetModelLastWriteTimeSafe(string filePath)
+        {
+            try
+            {
+                if (IsLinuxAbsolutePath(filePath))
+                {
+                    string distro = GetPreferredWslDistro(carFolderPath);
+                    string command = $"stat -c %Y {BashQuote(filePath)} 2>/dev/null || echo 0";
+                    if (RunWslCommand(distro, command, out string output) == 0 &&
+                        long.TryParse(output.Trim().Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault(), out long unixTime))
+                    {
+                        return DateTimeOffset.FromUnixTimeSeconds(unixTime).LocalDateTime;
+                    }
+                }
+                else if (File.Exists(filePath))
+                {
+                    return File.GetLastWriteTime(filePath);
+                }
+            }
+            catch
+            {
+                // ignored
+            }
+
+            return DateTime.MinValue;
+        }
+
+        private void AddModelToCombo(string modelFilePath)
+        {
+            string normalizedModelFilePath = NormalizeUserPath(modelFilePath);
+            if (!cmbModelList.Items.Cast<object>().Any(item => string.Equals(item.ToString(), normalizedModelFilePath, StringComparison.OrdinalIgnoreCase)))
+                cmbModelList.Items.Add(normalizedModelFilePath);
         }
 
         private static bool IsModelFile(string path)
