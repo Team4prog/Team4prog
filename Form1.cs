@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -75,6 +75,7 @@ namespace Team4prog.UI
                     panelTubManager.Parent = this;
                     panelTubManager.Visible = true;
                 }
+
                 if (panelTrainer != null)
                 {
                     panelTrainer.Dock = DockStyle.Fill;
@@ -127,6 +128,7 @@ namespace Team4prog.UI
             this.MinimumSize = this.Size;
 
             InitializeChart();
+
             InitializeLossChart();
             FixTrainerLayout();
 
@@ -165,6 +167,9 @@ namespace Team4prog.UI
                 panelTrainer.BringToFront();
 
                 panelTubManager.Visible = false;
+
+                FixTrainerLayout();
+                chartLoss.Invalidate();
             }
             catch (Exception ex)
             {
@@ -179,6 +184,7 @@ namespace Team4prog.UI
             {
                 var timestamp = DateTime.Now.ToString("HH:mm:ss");
                 listBoxLog.Items.Add($"[{timestamp}] {message}");
+
                 if (listBoxLog.Items.Count > 0)
                 {
                     listBoxLog.TopIndex = listBoxLog.Items.Count - 1;

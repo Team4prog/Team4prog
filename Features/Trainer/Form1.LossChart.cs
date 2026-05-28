@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
@@ -10,37 +10,58 @@ namespace Team4prog.UI
 {
     public partial class Form1
     {
-        private readonly List<double> trainLossValues = new();
-        private readonly List<double> valLossValues = new();
+        private readonly List<double> trainLossValues = new List<double>();
+        private readonly List<double> valLossValues = new List<double>();
 
         private static readonly Regex LossRegex =
-            new Regex(@"(?<!val_)loss:\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)",
+            new Regex(@"(?<![\w/])loss:\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)",
                 RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private static readonly Regex ValLossRegex =
-            new Regex(@"val_loss:\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)",
+            new Regex(@"(?<![\w/])val_loss:\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)",
                 RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private void InitializeLossChart()
         {
+            if (chartLoss == null)
+                return;
+
+            chartLoss.Visible = true;
+            chartLoss.BringToFront();
+
             chartLoss.Paint -= ChartLoss_Paint;
             chartLoss.Paint += ChartLoss_Paint;
+
             chartLoss.Resize += (s, e) => chartLoss.Invalidate();
+
+            chartLoss.Invalidate();
         }
 
         private void FixTrainerLayout()
         {
-            if (panelTrainer == null || chartLoss == null)
+            if (panelTrainer == null ||
+                chartLoss == null ||
+                groupBoxTrainer == null ||
+                groupBoxPilotManager == null)
+            {
                 return;
+            }
 
             panelTrainer.AutoScroll = true;
 
-            groupBoxConfigEditor.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            if (groupBoxConfigEditor != null)
+            {
+                groupBoxConfigEditor.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+                groupBoxConfigEditor.Width = Math.Max(600, panelTrainer.ClientSize.Width - 26);
+            }
+
             groupBoxTrainer.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            groupBoxTrainer.Width = Math.Max(600, panelTrainer.ClientSize.Width - 26);
 
             chartLoss.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             chartLoss.Location = new Point(10, groupBoxTrainer.Bottom + 20);
             chartLoss.Size = new Size(Math.Max(600, panelTrainer.ClientSize.Width - 26), 320);
+            chartLoss.Visible = true;
 
             groupBoxPilotManager.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             groupBoxPilotManager.Location = new Point(12, chartLoss.Bottom + 25);
@@ -51,11 +72,16 @@ namespace Team4prog.UI
         {
             trainLossValues.Clear();
             valLossValues.Clear();
-            chartLoss.Invalidate();
+
+            if (chartLoss != null)
+                chartLoss.Invalidate();
         }
 
         private void ParseLossLine(string line)
         {
+            if (string.IsNullOrWhiteSpace(line))
+                return;
+
             bool changed = false;
 
             Match lossMatch = LossRegex.Match(line);
@@ -74,12 +100,15 @@ namespace Team4prog.UI
                 changed = true;
             }
 
-            if (changed)
+            if (changed && chartLoss != null)
                 chartLoss.Invalidate();
         }
 
         private void ChartLoss_Paint(object? sender, PaintEventArgs e)
         {
+            if (chartLoss == null)
+                return;
+
             Graphics g = e.Graphics;
             g.Clear(Color.Black);
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
@@ -95,6 +124,7 @@ namespace Team4prog.UI
             using Font labelFont = new Font("Segoe UI", 8);
 
             g.DrawString("Training Loss Chart", titleFont, textBrush, 10, 5);
+
             g.DrawLine(axisPen, plot.Left, plot.Bottom, plot.Right, plot.Bottom);
             g.DrawLine(axisPen, plot.Left, plot.Top, plot.Left, plot.Bottom);
 
@@ -102,14 +132,18 @@ namespace Team4prog.UI
 
             if (count == 0)
             {
-                g.DrawString("학습을 시작하면 loss 그래프가 표시됩니다.", titleFont, textBrush, plot.Left + 20, plot.Top + 30);
+                g.DrawString("학습을 시작하면 loss 그래프가 표시됩니다.",
+                    titleFont,
+                    textBrush,
+                    plot.Left + 20,
+                    plot.Top + 30);
                 return;
             }
 
-            var all = trainLossValues.Concat(valLossValues).ToList();
+            List<double> allValues = trainLossValues.Concat(valLossValues).ToList();
 
-            double min = all.Min();
-            double max = all.Max();
+            double min = allValues.Min();
+            double max = allValues.Max();
 
             if (Math.Abs(max - min) < 0.000001)
             {
@@ -125,7 +159,15 @@ namespace Team4prog.UI
             g.DrawString($"Epoch: {count}", labelFont, textBrush, plot.Right - 80, plot.Bottom + 10);
         }
 
-        private void DrawLossSeries(Graphics g, Rectangle plot, List<double> values, double min, double max, Color color, string label, int index)
+        private void DrawLossSeries(
+            Graphics g,
+            Rectangle plot,
+            List<double> values,
+            double min,
+            double max,
+            Color color,
+            string label,
+            int index)
         {
             if (values.Count == 0)
                 return;
