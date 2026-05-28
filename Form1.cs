@@ -127,6 +127,13 @@ namespace Team4prog.UI
             this.MinimumSize = this.Size;
 
             InitializeChart();
+            InitializeLossChart();
+            FixTrainerLayout();
+
+            if (panelTrainer != null)
+            {
+                panelTrainer.Resize += (s, e) => FixTrainerLayout();
+            }
 
             lblRange.Text = "[0, 0]";
 
