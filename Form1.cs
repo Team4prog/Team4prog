@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Threading.Tasks;
+using Team4prog.Components;
 
 namespace Team4prog.UI
 {
@@ -64,6 +65,7 @@ namespace Team4prog.UI
                 if (this.Controls.Find("topBar", true).FirstOrDefault() is Control topBar)
                     topBar.Enabled = true;
 
+
                 if (btnTubManager != null)
                 {
                     btnTubManager.Click += (s, e) => ShowTubManager();
@@ -86,6 +88,16 @@ namespace Team4prog.UI
                     panelTrainer.Parent = this;
                     panelTrainer.Visible = false;
                 }
+                if (this.Controls.Find("topBar", true).FirstOrDefault() is AppNavigationBar navBar)
+                {
+                    navBar.HelpButton.Click += (s, e) =>
+                    {
+                        var help = new HelpForm();
+                        help.TopMost = true; // 선택
+                        help.Show();         // ⭐ 이걸로 바꿔라
+                    };
+                }
+
             }
             catch (Exception ex)
             {

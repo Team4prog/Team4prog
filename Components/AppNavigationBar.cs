@@ -1,40 +1,51 @@
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace Team4prog.UI.Components
+namespace Team4prog.Components
 {
-    // Top navigation bar used by Form1 to switch between Tub Manager and Trainer panels.
     public class AppNavigationBar : UserControl
     {
         public Button TubManagerButton { get; }
         public Button TrainerButton { get; }
+        public Button HelpButton { get; }
 
         public AppNavigationBar()
         {
-            Dock = DockStyle.Top;
-            Height = 35;
-            Enabled = true;
+            this.Name = "topBar";
+            this.Dock = DockStyle.Top;
+            this.Height = 40;
 
-            TubManagerButton = CreateButton("btnTubManager", "[Tub Manage]", new Point(10, -1), 9F, 0);
-            TrainerButton = CreateButton("btnTrainer", "[Trainer]", new Point(140, 0), 10F, 1);
-
-            Controls.Add(TrainerButton);
-            Controls.Add(TubManagerButton);
-        }
-
-        private static Button CreateButton(string name, string text, Point location, float fontSize, int tabIndex)
-        {
-            return new Button
+            TubManagerButton = new Button()
             {
-                BackColor = Color.Silver,
-                Font = new Font("Impact", fontSize, FontStyle.Regular, GraphicsUnit.Point, 0),
-                Location = location,
-                Name = name,
-                Size = new Size(124, 36),
-                TabIndex = tabIndex,
-                Text = text,
-                UseVisualStyleBackColor = false
+                Text = "[Tub Manage]",
+                Location = new Point(10, 5),
+                Size = new Size(120, 30),
+                BackColor = Color.Silver
             };
+
+            TrainerButton = new Button()
+            {
+                Text = "[Trainer]",
+                Location = new Point(140, 5),
+                Size = new Size(120, 30),
+                BackColor = Color.Silver
+            };
+
+            HelpButton = new Button()
+            {
+                Text = "?",
+                Size = new Size(30, 30),
+                BackColor = Color.FromArgb(192, 192, 255),
+                FlatStyle = FlatStyle.Flat,
+                Anchor = AnchorStyles.Top | AnchorStyles.Right
+            };
+            HelpButton.FlatAppearance.BorderSize = 0;
+            HelpButton.Dock = DockStyle.Right;
+            HelpButton.Width = 40;
+
+            this.Controls.Add(TubManagerButton);
+            this.Controls.Add(TrainerButton);
+            this.Controls.Add(HelpButton);
         }
     }
 }

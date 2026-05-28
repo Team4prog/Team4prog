@@ -1,4 +1,4 @@
-using Team4prog.UI.Components;
+using Team4prog.Components;
 
 namespace Team4prog.UI
 {
@@ -30,9 +30,12 @@ namespace Team4prog.UI
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             picFrame = new PictureBox();
             trackBarFrame = new TrackBar();
             btnOpenFolder = new Button();
+            imageList1 = new ImageList(components);
             btnDelete = new Button();
             groupBoxData = new GroupBox();
             lblThrottle = new Label();
@@ -63,8 +66,6 @@ namespace Team4prog.UI
             btnSetFilter = new Button();
             btnClearFilter = new Button();
             topBar = new AppNavigationBar();
-            btnTrainer = topBar.TrainerButton;
-            btnTubManager = topBar.TubManagerButton;
             listBoxFrames = new ListBox();
             panelTubManager = new Panel();
             innerPanel = new Panel();
@@ -114,19 +115,30 @@ namespace Team4prog.UI
             trackBarFrame.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             trackBarFrame.Location = new Point(321, 534);
             trackBarFrame.Name = "trackBarFrame";
-            trackBarFrame.Size = new Size(882, 56);
+            trackBarFrame.Size = new Size(882, 69);
             trackBarFrame.TabIndex = 1;
             // 
             // btnOpenFolder
             // 
             btnOpenFolder.BackColor = Color.Silver;
             btnOpenFolder.Font = new Font("Microsoft Sans Serif", 16F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            btnOpenFolder.Location = new Point(111, 736);
+            btnOpenFolder.ImageAlign = ContentAlignment.MiddleLeft;
+            btnOpenFolder.ImageIndex = 0;
+            btnOpenFolder.ImageList = imageList1;
+            btnOpenFolder.Location = new Point(66, 727);
             btnOpenFolder.Name = "btnOpenFolder";
-            btnOpenFolder.Size = new Size(204, 55);
+            btnOpenFolder.Size = new Size(186, 55);
             btnOpenFolder.TabIndex = 2;
             btnOpenFolder.Text = "폴더 열기";
+            btnOpenFolder.TextAlign = ContentAlignment.MiddleRight;
             btnOpenFolder.UseVisualStyleBackColor = false;
+            // 
+            // imageList1
+            // 
+            imageList1.ColorDepth = ColorDepth.Depth32Bit;
+            imageList1.ImageStream = (ImageListStreamer)resources.GetObject("imageList1.ImageStream");
+            imageList1.TransparentColor = Color.Transparent;
+            imageList1.Images.SetKeyName(0, "Folder Image.png");
             // 
             // btnDelete
             // 
@@ -160,7 +172,7 @@ namespace Team4prog.UI
             lblThrottle.AutoSize = true;
             lblThrottle.Location = new Point(438, 35);
             lblThrottle.Name = "lblThrottle";
-            lblThrottle.Size = new Size(84, 28);
+            lblThrottle.Size = new Size(101, 32);
             lblThrottle.TabIndex = 2;
             lblThrottle.Text = "Throttle";
             // 
@@ -170,7 +182,7 @@ namespace Team4prog.UI
             lblAngle.AutoSize = true;
             lblAngle.Location = new Point(233, 35);
             lblAngle.Name = "lblAngle";
-            lblAngle.Size = new Size(65, 28);
+            lblAngle.Size = new Size(77, 32);
             lblAngle.TabIndex = 1;
             lblAngle.Text = "Angle";
             // 
@@ -179,7 +191,7 @@ namespace Team4prog.UI
             lblFrame.AutoSize = true;
             lblFrame.Location = new Point(53, 35);
             lblFrame.Name = "lblFrame";
-            lblFrame.Size = new Size(67, 28);
+            lblFrame.Size = new Size(81, 32);
             lblFrame.TabIndex = 0;
             lblFrame.Text = "Frame";
             // 
@@ -191,7 +203,7 @@ namespace Team4prog.UI
             listBoxLog.FormattingEnabled = true;
             listBoxLog.Location = new Point(12, 428);
             listBoxLog.Name = "listBoxLog";
-            listBoxLog.Size = new Size(305, 277);
+            listBoxLog.Size = new Size(305, 268);
             listBoxLog.TabIndex = 6;
             // 
             // chartPanel
@@ -263,7 +275,7 @@ namespace Team4prog.UI
             lblSpeed.AutoSize = true;
             lblSpeed.Location = new Point(12, 62);
             lblSpeed.Name = "lblSpeed";
-            lblSpeed.Size = new Size(80, 32);
+            lblSpeed.Size = new Size(95, 36);
             lblSpeed.TabIndex = 13;
             lblSpeed.Text = "1.00x";
             // 
@@ -275,7 +287,7 @@ namespace Team4prog.UI
             nudSpeed.Maximum = new decimal(new int[] { 5, 0, 0, 0 });
             nudSpeed.Minimum = new decimal(new int[] { 1, 0, 0, 65536 });
             nudSpeed.Name = "nudSpeed";
-            nudSpeed.Size = new Size(108, 38);
+            nudSpeed.Size = new Size(108, 44);
             nudSpeed.TabIndex = 14;
             nudSpeed.Value = new decimal(new int[] { 1, 0, 0, 0 });
             // 
@@ -306,7 +318,7 @@ namespace Team4prog.UI
             txtTubNavigator.ForeColor = Color.White;
             txtTubNavigator.Location = new Point(12, 39);
             txtTubNavigator.Name = "txtTubNavigator";
-            txtTubNavigator.Size = new Size(179, 23);
+            txtTubNavigator.Size = new Size(179, 27);
             txtTubNavigator.TabIndex = 10;
             txtTubNavigator.Text = "Tub Navigator";
             // 
@@ -342,7 +354,7 @@ namespace Team4prog.UI
             cmbThrottleOp.FormattingEnabled = true;
             cmbThrottleOp.Location = new Point(421, 118);
             cmbThrottleOp.Name = "cmbThrottleOp";
-            cmbThrottleOp.Size = new Size(89, 33);
+            cmbThrottleOp.Size = new Size(89, 37);
             cmbThrottleOp.TabIndex = 23;
             // 
             // cmbAngleOp
@@ -351,7 +363,7 @@ namespace Team4prog.UI
             cmbAngleOp.FormattingEnabled = true;
             cmbAngleOp.Location = new Point(178, 118);
             cmbAngleOp.Name = "cmbAngleOp";
-            cmbAngleOp.Size = new Size(89, 33);
+            cmbAngleOp.Size = new Size(89, 37);
             cmbAngleOp.TabIndex = 22;
             // 
             // lblRange
@@ -360,7 +372,7 @@ namespace Team4prog.UI
             lblRange.AutoSize = true;
             lblRange.Location = new Point(329, 60);
             lblRange.Name = "lblRange";
-            lblRange.Size = new Size(62, 25);
+            lblRange.Size = new Size(71, 29);
             lblRange.TabIndex = 17;
             lblRange.Text = "[0, 0]";
             // 
@@ -426,7 +438,7 @@ namespace Team4prog.UI
             txtAngleFilter.Location = new Point(273, 118);
             txtAngleFilter.Name = "txtAngleFilter";
             txtAngleFilter.PlaceholderText = "Angle";
-            txtAngleFilter.Size = new Size(133, 30);
+            txtAngleFilter.Size = new Size(133, 35);
             txtAngleFilter.TabIndex = 19;
             // 
             // txtThrottleFilter
@@ -436,7 +448,7 @@ namespace Team4prog.UI
             txtThrottleFilter.Location = new Point(516, 118);
             txtThrottleFilter.Name = "txtThrottleFilter";
             txtThrottleFilter.PlaceholderText = "Throttle";
-            txtThrottleFilter.Size = new Size(159, 30);
+            txtThrottleFilter.Size = new Size(159, 35);
             txtThrottleFilter.TabIndex = 20;
             // 
             // btnSetFilter
@@ -464,10 +476,10 @@ namespace Team4prog.UI
             // topBar
             // 
             topBar.Dock = DockStyle.Top;
-            topBar.Enabled = true;
+            topBar.Font = new Font("한컴 고딕", 10F, FontStyle.Bold, GraphicsUnit.Point, 129);
             topBar.Location = new Point(0, 0);
             topBar.Name = "topBar";
-            topBar.Size = new Size(1231, 35);
+            topBar.Size = new Size(1263, 35);
             topBar.TabIndex = 16;
             // 
             // listBoxFrames
@@ -490,7 +502,7 @@ namespace Team4prog.UI
             panelTubManager.Dock = DockStyle.Fill;
             panelTubManager.Location = new Point(0, 0);
             panelTubManager.Name = "panelTubManager";
-            panelTubManager.Size = new Size(1231, 1055);
+            panelTubManager.Size = new Size(1263, 1055);
             panelTubManager.TabIndex = 17;
             // 
             // innerPanel
@@ -520,7 +532,7 @@ namespace Team4prog.UI
             panelTrainer.Dock = DockStyle.Fill;
             panelTrainer.Location = new Point(0, 0);
             panelTrainer.Name = "panelTrainer";
-            panelTrainer.Size = new Size(1231, 1055);
+            panelTrainer.Size = new Size(1263, 1055);
             panelTrainer.TabIndex = 18;
             // 
             // groupBoxPilotManager
@@ -563,7 +575,7 @@ namespace Team4prog.UI
             cmbModelList.FormattingEnabled = true;
             cmbModelList.Location = new Point(54, 55);
             cmbModelList.Name = "cmbModelList";
-            cmbModelList.Size = new Size(397, 28);
+            cmbModelList.Size = new Size(397, 33);
             cmbModelList.TabIndex = 0;
             // 
             // chartLoss
@@ -572,7 +584,7 @@ namespace Team4prog.UI
             chartLoss.BackColor = Color.Black;
             chartLoss.Location = new Point(10, 411);
             chartLoss.Name = "chartLoss";
-            chartLoss.Size = new Size(1205, 338);
+            chartLoss.Size = new Size(1237, 338);
             chartLoss.TabIndex = 16;
             // 
             // groupBoxTrainer
@@ -608,7 +620,7 @@ namespace Team4prog.UI
             txtComment.Location = new Point(642, 48);
             txtComment.Name = "txtComment";
             txtComment.PlaceholderText = "Comment";
-            txtComment.Size = new Size(539, 28);
+            txtComment.Size = new Size(539, 32);
             txtComment.TabIndex = 19;
             // 
             // btnTrain
@@ -640,7 +652,7 @@ namespace Team4prog.UI
             cmbModelType.Items.AddRange(new object[] { "linear", "categorical" });
             cmbModelType.Location = new Point(311, 48);
             cmbModelType.Name = "cmbModelType";
-            cmbModelType.Size = new Size(241, 28);
+            cmbModelType.Size = new Size(241, 33);
             cmbModelType.TabIndex = 0;
             // 
             // groupBoxConfigEditor
@@ -663,9 +675,9 @@ namespace Team4prog.UI
             flowconfig.Controls.Add(btnAddConfig);
             flowconfig.Controls.Add(btnSaveConfig);
             flowconfig.Dock = DockStyle.Fill;
-            flowconfig.Location = new Point(6, 27);
+            flowconfig.Location = new Point(6, 31);
             flowconfig.Name = "flowconfig";
-            flowconfig.Size = new Size(1202, 108);
+            flowconfig.Size = new Size(1202, 104);
             flowconfig.TabIndex = 1;
             // 
             // btnAddConfig
@@ -692,7 +704,7 @@ namespace Team4prog.UI
             // 
             AutoScaleMode = AutoScaleMode.None;
             BackColor = Color.FromArgb(64, 64, 64);
-            ClientSize = new Size(1231, 1055);
+            ClientSize = new Size(1263, 1055);
             Controls.Add(topBar);
             Controls.Add(panelTubManager);
             Controls.Add(panelTrainer);
@@ -775,5 +787,6 @@ namespace Team4prog.UI
         private ComboBox cmbModelList;
         private Button btnSelectCarFolder;
         private Panel innerPanel;
+        private ImageList imageList1;
     }
 }
