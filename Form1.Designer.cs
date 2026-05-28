@@ -63,8 +63,6 @@ namespace Team4prog.UI
             btnSetFilter = new Button();
             btnClearFilter = new Button();
             topBar = new AppNavigationBar();
-            btnTrainer = topBar.TrainerButton;
-            btnTubManager = topBar.TubManagerButton;
             listBoxFrames = new ListBox();
             panelTubManager = new Panel();
             innerPanel = new Panel();
@@ -84,6 +82,8 @@ namespace Team4prog.UI
             flowconfig = new FlowLayoutPanel();
             btnAddConfig = new Button();
             btnSaveConfig = new Button();
+            btnTubManager = topBar.TubManagerButton;
+            btnTrainer = topBar.TrainerButton;
             ((System.ComponentModel.ISupportInitialize)picFrame).BeginInit();
             ((System.ComponentModel.ISupportInitialize)trackBarFrame).BeginInit();
             groupBoxData.SuspendLayout();
@@ -114,7 +114,7 @@ namespace Team4prog.UI
             trackBarFrame.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             trackBarFrame.Location = new Point(321, 534);
             trackBarFrame.Name = "trackBarFrame";
-            trackBarFrame.Size = new Size(882, 56);
+            trackBarFrame.Size = new Size(882, 90);
             trackBarFrame.TabIndex = 1;
             // 
             // btnOpenFolder
@@ -160,7 +160,7 @@ namespace Team4prog.UI
             lblThrottle.AutoSize = true;
             lblThrottle.Location = new Point(438, 35);
             lblThrottle.Name = "lblThrottle";
-            lblThrottle.Size = new Size(84, 28);
+            lblThrottle.Size = new Size(137, 45);
             lblThrottle.TabIndex = 2;
             lblThrottle.Text = "Throttle";
             // 
@@ -170,7 +170,7 @@ namespace Team4prog.UI
             lblAngle.AutoSize = true;
             lblAngle.Location = new Point(233, 35);
             lblAngle.Name = "lblAngle";
-            lblAngle.Size = new Size(65, 28);
+            lblAngle.Size = new Size(104, 45);
             lblAngle.TabIndex = 1;
             lblAngle.Text = "Angle";
             // 
@@ -179,7 +179,7 @@ namespace Team4prog.UI
             lblFrame.AutoSize = true;
             lblFrame.Location = new Point(53, 35);
             lblFrame.Name = "lblFrame";
-            lblFrame.Size = new Size(67, 28);
+            lblFrame.Size = new Size(108, 45);
             lblFrame.TabIndex = 0;
             lblFrame.Text = "Frame";
             // 
@@ -191,7 +191,7 @@ namespace Team4prog.UI
             listBoxLog.FormattingEnabled = true;
             listBoxLog.Location = new Point(12, 428);
             listBoxLog.Name = "listBoxLog";
-            listBoxLog.Size = new Size(305, 277);
+            listBoxLog.Size = new Size(305, 268);
             listBoxLog.TabIndex = 6;
             // 
             // chartPanel
@@ -263,7 +263,7 @@ namespace Team4prog.UI
             lblSpeed.AutoSize = true;
             lblSpeed.Location = new Point(12, 62);
             lblSpeed.Name = "lblSpeed";
-            lblSpeed.Size = new Size(80, 32);
+            lblSpeed.Size = new Size(117, 44);
             lblSpeed.TabIndex = 13;
             lblSpeed.Text = "1.00x";
             // 
@@ -275,7 +275,7 @@ namespace Team4prog.UI
             nudSpeed.Maximum = new decimal(new int[] { 5, 0, 0, 0 });
             nudSpeed.Minimum = new decimal(new int[] { 1, 0, 0, 65536 });
             nudSpeed.Name = "nudSpeed";
-            nudSpeed.Size = new Size(108, 38);
+            nudSpeed.Size = new Size(108, 50);
             nudSpeed.TabIndex = 14;
             nudSpeed.Value = new decimal(new int[] { 1, 0, 0, 0 });
             // 
@@ -289,7 +289,7 @@ namespace Team4prog.UI
             groupBoxPlayControls.Controls.Add(btnNext);
             groupBoxPlayControls.Controls.Add(btnPrev);
             groupBoxPlayControls.Controls.Add(lblSpeed);
-            groupBoxPlayControls.Font = new Font("함초롬바탕 확장", 13.9999981F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            groupBoxPlayControls.Font = new Font("Microsoft Sans Serif", 13.9999981F, FontStyle.Bold, GraphicsUnit.Point, 129);
             groupBoxPlayControls.ForeColor = Color.FromArgb(192, 192, 255);
             groupBoxPlayControls.Location = new Point(971, 39);
             groupBoxPlayControls.Name = "groupBoxPlayControls";
@@ -306,7 +306,7 @@ namespace Team4prog.UI
             txtTubNavigator.ForeColor = Color.White;
             txtTubNavigator.Location = new Point(12, 39);
             txtTubNavigator.Name = "txtTubNavigator";
-            txtTubNavigator.Size = new Size(179, 23);
+            txtTubNavigator.Size = new Size(179, 36);
             txtTubNavigator.TabIndex = 10;
             txtTubNavigator.Text = "Tub Navigator";
             // 
@@ -342,7 +342,7 @@ namespace Team4prog.UI
             cmbThrottleOp.FormattingEnabled = true;
             cmbThrottleOp.Location = new Point(421, 118);
             cmbThrottleOp.Name = "cmbThrottleOp";
-            cmbThrottleOp.Size = new Size(89, 33);
+            cmbThrottleOp.Size = new Size(89, 45);
             cmbThrottleOp.TabIndex = 23;
             // 
             // cmbAngleOp
@@ -351,7 +351,7 @@ namespace Team4prog.UI
             cmbAngleOp.FormattingEnabled = true;
             cmbAngleOp.Location = new Point(178, 118);
             cmbAngleOp.Name = "cmbAngleOp";
-            cmbAngleOp.Size = new Size(89, 33);
+            cmbAngleOp.Size = new Size(89, 45);
             cmbAngleOp.TabIndex = 22;
             // 
             // lblRange
@@ -360,7 +360,7 @@ namespace Team4prog.UI
             lblRange.AutoSize = true;
             lblRange.Location = new Point(329, 60);
             lblRange.Name = "lblRange";
-            lblRange.Size = new Size(62, 25);
+            lblRange.Size = new Size(95, 37);
             lblRange.TabIndex = 17;
             lblRange.Text = "[0, 0]";
             // 
@@ -426,7 +426,7 @@ namespace Team4prog.UI
             txtAngleFilter.Location = new Point(273, 118);
             txtAngleFilter.Name = "txtAngleFilter";
             txtAngleFilter.PlaceholderText = "Angle";
-            txtAngleFilter.Size = new Size(133, 30);
+            txtAngleFilter.Size = new Size(133, 44);
             txtAngleFilter.TabIndex = 19;
             // 
             // txtThrottleFilter
@@ -436,7 +436,7 @@ namespace Team4prog.UI
             txtThrottleFilter.Location = new Point(516, 118);
             txtThrottleFilter.Name = "txtThrottleFilter";
             txtThrottleFilter.PlaceholderText = "Throttle";
-            txtThrottleFilter.Size = new Size(159, 30);
+            txtThrottleFilter.Size = new Size(159, 44);
             txtThrottleFilter.TabIndex = 20;
             // 
             // btnSetFilter
@@ -464,7 +464,6 @@ namespace Team4prog.UI
             // topBar
             // 
             topBar.Dock = DockStyle.Top;
-            topBar.Enabled = true;
             topBar.Location = new Point(0, 0);
             topBar.Name = "topBar";
             topBar.Size = new Size(1231, 35);
@@ -563,7 +562,7 @@ namespace Team4prog.UI
             cmbModelList.FormattingEnabled = true;
             cmbModelList.Location = new Point(54, 55);
             cmbModelList.Name = "cmbModelList";
-            cmbModelList.Size = new Size(397, 28);
+            cmbModelList.Size = new Size(397, 40);
             cmbModelList.TabIndex = 0;
             // 
             // chartLoss
@@ -608,7 +607,7 @@ namespace Team4prog.UI
             txtComment.Location = new Point(642, 48);
             txtComment.Name = "txtComment";
             txtComment.PlaceholderText = "Comment";
-            txtComment.Size = new Size(539, 28);
+            txtComment.Size = new Size(539, 40);
             txtComment.TabIndex = 19;
             // 
             // btnTrain
@@ -640,7 +639,7 @@ namespace Team4prog.UI
             cmbModelType.Items.AddRange(new object[] { "linear", "categorical" });
             cmbModelType.Location = new Point(311, 48);
             cmbModelType.Name = "cmbModelType";
-            cmbModelType.Size = new Size(241, 28);
+            cmbModelType.Size = new Size(241, 40);
             cmbModelType.TabIndex = 0;
             // 
             // groupBoxConfigEditor
@@ -663,9 +662,9 @@ namespace Team4prog.UI
             flowconfig.Controls.Add(btnAddConfig);
             flowconfig.Controls.Add(btnSaveConfig);
             flowconfig.Dock = DockStyle.Fill;
-            flowconfig.Location = new Point(6, 27);
+            flowconfig.Location = new Point(6, 39);
             flowconfig.Name = "flowconfig";
-            flowconfig.Size = new Size(1202, 108);
+            flowconfig.Size = new Size(1202, 96);
             flowconfig.TabIndex = 1;
             // 
             // btnAddConfig

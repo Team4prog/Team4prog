@@ -36,5 +36,6 @@ namespace Team4prog.UI.Components
                 UseVisualStyleBackColor = false
             };
         }
+
     }
 }

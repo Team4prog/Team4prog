@@ -170,60 +170,43 @@ namespace Team4prog.UI
             string modelArgument = ResolveTrainingModelArgument(workingDir, modelType, selectedModelPath);
             string trainScript = File.Exists(Path.Combine(workingDir, "train.py")) ? "train.py" : "manage.py";
 
-            bool isWslPath = TryConvertWslUncPath(workingDir, out string wslWorkingDir, out string? wslDistro);
-            string? wslPython = Environment.GetEnvironmentVariable("DONKEYCAR_WSL_PYTHON");
-            if (isWslPath || !string.IsNullOrWhiteSpace(wslPython))
+            // [수정] TryConvertWslUncPath 정의 순서에 맞게 변수 위치 교정
+            // 정의: (string path, out string linuxPath, out string? distroName)
+            bool isWslPath = TryConvertWslUncPath(workingDir, out string linuxWorkingDir, out string? wslDistro);
+
+            if (isWslPath)
             {
                 string wslModelArgument = modelArgument;
                 if (TryConvertWslUncPath(modelArgument, out string convertedModelPath, out _))
                     wslModelArgument = convertedModelPath;
 
-                string pythonExecutable = string.IsNullOrWhiteSpace(wslPython)
-                    ? "~/miniconda3/envs/e2e_env/bin/python"
-                    : wslPython;
+                // 배포판 이름 유효성 검사 및 기본값 처리
+                string distro = string.IsNullOrWhiteSpace(wslDistro) ? "Ubuntu-22.04" : wslDistro;
+
+                // 동적 학습 스크립트 파라미터 조립 (경로 띄어쓰기 대비 작은따옴표 처리)
+                string scriptCmd = trainScript == "train.py"
+                    ? $"python train.py --tubs data --model '{wslModelArgument}' --type {modelType}"
+                    : $"python manage.py train --model '{wslModelArgument}'";
+
+                // [핵심 해결책] bash -ic 조합으로 .bashrc를 강제 로드하여 conda 환경을 확실하게 켜고 진입합니다.
+                string bshCommand = $"conda activate e2e_env && cd '{linuxWorkingDir}' && {scriptCmd}";
 
                 var psi = new ProcessStartInfo
                 {
                     FileName = "wsl.exe",
-                    WorkingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    // ArgumentList 대신 단일 Arguments 문자열 스트링 방식을 사용하여 공백 및 이스케이프 안정성 확보
+                    Arguments = $"-d {distro} -- bash -ic \"{bshCommand}\"",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
                     CreateNoWindow = true
                 };
 
-                if (!string.IsNullOrWhiteSpace(wslDistro))
-                {
-                    psi.ArgumentList.Add("--distribution");
-                    psi.ArgumentList.Add(wslDistro);
-                }
-
-                psi.ArgumentList.Add("--cd");
-                psi.ArgumentList.Add(wslWorkingDir);
-                psi.ArgumentList.Add(pythonExecutable);
-
-                if (trainScript == "train.py")
-                {
-                    psi.ArgumentList.Add("train.py");
-                    psi.ArgumentList.Add("--tubs");
-                    psi.ArgumentList.Add("data");
-                    psi.ArgumentList.Add("--model");
-                    psi.ArgumentList.Add(wslModelArgument);
-                    psi.ArgumentList.Add("--type");
-                    psi.ArgumentList.Add(modelType);
-                }
-                else
-                {
-                    psi.ArgumentList.Add("manage.py");
-                    psi.ArgumentList.Add("train");
-                    psi.ArgumentList.Add("--model");
-                    psi.ArgumentList.Add(wslModelArgument);
-                }
-
-                AddLog("[학습 명령] " + FormatProcessStartInfo(psi));
+                AddLog("[학습 명령 (WSL)] " + psi.FileName + " " + psi.Arguments);
                 return psi;
             }
 
+            // 로컬 윈도우 환경인 경우 기존 로직 유지
             string pythonExe = Environment.GetEnvironmentVariable("DONKEYCAR_PYTHON") ?? "python";
             var localPsi = new ProcessStartInfo
             {
@@ -253,7 +236,7 @@ namespace Team4prog.UI
                 localPsi.ArgumentList.Add(modelArgument);
             }
 
-            AddLog("[학습 명령] " + FormatProcessStartInfo(localPsi));
+            AddLog("[학습 명령 (Local)] " + FormatProcessStartInfo(localPsi));
             return localPsi;
         }
 
