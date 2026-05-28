@@ -61,13 +61,19 @@ namespace Team4prog.UI
                 }
 
                 // Run DonkeyCar training from the selected car folder.
-                string command = $"manage.py train --model {modelType}";
+                if (!TryConvertWslUncPath(workingDir, out var distroName, out var linuxWorkingDir))
+                {
+                    MessageBox.Show("선택한 폴더가 올바른 WSL 경로(\\\\wsl.localhost\\...)가 아닙니다.\nWSL 내부의 mycar 폴더를 선택해주세요.");
+                    isTrainingRunning = false;
+                    btnTrain.Enabled = true;
+                    return;
+                }
+                string wslArgs = $"-d {distroName} -- bash -ic \"conda activate e2e_env && cd '{linuxWorkingDir}' && python manage.py train --model {modelType}\"";
 
                 var psi = new ProcessStartInfo
                 {
-                    FileName = "python",
-                    Arguments = command,
-                    WorkingDirectory = workingDir,
+                    FileName = "wsl.exe",
+                    Arguments = wslArgs,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
@@ -159,6 +165,38 @@ namespace Team4prog.UI
                     MessageBox.Show("선택됨: " + carFolderPath);
                 }
             }
+        }
+
+        private static bool TryConvertWslUncPath(string path, out string distroName, out string linuxPath)
+        {
+            distroName = "";
+            linuxPath = "";
+
+            var normalizedPath = path.TrimEnd('\\', '/');
+            string relativePath;
+
+            if (normalizedPath.StartsWith(@"\\wsl.localhost\", StringComparison.OrdinalIgnoreCase))
+            {
+                relativePath = normalizedPath.Substring(@"\\wsl.localhost\".Length);
+            }
+            else if (normalizedPath.StartsWith(@"\\wsl$\", StringComparison.OrdinalIgnoreCase))
+            {
+                relativePath = normalizedPath.Substring(@"\\wsl$\".Length);
+            }
+            else
+            {
+                return false;
+            }
+
+            var parts = relativePath.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2)
+            {
+                return false;
+            }
+
+            distroName = parts[0];
+            linuxPath = "/" + string.Join("/", parts.Skip(1));
+            return true;
         }
     }
 }
