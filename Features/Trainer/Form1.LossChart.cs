@@ -27,13 +27,9 @@ namespace Team4prog.UI
                 return;
 
             chartLoss.Visible = true;
-            chartLoss.BringToFront();
-
             chartLoss.Paint -= ChartLoss_Paint;
             chartLoss.Paint += ChartLoss_Paint;
-
             chartLoss.Resize += (s, e) => chartLoss.Invalidate();
-
             chartLoss.Invalidate();
         }
 
@@ -41,31 +37,137 @@ namespace Team4prog.UI
         {
             if (panelTrainer == null ||
                 chartLoss == null ||
+                groupBoxConfigEditor == null ||
                 groupBoxTrainer == null ||
                 groupBoxPilotManager == null)
             {
                 return;
             }
 
-            panelTrainer.AutoScroll = true;
-
-            if (groupBoxConfigEditor != null)
+            try
             {
+                panelTrainer.SuspendLayout();
+                panelTrainer.AutoScroll = true;
+
+                int margin = 10;
+                int gap = 14;
+                int clientW = panelTrainer.ClientSize.Width;
+                int clientH = panelTrainer.ClientSize.Height;
+
+                if (clientW < 700)
+                    clientW = 700;
+
+                int scrollBarSpace = panelTrainer.VerticalScroll.Visible ? SystemInformation.VerticalScrollBarWidth + 4 : 0;
+                int fullW = Math.Max(650, clientW - margin * 2 - scrollBarSpace);
+
+                int topY = 70;
+
                 groupBoxConfigEditor.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-                groupBoxConfigEditor.Width = Math.Max(600, panelTrainer.ClientSize.Width - 26);
+                groupBoxConfigEditor.Location = new Point(margin, topY);
+                groupBoxConfigEditor.Size = new Size(fullW, 135);
+
+                groupBoxTrainer.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+                groupBoxTrainer.Location = new Point(margin, groupBoxConfigEditor.Bottom + gap + 10);
+                groupBoxTrainer.Size = new Size(fullW, 128);
+
+                ArrangeTrainerControls();
+
+                int chartY = groupBoxTrainer.Bottom + gap + 6;
+                int pilotH = 135;
+                int pilotGap = 18;
+
+                int availableChartH = clientH - chartY - pilotGap - pilotH - 35;
+
+                int chartH;
+                if (availableChartH >= 230)
+                    chartH = Math.Min(320, availableChartH);
+                else
+                    chartH = 240;
+
+                chartLoss.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+                chartLoss.Location = new Point(margin, chartY);
+                chartLoss.Size = new Size(fullW, chartH);
+                chartLoss.Visible = true;
+
+                groupBoxPilotManager.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+                groupBoxPilotManager.Location = new Point(margin, chartLoss.Bottom + pilotGap);
+                groupBoxPilotManager.Size = new Size(fullW, pilotH);
+
+                ArrangePilotManagerControls();
+
+                int bottom = groupBoxPilotManager.Bottom + 30;
+                panelTrainer.AutoScrollMinSize = new Size(0, Math.Max(bottom, clientH + 1));
+
+                chartLoss.Invalidate();
+            }
+            finally
+            {
+                panelTrainer.ResumeLayout();
+            }
+        }
+
+        private void ArrangeTrainerControls()
+        {
+            if (groupBoxTrainer == null)
+                return;
+
+            int w = groupBoxTrainer.ClientSize.Width;
+            int pad = 22;
+            int gap = 10;
+            int h = 36;
+
+            int leftW = Math.Min(520, Math.Max(380, (w - pad * 2 - gap) / 2));
+            int rightX = pad + leftW + gap + 30;
+            int rightW = w - rightX - pad;
+
+            if (rightW < 300)
+            {
+                leftW = Math.Max(320, w / 2 - 35);
+                rightX = pad + leftW + gap;
+                rightW = Math.Max(260, w - rightX - pad);
             }
 
-            groupBoxTrainer.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            groupBoxTrainer.Width = Math.Max(600, panelTrainer.ClientSize.Width - 26);
+            int selectW = Math.Min(260, Math.Max(190, leftW / 2));
+            int comboW = Math.Max(120, leftW - selectW - gap);
 
-            chartLoss.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            chartLoss.Location = new Point(10, groupBoxTrainer.Bottom + 20);
-            chartLoss.Size = new Size(Math.Max(600, panelTrainer.ClientSize.Width - 26), 320);
-            chartLoss.Visible = true;
+            btnSelectCarFolder.Location = new Point(pad, 36);
+            btnSelectCarFolder.Size = new Size(selectW, h);
 
-            groupBoxPilotManager.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            groupBoxPilotManager.Location = new Point(12, chartLoss.Bottom + 25);
-            groupBoxPilotManager.Width = Math.Max(600, panelTrainer.ClientSize.Width - 31);
+            cmbModelType.Location = new Point(btnSelectCarFolder.Right + gap, 39);
+            cmbModelType.Size = new Size(comboW, 32);
+
+            btnLoadModel.Location = new Point(pad, 79);
+            btnLoadModel.Size = new Size(leftW, h);
+
+            txtComment.Location = new Point(rightX, 39);
+            txtComment.Size = new Size(rightW, 32);
+
+            btnTrain.Location = new Point(rightX, 79);
+            btnTrain.Size = new Size(rightW, h + 2);
+        }
+
+        private void ArrangePilotManagerControls()
+        {
+            if (groupBoxPilotManager == null)
+                return;
+
+            int w = groupBoxPilotManager.ClientSize.Width;
+            int pad = 45;
+            int gap = 10;
+            int y = 52;
+            int h = 34;
+
+            int comboW = Math.Min(410, Math.Max(260, w / 3));
+            int btnW = Math.Min(240, Math.Max(160, (w - comboW - pad * 2 - gap * 3) / 2));
+
+            cmbModelList.Location = new Point(pad, y);
+            cmbModelList.Size = new Size(comboW, h);
+
+            btnDeleteModel.Location = new Point(cmbModelList.Right + gap + 20, y);
+            btnDeleteModel.Size = new Size(btnW, h);
+
+            btnUpdateComment.Location = new Point(btnDeleteModel.Right + gap, y);
+            btnUpdateComment.Size = new Size(btnW, h);
         }
 
         private void ResetLossChart()
@@ -116,7 +218,7 @@ namespace Team4prog.UI
             if (chartLoss.Width < 100 || chartLoss.Height < 100)
                 return;
 
-            Rectangle plot = new Rectangle(55, 30, chartLoss.Width - 80, chartLoss.Height - 80);
+            Rectangle plot = new Rectangle(55, 30, chartLoss.Width - 80, chartLoss.Height - 75);
 
             using Pen axisPen = new Pen(Color.White, 1);
             using Brush textBrush = new SolidBrush(Color.White);
