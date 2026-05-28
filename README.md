@@ -1,4 +1,4 @@
-<img width="1347" height="1079" alt="스크린샷 2026-05-28 100341" src="https://github.com/user-attachments/assets/54b85f2c-3b2d-4b38-85c4-0c9d1ee994a6" /># 🏎️ DonkeyCar 자율주행 데이터 정제 및 UI 학습기 (SimpleTrainer)
+자율주행 데이터 정제 및 UI 학습기 (SimpleTrainer)
 
 ## 1. 개요
 * **C# 프로그래밍 및 Windows Forms 기반 실무 프로젝트**
