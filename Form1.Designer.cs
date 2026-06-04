@@ -65,10 +65,11 @@ namespace Team4prog.UI
             txtThrottleFilter = new TextBox();
             btnSetFilter = new Button();
             btnClearFilter = new Button();
-            topBar = new AppNavigationBar();
             listBoxFrames = new ListBox();
             panelTubManager = new Panel();
             innerPanel = new Panel();
+            label1 = new Label();
+            listBoxException = new ListBox();
             picFrame = new PictureBox();
             panelTrainer = new Panel();
             listBoxChartLoss = new ListBox();
@@ -126,6 +127,7 @@ namespace Team4prog.UI
             btnDelete.TabIndex = 7;
             btnDelete.Text = "삭제";
             btnDelete.UseVisualStyleBackColor = false;
+            btnDelete.Click += btnDelete_Click;
             // 
             // groupBoxData
             // 
@@ -181,10 +183,10 @@ namespace Team4prog.UI
             listBoxLog.BackColor = Color.Silver;
             listBoxLog.Font = new Font("Tahoma", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
             listBoxLog.FormattingEnabled = true;
-            listBoxLog.Location = new Point(9, 604);
+            listBoxLog.Location = new Point(9, 652);
             listBoxLog.Margin = new Padding(2);
             listBoxLog.Name = "listBoxLog";
-            listBoxLog.Size = new Size(302, 460);
+            listBoxLog.Size = new Size(302, 412);
             listBoxLog.TabIndex = 6;
             // 
             // chartPanel
@@ -321,7 +323,7 @@ namespace Team4prog.UI
             lblStop.Name = "lblStop";
             lblStop.Size = new Size(56, 32);
             lblStop.TabIndex = 17;
-            lblStop.Text = "재생";
+            lblStop.Text = "정지";
             // 
             // lblPlayBackward
             // 
@@ -527,16 +529,6 @@ namespace Team4prog.UI
             btnClearFilter.Text = "텍스트박스 삭제";
             btnClearFilter.UseVisualStyleBackColor = false;
             // 
-            // topBar
-            // 
-            topBar.Dock = DockStyle.Top;
-            topBar.Enabled = false;
-            topBar.Location = new Point(0, 0);
-            topBar.Margin = new Padding(2);
-            topBar.Name = "topBar";
-            topBar.Size = new Size(2328, 41);
-            topBar.TabIndex = 16;
-            // 
             // listBoxFrames
             // 
             listBoxFrames.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
@@ -563,6 +555,8 @@ namespace Team4prog.UI
             // 
             // innerPanel
             // 
+            innerPanel.Controls.Add(label1);
+            innerPanel.Controls.Add(listBoxException);
             innerPanel.Controls.Add(groupBox1);
             innerPanel.Controls.Add(txtTubNavigator);
             innerPanel.Controls.Add(groupBoxData);
@@ -580,6 +574,29 @@ namespace Team4prog.UI
             innerPanel.Size = new Size(2318, 1444);
             innerPanel.TabIndex = 24;
             // 
+            // label1
+            // 
+            label1.AutoSize = true;
+            label1.Font = new Font("맑은 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            label1.ForeColor = Color.FromArgb(192, 192, 255);
+            label1.Location = new Point(9, 615);
+            label1.Name = "label1";
+            label1.Size = new Size(174, 32);
+            label1.TabIndex = 17;
+            label1.Text = "삭제 로그 관리";
+            // 
+            // listBoxException
+            // 
+            listBoxException.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            listBoxException.BackColor = Color.Silver;
+            listBoxException.Font = new Font("Tahoma", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            listBoxException.FormattingEnabled = true;
+            listBoxException.Location = new Point(2001, 11);
+            listBoxException.Margin = new Padding(2);
+            listBoxException.Name = "listBoxException";
+            listBoxException.Size = new Size(302, 580);
+            listBoxException.TabIndex = 16;
+            // 
             // picFrame
             // 
             picFrame.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
@@ -587,7 +604,7 @@ namespace Team4prog.UI
             picFrame.Location = new Point(322, 11);
             picFrame.Margin = new Padding(2);
             picFrame.Name = "picFrame";
-            picFrame.Size = new Size(1975, 581);
+            picFrame.Size = new Size(1666, 581);
             picFrame.TabIndex = 0;
             picFrame.TabStop = false;
             // 
@@ -736,7 +753,6 @@ namespace Team4prog.UI
             AutoScaleMode = AutoScaleMode.Dpi;
             BackColor = Color.FromArgb(64, 64, 64);
             ClientSize = new Size(2328, 1500);
-            Controls.Add(topBar);
             Controls.Add(panelTubManager);
             Controls.Add(panelTrainer);
             Margin = new Padding(2);
@@ -814,5 +830,7 @@ namespace Team4prog.UI
         private Label lblStop;
         private Label lblPlayBackward;
         private ListBox listBoxChartLoss;
+        private ListBox listBoxException;
+        private Label label1;
     }
 }

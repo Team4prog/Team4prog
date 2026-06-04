@@ -147,7 +147,10 @@ namespace Team4prog.UI
                     trackBarFrame.Value = newIdx;
                 }
 
-                AddLog($"[삭제 완료] {l} ~ {r} 프레임 삭제");
+                for (int i = 0; i < tempPaths.Count; i++)
+                {
+                    AddLog($"[삭제 완료] {Path.GetFileName(tempPaths[i])}");
+                }
 
                 // Reset range selection after a successful delete.
                 leftIndex = -1; rightIndex = -1;
@@ -170,14 +173,36 @@ namespace Team4prog.UI
                     return;
                 }
 
-                // Restore frames near their saved indices; append if the list is now shorter.
-                for (int i = 0; i < deletedImagePaths.Count; i++)
+                if (listBoxLog.SelectedIndices.Count == 0)
                 {
-                    int idx = (i < deletedIndices.Count) ? deletedIndices[i] : imagePaths.Count;
+                    MessageBox.Show("복원할 삭제 로그를 선택하세요.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                var selectedRestoreIndices = listBoxLog.SelectedIndices
+                    .Cast<int>()
+                    .Where(i => i >= 0 && i < deletedImagePaths.Count)
+                    .Distinct()
+                    .OrderBy(i => deletedIndices.Count > i ? deletedIndices[i] : imagePaths.Count)
+                    .ThenBy(i => i)
+                    .ToList();
+
+                if (selectedRestoreIndices.Count == 0)
+                {
+                    MessageBox.Show("선택한 삭제 로그와 일치하는 복원 데이터가 없습니다.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                int firstRestoredIndex = -1;
+
+                // Restore only the deleted frames selected in listBoxLog.
+                foreach (int restoreIndex in selectedRestoreIndices)
+                {
+                    int idx = (restoreIndex < deletedIndices.Count) ? deletedIndices[restoreIndex] : imagePaths.Count;
                     idx = Math.Min(idx, imagePaths.Count);
-                    imagePaths.Insert(idx, deletedImagePaths[i]);
-                    double a = deletedAngles[i];
-                    double t = deletedThrottles[i];
+                    imagePaths.Insert(idx, deletedImagePaths[restoreIndex]);
+                    double a = deletedAngles[restoreIndex];
+                    double t = deletedThrottles[restoreIndex];
                     if (double.IsNaN(a))
                         angles.Insert(idx, null);
                     else
@@ -187,15 +212,23 @@ namespace Team4prog.UI
                         throttles.Insert(idx, null);
                     else
                         throttles.Insert(idx, t);
+
+                    if (firstRestoredIndex < 0)
+                        firstRestoredIndex = idx;
                 }
 
-                int restoredCount = deletedImagePaths.Count;
+                int restoredCount = selectedRestoreIndices.Count;
 
-                // Clear restore buffers after they are applied.
-                deletedImagePaths.Clear();
-                deletedAngles.Clear();
-                deletedThrottles.Clear();
-                deletedIndices.Clear();
+                // Remove restored entries from the visible delete log and restore buffers.
+                foreach (int restoreIndex in selectedRestoreIndices.OrderByDescending(i => i))
+                {
+                    if (restoreIndex < listBoxLog.Items.Count)
+                        listBoxLog.Items.RemoveAt(restoreIndex);
+                    deletedImagePaths.RemoveAt(restoreIndex);
+                    deletedAngles.RemoveAt(restoreIndex);
+                    deletedThrottles.RemoveAt(restoreIndex);
+                    deletedIndices.RemoveAt(restoreIndex);
+                }
 
                 RebuildListBoxFrames();
                 trackBarFrame.Minimum = 0;
@@ -203,7 +236,7 @@ namespace Team4prog.UI
 
                 if (imagePaths.Count > 0)
                 {
-                    int sel = 0;
+                    int sel = Math.Max(0, Math.Min(firstRestoredIndex, imagePaths.Count - 1));
                     listBoxFrames.SelectedIndex = sel;
                     trackBarFrame.Value = sel;
                 }

@@ -53,12 +53,13 @@ namespace Team4prog.UI
         public Form1()
         {
             InitializeComponent();
+            EnsureTopBar();
 
 
             try
             {
                 // Enable the navigation bar and connect it to the two main panels.
-                if (this.Controls.Find("topBar", true).FirstOrDefault() is AppNavigationBar navBar)
+                if (topBar is AppNavigationBar navBar)
                 {
                     navBar.Enabled = true;
                     btnTubManager = navBar.TubManagerButton;
@@ -95,10 +96,12 @@ namespace Team4prog.UI
                     panelTrainer.Parent = this;
                     panelTrainer.Visible = false;
                 }
+
+                topBar.BringToFront();
             }
             catch (Exception ex)
             {
-                AddLog($"UI 패널 초기화 오류: {ex.Message}");
+                AddExceptionLog($"UI 패널 초기화 오류: {ex.Message}");
             }
 
             chartPanel.MouseClick += ChartPanel_MouseClick;
@@ -125,7 +128,6 @@ namespace Team4prog.UI
 
             // Feature event wiring. Implementations live in the partial files under Features/*.
             btnOpenFolder.Click += btnOpenFolder_Click;
-            btnDelete.Click += btnDelete_Click;
             btnSetFilter.Click += btnSetFilter_Click;
             btnClearFilter.Click += btnClearFilter_Click;
             btnSetLeft.Click += btnSetLeft_Click;
@@ -170,6 +172,26 @@ namespace Team4prog.UI
             timerPlayback.Tick += TimerPlayback_Tick;
         }
 
+        private void EnsureTopBar()
+        {
+            if (topBar == null)
+            {
+                topBar = new AppNavigationBar
+                {
+                    Name = "topBar",
+                    Dock = DockStyle.Top,
+                    Height = 35,
+                    Enabled = true
+                };
+
+                Controls.Add(topBar);
+            }
+
+            topBar.Visible = true;
+            topBar.Enabled = true;
+            topBar.BringToFront();
+        }
+
         private void ShowTubManager()
         {
             try
@@ -184,7 +206,7 @@ namespace Team4prog.UI
             }
             catch (Exception ex)
             {
-                AddLog($"ShowTubManager 오류: {ex.Message}");
+                AddExceptionLog($"ShowTubManager 오류: {ex.Message}");
             }
         }
 
@@ -203,7 +225,7 @@ namespace Team4prog.UI
             }
             catch (Exception ex)
             {
-                AddLog($"ShowTrainer 오류: {ex.Message}");
+                AddExceptionLog($"ShowTrainer 오류: {ex.Message}");
             }
         }
 
@@ -404,6 +426,10 @@ namespace Team4prog.UI
         {
             try
             {
+                // Show only successfully deleted frames here so listBoxLog selection maps to restore data.
+                if (!message.Contains("[삭제 완료]"))
+                    return;
+
                 var timestamp = DateTime.Now.ToString("HH:mm:ss");
                 listBoxLog.Items.Add($"[{timestamp}] {message}");
 
@@ -415,6 +441,24 @@ namespace Team4prog.UI
             catch
             {
                 // Logging should never interrupt the main UI flow.
+            }
+        }
+
+        private void AddExceptionLog(string message)
+        {
+            try
+            {
+                var timestamp = DateTime.Now.ToString("HH:mm:ss");
+                listBoxException.Items.Add($"[{timestamp}] {message}");
+
+                if (listBoxException.Items.Count > 0)
+                {
+                    listBoxException.TopIndex = listBoxException.Items.Count - 1;
+                }
+            }
+            catch
+            {
+                // 무시
             }
         }
     }

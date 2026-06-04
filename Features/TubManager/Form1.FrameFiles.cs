@@ -37,6 +37,9 @@ namespace Team4prog.UI
                 string imagePath = imagePaths[idx];
                 string imageFileName = Path.GetFileName(imagePath);
 
+                double a = angles[idx] ?? double.NaN;
+                double t = throttles[idx] ?? double.NaN;
+
                 // Delete the image file first; if this fails, leave UI state unchanged.
                 try
                 {
@@ -83,6 +86,12 @@ namespace Team4prog.UI
                 }
 
                 RemoveImageFromCatalogs(imagePath);
+
+                // Store restore data only after the file delete succeeds.
+                deletedImagePaths.Add(imagePath);
+                deletedAngles.Add(a);
+                deletedThrottles.Add(t);
+                deletedIndices.Add(idx);
 
                 // Remove the deleted frame from in-memory lists and visible controls.
                 try
@@ -136,7 +145,7 @@ namespace Team4prog.UI
             }
             catch (Exception ex)
             {
-                AddLog($"catalog 삭제 오류: {ex.Message}");
+                AddExceptionLog($"catalog 삭제 오류: {ex.Message}");
             }
         }
 
@@ -200,11 +209,11 @@ namespace Team4prog.UI
                     return;
 
                 File.WriteAllLines(catalogPath, keptLines);
-                AddLog($"[catalog 삭제] {Path.GetFileName(catalogPath)}에서 {removed}개 항목 제거");
+                AddExceptionLog($"[catalog 삭제] {Path.GetFileName(catalogPath)}에서 {removed}개 항목 제거");
             }
             catch (Exception ex)
             {
-                AddLog($"[catalog 삭제 실패] {Path.GetFileName(catalogPath)}: {ex.Message}");
+                AddExceptionLog($"[catalog 삭제 실패] {Path.GetFileName(catalogPath)}: {ex.Message}");
             }
         }
 
@@ -250,11 +259,11 @@ namespace Team4prog.UI
                 lblFrame.Text = "Frame: N/A";
                 lblAngle.Text = "Angle: N/A";
                 lblThrottle.Text = "Throttle: N/A";
-                AddLog("Image display cleared.");
+                AddExceptionLog("Image display cleared.");
             }
             catch (Exception ex)
             {
-                AddLog($"이미지 초기화 오류: {ex.Message}");
+                AddExceptionLog($"이미지 초기화 오류: {ex.Message}");
             }
         }
 
@@ -273,7 +282,7 @@ namespace Team4prog.UI
             if (dlg.ShowDialog() == DialogResult.OK)
             {
                 string folder = dlg.SelectedPath;
-                AddLog($"폴더 선택: {folder}");
+                AddExceptionLog($"폴더 선택: {folder}");
                 LoadImages(folder);
             }
         }
@@ -302,7 +311,7 @@ namespace Team4prog.UI
                 if (!Directory.Exists(folderPath))
                 {
                     MessageBox.Show("선택한 폴더가 존재하지 않습니다.", "로드 실패", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    AddLog($"폴더가 존재하지 않습니다: {folderPath}");
+                    AddExceptionLog($"폴더가 존재하지 않습니다: {folderPath}");
                     return;
                 }
 
@@ -314,10 +323,10 @@ namespace Team4prog.UI
                 {
                     if (LoadFromCatalogJsonl(folderPath, catalogPath))
                     {
-                        AddLog("catalog_0.catalog 로드 완료");
+                        AddExceptionLog("catalog_0.catalog 로드 완료");
                         return;
                     }
-                    AddLog("catalog_0.catalog 로드 실패: 이미지 스캔 방식으로 fallback 합니다.");
+                    AddExceptionLog("catalog_0.catalog 로드 실패: 이미지 스캔 방식으로 fallback 합니다.");
                 }
 
                 // Fallback: scan image files. Prefer "images/" subfolder when present to avoid picking up unrelated PNGs.
@@ -345,14 +354,14 @@ namespace Team4prog.UI
                 }
                 catch (Exception ex)
                 {
-                    AddLog($"파일 정렬 중 오류 발생: {ex.Message}. 기본 정렬을 사용합니다.");
+                    AddExceptionLog($"파일 정렬 중 오류 발생: {ex.Message}. 기본 정렬을 사용합니다.");
                     files = files.OrderBy(f => f).ToArray();
                 }
 
                 if (files.Length == 0)
                 {
                     MessageBox.Show("선택한 폴더에 jpg/png 이미지가 없습니다.", "로드 실패", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    AddLog("이미지 파일이 없습니다.");
+                    AddExceptionLog("이미지 파일이 없습니다.");
                     trackBarFrame.Minimum = 0;
                     trackBarFrame.Maximum = 0;
                     ClearImageDisplay();
@@ -372,14 +381,14 @@ namespace Team4prog.UI
 
                 listBoxFrames.SelectedIndex = 0;
 
-                AddLog($"이미지 로드 완료: {imagePaths.Count}개");
+                AddExceptionLog($"이미지 로드 완료: {imagePaths.Count}개");
                 // Load matching driving metadata from JSON files only when the folder looks like per-frame JSON layout.
                 // (Some folders contain unrelated JSON files like database.json.)
                 if (Directory.EnumerateFiles(folderPath, "*.json").Any(f => Path.GetFileName(f).EndsWith(".json", StringComparison.OrdinalIgnoreCase) &&
                                                                          Path.GetFileName(f).Contains("_", StringComparison.OrdinalIgnoreCase) == false))
                 {
                     // Heuristic: if JSON files are not frame-indexed, skip parsing to avoid noisy errors.
-                    AddLog("JSON 메타데이터 파싱 스킵(프레임 JSON 레이아웃 아님)");
+                    AddExceptionLog("JSON 메타데이터 파싱 스킵(프레임 JSON 레이아웃 아님)");
                 }
                 else
                 {
@@ -389,7 +398,7 @@ namespace Team4prog.UI
             }
             catch (Exception ex)
             {
-                AddLog($"이미지 로드 오류: {ex.Message}");
+                AddExceptionLog($"이미지 로드 오류: {ex.Message}");
             }
         }
 
@@ -439,14 +448,14 @@ namespace Team4prog.UI
                 listBoxFrames.SelectedIndex = 0;
 
                 if (skippedMissing > 0)
-                    AddLog($"catalog 경고: 이미지 누락으로 {skippedMissing}개 프레임 스킵");
+                    AddExceptionLog($"catalog 경고: 이미지 누락으로 {skippedMissing}개 프레임 스킵");
 
                 UpdateChart();
                 return true;
             }
             catch (Exception ex)
             {
-                AddLog($"catalog 파싱 오류: {ex.Message}");
+                AddExceptionLog($"catalog 파싱 오류: {ex.Message}");
                 return false;
             }
         }
@@ -490,7 +499,7 @@ namespace Team4prog.UI
             }
             catch (Exception ex)
             {
-                AddLog($"숫자 추출 오류 ({Path.GetFileName(filePath)}): {ex.Message}");
+                AddExceptionLog($"숫자 추출 오류 ({Path.GetFileName(filePath)}): {ex.Message}");
                 return null;
             }
         }
@@ -505,7 +514,7 @@ namespace Team4prog.UI
 
                 if (!Directory.Exists(folderPath))
                 {
-                    AddLog($"JSON 폴더가 존재하지 않습니다: {folderPath}");
+                    AddExceptionLog($"JSON 폴더가 존재하지 않습니다: {folderPath}");
                     return;
                 }
 
@@ -523,13 +532,13 @@ namespace Team4prog.UI
                 }
                 catch (Exception ex)
                 {
-                    AddLog($"JSON 파일 정렬 중 오류: {ex.Message}");
+                    AddExceptionLog($"JSON 파일 정렬 중 오류: {ex.Message}");
                     jsonFiles = jsonFiles.OrderBy(f => f).ToArray();
                 }
 
                 if (jsonFiles.Length == 0)
                 {
-                    AddLog("JSON 파일이 없습니다.");
+                    AddExceptionLog("JSON 파일이 없습니다.");
                     while (angles.Count < imagePaths.Count)
                         angles.Add(null);
                     while (throttles.Count < imagePaths.Count)
@@ -578,18 +587,18 @@ namespace Team4prog.UI
                     }
                     catch (Exception ex)
                     {
-                        AddLog($"JSON 파싱 오류 ({Path.GetFileName(jf)}): {ex.Message}");
+                        AddExceptionLog($"JSON 파싱 오류 ({Path.GetFileName(jf)}): {ex.Message}");
                         // Keep list alignment even when one JSON file cannot be parsed.
                         angles.Add(null);
                         throttles.Add(null);
                     }
                 }
 
-                AddLog($"JSON 로드 완료: {jsonFiles.Length}개");
+                AddExceptionLog($"JSON 로드 완료: {jsonFiles.Length}개");
 
                 if (jsonFiles.Length != imagePaths.Count)
                 {
-                    AddLog($"경고: 이미지 개수({imagePaths.Count})와 JSON 개수({jsonFiles.Length})가 다릅니다.");
+                    AddExceptionLog($"경고: 이미지 개수({imagePaths.Count})와 JSON 개수({jsonFiles.Length})가 다릅니다.");
                 }
 
                 // Keep metadata lists aligned with imagePaths so frame navigation can stay index-safe.
@@ -601,7 +610,7 @@ namespace Team4prog.UI
             }
             catch (Exception ex)
             {
-                AddLog($"JSON 로드 오류: {ex.Message}");
+                AddExceptionLog($"JSON 로드 오류: {ex.Message}");
             }
         }
 
@@ -610,7 +619,7 @@ namespace Team4prog.UI
         {
             if (index < 0 || index >= imagePaths.Count)
             {
-                AddLog($"잘못된 인덱스: {index}");
+                AddExceptionLog($"잘못된 인덱스: {index}");
                 return;
             }
 
@@ -628,7 +637,7 @@ namespace Team4prog.UI
                 string path = imagePaths[index];
                 if (!File.Exists(path))
                 {
-                    AddLog($"이미지 파일이 없습니다: {path}");
+                    AddExceptionLog($"이미지 파일이 없습니다: {path}");
                     return;
                 }
 
@@ -652,28 +661,28 @@ namespace Team4prog.UI
                 else
                     lblThrottle.Text = "Throttle: N/A";
 
-                AddLog($"이미지 표시: {Path.GetFileName(imagePaths[index])} (인덱스 {index})");
+                AddExceptionLog($"이미지 표시: {Path.GetFileName(imagePaths[index])} (인덱스 {index})");
                 HighlightCurrentIndex(index);
             }
             catch (FileNotFoundException ex)
             {
-                AddLog($"이미지 파일 없음: {ex.Message}");
+                AddExceptionLog($"이미지 파일 없음: {ex.Message}");
             }
             catch (UnauthorizedAccessException ex)
             {
-                AddLog($"이미지 접근 권한 오류: {ex.Message}");
+                AddExceptionLog($"이미지 접근 권한 오류: {ex.Message}");
             }
             catch (IOException ex)
             {
-                AddLog($"이미지 I/O 오류: {ex.Message}");
+                AddExceptionLog($"이미지 I/O 오류: {ex.Message}");
             }
             catch (OutOfMemoryException ex)
             {
-                AddLog($"이미지 형식 오류 또는 메모리 부족: {ex.Message}");
+                AddExceptionLog($"이미지 형식 오류 또는 메모리 부족: {ex.Message}");
             }
             catch (Exception ex)
             {
-                AddLog($"이미지 표시 오류: {ex.Message}");
+                AddExceptionLog($"이미지 표시 오류: {ex.Message}");
             }
         }
 
