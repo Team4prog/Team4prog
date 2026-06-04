@@ -48,7 +48,7 @@ namespace Team4prog.UI
             lblSpeed = new Label();
             nudSpeed = new NumericUpDown();
             groupBoxPlayControls = new GroupBox();
-            txtTubNavigator = new TextBox();
+            txtTubNavigator = new Label();
             groupBox1 = new GroupBox();
             cmbThrottleOp = new ComboBox();
             cmbAngleOp = new ComboBox();
@@ -69,20 +69,14 @@ namespace Team4prog.UI
             panelTubManager = new Panel();
             panelTrainer = new Panel();
             groupBoxPilotManager = new GroupBox();
-            btnUpdateComment = new Button();
             btnDeleteModel = new Button();
             cmbModelList = new ComboBox();
             chartLoss = new Panel();
             groupBoxTrainer = new GroupBox();
             btnSelectCarFolder = new Button();
-            txtComment = new TextBox();
             btnTrain = new Button();
             btnLoadModel = new Button();
             cmbModelType = new ComboBox();
-            groupBoxConfigEditor = new GroupBox();
-            flowconfig = new FlowLayoutPanel();
-            btnAddConfig = new Button();
-            btnSaveConfig = new Button();
             innerPanel = new Panel();
             ((System.ComponentModel.ISupportInitialize)picFrame).BeginInit();
             ((System.ComponentModel.ISupportInitialize)trackBarFrame).BeginInit();
@@ -94,8 +88,6 @@ namespace Team4prog.UI
             panelTrainer.SuspendLayout();
             groupBoxPilotManager.SuspendLayout();
             groupBoxTrainer.SuspendLayout();
-            groupBoxConfigEditor.SuspendLayout();
-            flowconfig.SuspendLayout();
             innerPanel.SuspendLayout();
             SuspendLayout();
             // 
@@ -309,6 +301,7 @@ namespace Team4prog.UI
             txtTubNavigator.Size = new Size(179, 27);
             txtTubNavigator.TabIndex = 10;
             txtTubNavigator.Text = "Tub Navigator";
+            txtTubNavigator.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // groupBox1
             // 
@@ -496,7 +489,6 @@ namespace Team4prog.UI
             panelTrainer.Controls.Add(groupBoxPilotManager);
             panelTrainer.Controls.Add(chartLoss);
             panelTrainer.Controls.Add(groupBoxTrainer);
-            panelTrainer.Controls.Add(groupBoxConfigEditor);
             panelTrainer.Dock = DockStyle.Fill;
             panelTrainer.Location = new Point(0, 0);
             panelTrainer.Name = "panelTrainer";
@@ -505,7 +497,6 @@ namespace Team4prog.UI
             // 
             // groupBoxPilotManager
             // 
-            groupBoxPilotManager.Controls.Add(btnUpdateComment);
             groupBoxPilotManager.Controls.Add(btnDeleteModel);
             groupBoxPilotManager.Controls.Add(cmbModelList);
             groupBoxPilotManager.Font = new Font("Verdana", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
@@ -516,16 +507,6 @@ namespace Team4prog.UI
             groupBoxPilotManager.TabIndex = 0;
             groupBoxPilotManager.TabStop = false;
             groupBoxPilotManager.Text = "Pilot Manager";
-            // 
-            // btnUpdateComment
-            // 
-            btnUpdateComment.BackColor = Color.DimGray;
-            btnUpdateComment.Location = new Point(729, 53);
-            btnUpdateComment.Name = "btnUpdateComment";
-            btnUpdateComment.Size = new Size(267, 34);
-            btnUpdateComment.TabIndex = 2;
-            btnUpdateComment.Text = "UpdateComment";
-            btnUpdateComment.UseVisualStyleBackColor = false;
             // 
             // btnDeleteModel
             // 
@@ -558,7 +539,6 @@ namespace Team4prog.UI
             // groupBoxTrainer
             // 
             groupBoxTrainer.Controls.Add(btnSelectCarFolder);
-            groupBoxTrainer.Controls.Add(txtComment);
             groupBoxTrainer.Controls.Add(btnTrain);
             groupBoxTrainer.Controls.Add(btnLoadModel);
             groupBoxTrainer.Controls.Add(cmbModelType);
@@ -581,15 +561,6 @@ namespace Team4prog.UI
             btnSelectCarFolder.Text = "Select Car Folder";
             btnSelectCarFolder.UseVisualStyleBackColor = false;
             btnSelectCarFolder.Click += btnSelectCarFolder_Click;
-            // 
-            // txtComment
-            // 
-            txtComment.BackColor = Color.Snow;
-            txtComment.Location = new Point(642, 48);
-            txtComment.Name = "txtComment";
-            txtComment.PlaceholderText = "Comment";
-            txtComment.Size = new Size(539, 32);
-            txtComment.TabIndex = 19;
             // 
             // btnTrain
             // 
@@ -623,51 +594,6 @@ namespace Team4prog.UI
             cmbModelType.Size = new Size(241, 33);
             cmbModelType.TabIndex = 0;
             // 
-            // groupBoxConfigEditor
-            // 
-            groupBoxConfigEditor.Controls.Add(flowconfig);
-            groupBoxConfigEditor.Font = new Font("Verdana", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            groupBoxConfigEditor.ForeColor = Color.FromArgb(192, 192, 255);
-            groupBoxConfigEditor.Location = new Point(10, 69);
-            groupBoxConfigEditor.Margin = new Padding(0);
-            groupBoxConfigEditor.Name = "groupBoxConfigEditor";
-            groupBoxConfigEditor.Padding = new Padding(6);
-            groupBoxConfigEditor.Size = new Size(1214, 141);
-            groupBoxConfigEditor.TabIndex = 0;
-            groupBoxConfigEditor.TabStop = false;
-            groupBoxConfigEditor.Text = "Config Editor";
-            // 
-            // flowconfig
-            // 
-            flowconfig.AutoScroll = true;
-            flowconfig.Controls.Add(btnAddConfig);
-            flowconfig.Controls.Add(btnSaveConfig);
-            flowconfig.Dock = DockStyle.Fill;
-            flowconfig.Location = new Point(6, 31);
-            flowconfig.Name = "flowconfig";
-            flowconfig.Size = new Size(1202, 104);
-            flowconfig.TabIndex = 1;
-            // 
-            // btnAddConfig
-            // 
-            btnAddConfig.BackColor = Color.DimGray;
-            btnAddConfig.Location = new Point(3, 3);
-            btnAddConfig.Name = "btnAddConfig";
-            btnAddConfig.Size = new Size(58, 49);
-            btnAddConfig.TabIndex = 0;
-            btnAddConfig.Text = "+";
-            btnAddConfig.UseVisualStyleBackColor = false;
-            // 
-            // btnSaveConfig
-            // 
-            btnSaveConfig.BackColor = Color.DimGray;
-            btnSaveConfig.Location = new Point(67, 3);
-            btnSaveConfig.Name = "btnSaveConfig";
-            btnSaveConfig.Size = new Size(254, 49);
-            btnSaveConfig.TabIndex = 1;
-            btnSaveConfig.Text = "Save myconfig";
-            btnSaveConfig.UseVisualStyleBackColor = false;
-            // 
             // innerPanel
             // 
             innerPanel.Controls.Add(groupBox1);
@@ -688,7 +614,7 @@ namespace Team4prog.UI
             // 
             // Form1
             // 
-            AutoScaleMode = AutoScaleMode.None;
+            AutoScaleMode = AutoScaleMode.Dpi;
             BackColor = Color.FromArgb(64, 64, 64);
             ClientSize = new Size(1231, 1114);
             Controls.Add(topBar);
@@ -710,8 +636,6 @@ namespace Team4prog.UI
             groupBoxPilotManager.ResumeLayout(false);
             groupBoxTrainer.ResumeLayout(false);
             groupBoxTrainer.PerformLayout();
-            groupBoxConfigEditor.ResumeLayout(false);
-            flowconfig.ResumeLayout(false);
             innerPanel.ResumeLayout(false);
             innerPanel.PerformLayout();
             ResumeLayout(false);
@@ -736,7 +660,7 @@ namespace Team4prog.UI
         private Button btnNext;
         private Label lblSpeed;
         private NumericUpDown nudSpeed;
-        private TextBox txtTubNavigator;
+        private Label txtTubNavigator;
         private GroupBox groupBox1;
         private Button btnDeleteRange;
         private Button btnSetRight;
@@ -757,18 +681,12 @@ namespace Team4prog.UI
         private ListBox listBoxFrames;
         private Panel panelTubManager;
         private Panel panelTrainer;
-        private GroupBox groupBoxConfigEditor;
-        private FlowLayoutPanel flowconfig;
-        private Button btnAddConfig;
         private GroupBox groupBoxTrainer;
         private ComboBox cmbModelType;
-        private Button btnSaveConfig;
         private Button btnLoadModel;
         private Button btnTrain;
-        private TextBox txtComment;
         private GroupBox groupBoxPilotManager;
         private Panel chartLoss;
-        private Button btnUpdateComment;
         private Button btnDeleteModel;
         private ComboBox cmbModelList;
         private Button btnSelectCarFolder;

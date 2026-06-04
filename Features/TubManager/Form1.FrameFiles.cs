@@ -82,6 +82,8 @@ namespace Team4prog.UI
                     }
                 }
 
+                RemoveImageFromCatalogs(imagePath);
+
                 // Remove the deleted frame from in-memory lists and visible controls.
                 try
                 {
@@ -119,6 +121,117 @@ namespace Team4prog.UI
             catch (Exception ex)
             {
                 AddLog($"[삭제 실패] 알 수 없는 오류: {ex.Message}");
+            }
+        }
+
+        private void RemoveImageFromCatalogs(string imagePath)
+        {
+            try
+            {
+                var catalogPaths = FindCatalogFilesForImage(imagePath).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+                foreach (var catalogPath in catalogPaths)
+                {
+                    RemoveImageFromCatalog(catalogPath, imagePath);
+                }
+            }
+            catch (Exception ex)
+            {
+                AddLog($"catalog 삭제 오류: {ex.Message}");
+            }
+        }
+
+        private IEnumerable<string> FindCatalogFilesForImage(string imagePath)
+        {
+            var candidates = new List<string>();
+
+            void AddCatalogsFrom(string? folder)
+            {
+                if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
+                    return;
+
+                candidates.AddRange(Directory.EnumerateFiles(folder, "catalog_*.catalog", SearchOption.TopDirectoryOnly));
+
+                var dataFolder = Path.Combine(folder, "data");
+                if (Directory.Exists(dataFolder))
+                    candidates.AddRange(Directory.EnumerateFiles(dataFolder, "catalog_*.catalog", SearchOption.TopDirectoryOnly));
+            }
+
+            AddCatalogsFrom(currentFolder);
+
+            var imageFolder = Path.GetDirectoryName(imagePath);
+            AddCatalogsFrom(imageFolder);
+
+            var parentFolder = string.IsNullOrWhiteSpace(imageFolder) ? null : Directory.GetParent(imageFolder)?.FullName;
+            AddCatalogsFrom(parentFolder);
+
+            if (!string.IsNullOrWhiteSpace(parentFolder))
+                AddCatalogsFrom(Path.Combine(parentFolder, "data"));
+
+            return candidates;
+        }
+
+        private void RemoveImageFromCatalog(string catalogPath, string imagePath)
+        {
+            try
+            {
+                if (!File.Exists(catalogPath))
+                    return;
+
+                string catalogFolder = Path.GetDirectoryName(catalogPath) ?? "";
+                string imagesDir = Path.Combine(catalogFolder, "images");
+                string targetFullPath = Path.GetFullPath(imagePath);
+                string targetFileName = Path.GetFileName(imagePath);
+
+                var keptLines = new List<string>();
+                int removed = 0;
+
+                foreach (var line in File.ReadLines(catalogPath))
+                {
+                    if (CatalogLineMatchesImage(line, catalogFolder, imagesDir, targetFullPath, targetFileName))
+                    {
+                        removed++;
+                        continue;
+                    }
+
+                    keptLines.Add(line);
+                }
+
+                if (removed == 0)
+                    return;
+
+                File.WriteAllLines(catalogPath, keptLines);
+                AddLog($"[catalog 삭제] {Path.GetFileName(catalogPath)}에서 {removed}개 항목 제거");
+            }
+            catch (Exception ex)
+            {
+                AddLog($"[catalog 삭제 실패] {Path.GetFileName(catalogPath)}: {ex.Message}");
+            }
+        }
+
+        private static bool CatalogLineMatchesImage(string line, string catalogFolder, string imagesDir, string targetFullPath, string targetFileName)
+        {
+            if (string.IsNullOrWhiteSpace(line))
+                return false;
+
+            try
+            {
+                var jobj = JObject.Parse(line);
+                string? imagePathFromCatalog = jobj["cam/image_array"]?.ToString();
+                if (string.IsNullOrWhiteSpace(imagePathFromCatalog))
+                    return false;
+
+                var resolved = ResolveCatalogImagePath(catalogFolder, imagesDir, imagePathFromCatalog);
+                if (!string.IsNullOrWhiteSpace(resolved) &&
+                    string.Equals(Path.GetFullPath(resolved), targetFullPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                return string.Equals(Path.GetFileName(imagePathFromCatalog), targetFileName, StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return false;
             }
         }
 
@@ -594,4 +707,3 @@ namespace Team4prog.UI
         }
     }
 }
-

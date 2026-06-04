@@ -8,6 +8,7 @@ namespace Team4prog.UI.Components
     {
         public Button TubManagerButton { get; }
         public Button TrainerButton { get; }
+        public Button HelpButton { get; }
 
         public AppNavigationBar()
         {
@@ -17,7 +18,20 @@ namespace Team4prog.UI.Components
 
             TubManagerButton = CreateButton("btnTubManager", "[Tub Manage]", new Point(10, -1), 9F, 0);
             TrainerButton = CreateButton("btnTrainer", "[Trainer]", new Point(140, 0), 10F, 1);
+            HelpButton = new Button
+            {
+                Text = "?",
+                Size = new Size(30, 30),
+                BackColor = Color.FromArgb(192, 192, 255),
+                FlatStyle = FlatStyle.Flat,
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                Location = new Point(Width - 40, 2),
+                Name = "btnHelp",
+                TabIndex = 2,
+                UseVisualStyleBackColor = false
+            };
 
+            Controls.Add(HelpButton);
             Controls.Add(TrainerButton);
             Controls.Add(TubManagerButton);
         }

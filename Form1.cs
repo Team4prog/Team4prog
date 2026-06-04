@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Threading.Tasks;
+using Team4prog.UI.Components;
 
 namespace Team4prog.UI
 {
@@ -53,6 +54,7 @@ namespace Team4prog.UI
         {
             InitializeComponent();
 
+
             try
             {
                 // Enable the navigation bar and connect it to the two main panels.
@@ -69,12 +71,23 @@ namespace Team4prog.UI
                     btnTrainer.Click += (s, e) => ShowTrainer();
                 }
 
+                if (this.Controls.Find("topBar", true).FirstOrDefault() is AppNavigationBar navBar)
+                {
+                    navBar.HelpButton.Click += (s, e) =>
+                    {
+                        var help = new HelpForm();
+                        help.TopMost = true;
+                        help.Show();
+                    };
+                }
+
                 if (panelTubManager != null)
                 {
                     panelTubManager.Dock = DockStyle.Fill;
                     panelTubManager.Parent = this;
                     panelTubManager.Visible = true;
                 }
+
                 if (panelTrainer != null)
                 {
                     panelTrainer.Dock = DockStyle.Fill;
@@ -124,9 +137,26 @@ namespace Team4prog.UI
             listBoxFrames.SelectedIndexChanged += listBoxFrames_SelectedIndexChanged;
             trackBarFrame.Scroll += trackBarFrame_Scroll;
 
-            this.MinimumSize = this.Size;
+            this.MinimumSize = new Size(1000, 700);
 
             InitializeChart();
+
+            InitializeLossChart();
+            FixTrainerLayout();
+
+            ApplyResponsiveLayout();
+
+            this.Resize += (s, e) => ApplyResponsiveLayout();
+
+            if (panelTubManager != null)
+            {
+                panelTubManager.Resize += (s, e) => ApplyResponsiveLayout();
+            }
+
+            if (panelTrainer != null)
+            {
+                panelTrainer.Resize += (s, e) => ApplyResponsiveLayout();
+            }
 
             lblRange.Text = "[0, 0]";
 
@@ -143,6 +173,8 @@ namespace Team4prog.UI
                 panelTubManager.BringToFront();
 
                 panelTrainer.Visible = false;
+
+                ApplyResponsiveLayout();
             }
             catch (Exception ex)
             {
@@ -158,11 +190,208 @@ namespace Team4prog.UI
                 panelTrainer.BringToFront();
 
                 panelTubManager.Visible = false;
+
+                ApplyResponsiveLayout();
+                chartLoss.Invalidate();
             }
             catch (Exception ex)
             {
                 AddLog($"ShowTrainer 오류: {ex.Message}");
             }
+        }
+
+
+        private void ApplyResponsiveLayout()
+        {
+            try
+            {
+                ApplyTubManagerLayout();
+                FixTrainerLayout();
+            }
+            catch
+            {
+                // 레이아웃 조정 오류가 나도 UI 실행은 막지 않음.
+            }
+        }
+
+        private void ApplyTubManagerLayout()
+        {
+            if (panelTubManager == null || innerPanel == null)
+                return;
+
+            int margin = 10;
+            int gap = 8;
+
+            int clientW = panelTubManager.ClientSize.Width;
+            int clientH = panelTubManager.ClientSize.Height;
+
+            if (clientW < 900 || clientH < 600)
+                return;
+
+            panelTubManager.AutoScroll = true;
+
+            int topY = 42;
+            int leftW = 260;
+            int rightW = 260;
+            int contentW = clientW - margin * 2;
+
+            int centerX = margin + leftW + gap;
+            int rightX = contentW - rightW;
+            int centerW = rightX - centerX - gap;
+
+            if (centerW < 420)
+            {
+                leftW = 230;
+                rightW = 235;
+                centerX = margin + leftW + gap;
+                rightX = contentW - rightW;
+                centerW = rightX - centerX - gap;
+            }
+
+            if (centerW < 360)
+                centerW = 360;
+
+            innerPanel.SuspendLayout();
+
+            innerPanel.Location = new Point(0, 0);
+            innerPanel.Width = Math.Max(clientW - 20, centerX + centerW + gap + rightW + margin);
+
+            txtTubNavigator.Location = new Point(margin, topY);
+            txtTubNavigator.Size = new Size(leftW - 105, 28);
+
+            btnDelete.Location = new Point(margin + leftW - 100, topY - 2);
+            btnDelete.Size = new Size(100, 32);
+
+            listBoxFrames.Location = new Point(margin, topY + 38);
+            listBoxFrames.Size = new Size(leftW, 270);
+
+            listBoxLog.Location = new Point(margin, topY + 338);
+            listBoxLog.Size = new Size(leftW, 250);
+
+            btnOpenFolder.Location = new Point(margin + 5, topY + 600);
+            btnOpenFolder.Size = new Size(leftW - 10, 48);
+
+            picFrame.Location = new Point(centerX, topY);
+            picFrame.Size = new Size(centerW, 300);
+            picFrame.SizeMode = PictureBoxSizeMode.Zoom;
+
+            groupBoxPlayControls.Location = new Point(centerX + centerW + gap, topY);
+            groupBoxPlayControls.Size = new Size(rightW, 300);
+            ArrangePlayControls();
+
+            int dataY = picFrame.Bottom + 28;
+            groupBoxData.Location = new Point(centerX, dataY);
+            groupBoxData.Size = new Size(centerW + gap + rightW, 82);
+
+            lblFrame.Location = new Point(50, 32);
+            lblAngle.Location = new Point(groupBoxData.Width / 3 + 30, 32);
+            lblThrottle.Location = new Point(groupBoxData.Width * 2 / 3 + 20, 32);
+
+            trackBarFrame.Location = new Point(centerX, groupBoxData.Bottom + 18);
+            trackBarFrame.Size = new Size(centerW + gap + rightW, 55);
+
+            groupBox1.Location = new Point(centerX, trackBarFrame.Bottom + 30);
+            groupBox1.Size = new Size(centerW + gap + rightW, 145);
+
+            ArrangeTubCleanerControls();
+
+            chartPanel.Location = new Point(centerX, groupBox1.Bottom + 20);
+            chartPanel.Size = new Size(centerW + gap + rightW, Math.Max(210, clientH - chartPanel.Location.Y - 30));
+
+            int bottom = chartPanel.Bottom + 30;
+            innerPanel.Height = Math.Max(bottom, clientH + 20);
+
+            chartPanel.Invalidate();
+
+            innerPanel.ResumeLayout();
+        }
+
+
+        private void ArrangePlayControls()
+        {
+            if (groupBoxPlayControls == null)
+                return;
+
+            int w = groupBoxPlayControls.ClientSize.Width;
+            int margin = 12;
+            int gap = 8;
+
+            int usableW = Math.Max(160, w - margin * 2);
+            int halfW = Math.Max(70, (usableW - gap) / 2);
+
+            lblSpeed.Location = new Point(margin, 45);
+            lblSpeed.AutoSize = true;
+
+            nudSpeed.Location = new Point(Math.Max(margin + 80, w - 105), 40);
+            nudSpeed.Size = new Size(90, 32);
+
+            btnPrev.Location = new Point(margin, 95);
+            btnPrev.Size = new Size(halfW, 42);
+
+            btnNext.Location = new Point(margin + halfW + gap, 95);
+            btnNext.Size = new Size(halfW, 42);
+
+            btnPlayBackward.Location = new Point(margin, 145);
+            btnPlayBackward.Size = new Size(halfW, 42);
+
+            btnPlayForward.Location = new Point(margin + halfW + gap, 145);
+            btnPlayForward.Size = new Size(halfW, 42);
+
+            btnStop.Location = new Point(margin, 200);
+            btnStop.Size = new Size(usableW, 45);
+        }
+
+        private void ArrangeTubCleanerControls()
+        {
+            if (groupBox1 == null)
+                return;
+
+            int w = groupBox1.ClientSize.Width;
+            int margin = 18;
+            int gap = 10;
+
+            int y1 = 38;
+            int y2 = 92;
+
+            int btnW = 115;
+            int btnH = 40;
+
+            btnSetLeft.Location = new Point(margin, y1);
+            btnSetLeft.Size = new Size(btnW, btnH);
+
+            btnSetRight.Location = new Point(btnSetLeft.Right + gap, y1);
+            btnSetRight.Size = new Size(btnW, btnH);
+
+            lblRange.Location = new Point(btnSetRight.Right + 25, y1 + 9);
+
+            int rightStart = Math.Max(lblRange.Right + 40, w - (btnW * 3 + gap * 2 + margin));
+
+            btnDeleteRange.Location = new Point(rightStart, y1);
+            btnDeleteRange.Size = new Size(btnW, btnH);
+
+            btnRestore.Location = new Point(btnDeleteRange.Right + gap, y1);
+            btnRestore.Size = new Size(btnW, btnH);
+
+            btnReload.Location = new Point(btnRestore.Right + gap, y1);
+            btnReload.Size = new Size(btnW, btnH);
+
+            btnSetFilter.Location = new Point(margin, y2);
+            btnSetFilter.Size = new Size(btnW, btnH);
+
+            cmbAngleOp.Location = new Point(btnSetFilter.Right + gap + 10, y2 + 4);
+            cmbAngleOp.Size = new Size(75, 32);
+
+            txtAngleFilter.Location = new Point(cmbAngleOp.Right + 6, y2 + 4);
+            txtAngleFilter.Size = new Size(120, 32);
+
+            cmbThrottleOp.Location = new Point(txtAngleFilter.Right + 18, y2 + 4);
+            cmbThrottleOp.Size = new Size(75, 32);
+
+            txtThrottleFilter.Location = new Point(cmbThrottleOp.Right + 6, y2 + 4);
+            txtThrottleFilter.Size = new Size(135, 32);
+
+            btnClearFilter.Location = new Point(Math.Min(txtThrottleFilter.Right + 18, w - btnW - margin), y2);
+            btnClearFilter.Size = new Size(btnW, btnH);
         }
 
         // Adds a timestamped entry and keeps the latest log visible.
@@ -172,6 +401,7 @@ namespace Team4prog.UI
             {
                 var timestamp = DateTime.Now.ToString("HH:mm:ss");
                 listBoxLog.Items.Add($"[{timestamp}] {message}");
+
                 if (listBoxLog.Items.Count > 0)
                 {
                     listBoxLog.TopIndex = listBoxLog.Items.Count - 1;
