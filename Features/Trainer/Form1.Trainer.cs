@@ -198,7 +198,7 @@ namespace Team4prog.UI
                 trainingStopRequested = false;
 
                 btnTrain.Enabled = true;
-                btnTrain.Text = "Train";
+                btnTrain.Text = "학습";
                 btnTrain.BackColor = Color.FromArgb(128, 255, 128);
             }
         }

@@ -83,9 +83,9 @@ namespace Team4prog.UI
                 TextAlign = ContentAlignment.TopLeft,
                 Text =
                     "Tub Manager\r\n" +
-                    "- Open Folder: DonkeyCar tub/image folder를 불러옵니다.\r\n" +
-                    "- Tub Navigator: 프레임 목록에서 이미지를 선택해 확인합니다.\r\n" +
-                    "- Delete: 선택한 이미지와 연결 JSON, catalog 항목을 삭제합니다.\r\n" +
+                    "- 폴더 열기: DonkeyCar tub/image folder를 불러옵니다.\r\n" +
+                    "- 주행 데이터 탐색기: 프레임 목록에서 이미지를 선택해 확인합니다.\r\n" +
+                    "- 프레임 삭제: 선택한 이미지와 연결 JSON, catalog 항목을 삭제합니다.\r\n" +
                     "- Tub Cleaner: Left/Right 범위를 잡고 여러 프레임을 정리합니다.\r\n" +
                     "- Filter: angle/throttle 조건으로 프레임을 필터링합니다.\r\n\r\n" +
                     "Trainer\r\n" +
