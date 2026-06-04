@@ -33,7 +33,7 @@ namespace Team4prog.UI
             chartLoss.Invalidate();
         }
 
-        private void FixTrainerLayout()
+        /* private void FixTrainerLayout()
         {
             if (panelTrainer == null ||
                 chartLoss == null ||
@@ -99,7 +99,7 @@ namespace Team4prog.UI
             {
                 panelTrainer.ResumeLayout();
             }
-        }
+        } */
 
         private void ArrangeTrainerControls()
         {

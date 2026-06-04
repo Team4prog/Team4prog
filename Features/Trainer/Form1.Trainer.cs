@@ -46,12 +46,12 @@ namespace Team4prog.UI
                 if (trainingProcess != null && !trainingProcess.HasExited)
                 {
                     trainingProcess.Kill(entireProcessTree: true);
-                    AddLog("[학습 중지 요청]");
+                    AddTrainLog("[학습 중지 요청]");
                 }
             }
             catch (Exception ex)
             {
-                AddLog("[학습 중지 오류] " + ex.Message);
+                AddTrainLog("[학습 중지 오류] " + ex.Message);
             }
         }
 
@@ -71,7 +71,7 @@ namespace Team4prog.UI
                 {
                     modelType = "linear";
                     cmbModelType.SelectedItem = modelType;
-                    AddLog("[학습] 모델 타입이 비어 있어 linear로 설정했습니다.");
+                    AddTrainLog("[학습] 모델 타입이 비어 있어 linear로 설정했습니다.");
                 }
 
                 if (string.IsNullOrEmpty(carFolderPath))
@@ -96,7 +96,7 @@ namespace Team4prog.UI
                 }
 
                 ResetLossChart();
-                FixTrainerLayout();
+                // FixTrainerLayout();
 
                 string? selectedModelPath = GetSelectedTrainingModelPath();
                 var psi = BuildTrainingStartInfo(workingDir, modelType, selectedModelPath, pathMode);
@@ -115,8 +115,7 @@ namespace Team4prog.UI
                         trainingOutput.Add(e.Data);
                         this.Invoke(new Action(() =>
                         {
-                            listBoxLog.Items.Add(e.Data);
-                            listBoxLog.TopIndex = listBoxLog.Items.Count - 1;
+                            AddTrainLog(e.Data);   
                             ParseLossLine(e.Data);
                         }));
                     }
@@ -129,7 +128,7 @@ namespace Team4prog.UI
                         trainingOutput.Add(e.Data);
                         this.Invoke(new Action(() =>
                         {
-                            AddLog("[학습 오류] " + e.Data);
+                            AddTrainLog("[학습 오류] " + e.Data);
                             ParseLossLine(e.Data);
                         }));
                     }
@@ -139,7 +138,7 @@ namespace Team4prog.UI
                 btnTrain.Enabled = true;
                 btnTrain.Text = "Stop";
                 btnTrain.BackColor = Color.FromArgb(255, 128, 128);
-                AddLog("[학습 시작]");
+                AddTrainLog("[학습 시작]");
 
                 if (!process.Start())
                 {
@@ -155,12 +154,12 @@ namespace Team4prog.UI
 
                 if (trainingStopRequested)
                 {
-                    AddLog("[학습 중지됨]");
+                    AddTrainLog("[학습 중지됨]");
                 }
                 else if (process.ExitCode == 0)
                 {
                     MessageBox.Show("학습 완료");
-                    AddLog("[학습 완료]");
+                    AddTrainLog("[학습 완료]");
                     LoadModelList();
                 }
                 else
@@ -173,23 +172,23 @@ namespace Team4prog.UI
                         "학습 실패",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Error);
-                    AddLog($"[학습 실패] ExitCode={process.ExitCode}");
+                    AddTrainLog($"[학습 실패] ExitCode={process.ExitCode}");
                 }
             }
             catch (System.ComponentModel.Win32Exception ex)
             {
                 MessageBox.Show("python 또는 wsl 실행 파일을 찾을 수 없습니다. Python, WSL, 가상환경 설정을 확인하세요.\n" + ex.Message);
-                AddLog($"실행 파일 오류: {ex.Message}");
+                AddTrainLog($"실행 파일 오류: {ex.Message}");
             }
             catch (InvalidOperationException ex)
             {
                 MessageBox.Show("학습 프로세스 실행 상태가 올바르지 않습니다.\n" + ex.Message);
-                AddLog($"학습 프로세스 상태 오류: {ex.Message}");
+                AddTrainLog($"학습 프로세스 상태 오류: {ex.Message}");
             }
             catch (Exception ex)
             {
                 MessageBox.Show("오류: " + ex.Message);
-                AddLog($"학습 실행 오류: {ex.Message}");
+                AddTrainLog($"학습 실행 오류: {ex.Message}");
             }
             finally
             {
@@ -201,6 +200,14 @@ namespace Team4prog.UI
                 btnTrain.Text = "학습";
                 btnTrain.BackColor = Color.FromArgb(128, 255, 128);
             }
+        }
+
+        private void AddTrainLog(string message)
+        {
+            if (listBoxChartLoss == null) return;
+
+            listBoxChartLoss.Items.Add(message);
+            listBoxChartLoss.TopIndex = listBoxChartLoss.Items.Count - 1;
         }
 
         private void btnSelectCarFolder_Click(object sender, EventArgs e)
@@ -256,7 +263,7 @@ namespace Team4prog.UI
                 psi.ArgumentList.Add("-ic");
                 psi.ArgumentList.Add(bshCommand);
 
-                AddLog("[학습 명령 (WSL)] " + FormatProcessStartInfo(psi));
+                AddTrainLog("[학습 명령 (WSL)] " + FormatProcessStartInfo(psi));
                 return psi;
             }
 
@@ -289,7 +296,7 @@ namespace Team4prog.UI
                 localPsi.ArgumentList.Add(modelArgument);
             }
 
-            AddLog("[학습 명령 (Local)] " + FormatProcessStartInfo(localPsi));
+            AddTrainLog("[학습 명령 (Local)] " + FormatProcessStartInfo(localPsi));
             return localPsi;
         }
 
@@ -329,12 +336,12 @@ namespace Team4prog.UI
                 Directory.CreateDirectory(logFolder);
                 string logFilePath = Path.Combine(logFolder, $"training_{DateTime.Now:yyyyMMdd_HHmmss}.log");
                 File.WriteAllLines(logFilePath, trainingOutput);
-                AddLog("[학습 로그] " + logFilePath);
+                AddTrainLog("[학습 로그] " + logFilePath);
                 return logFilePath;
             }
             catch (Exception ex)
             {
-                AddLog($"학습 로그 저장 오류: {ex.Message}");
+                AddTrainLog($"학습 로그 저장 오류: {ex.Message}");
                 return null;
             }
         }
@@ -344,7 +351,7 @@ namespace Team4prog.UI
             if (!string.IsNullOrWhiteSpace(selectedModelPath))
             {
                 string normalizedSelectedModelPath = NormalizeUserPath(selectedModelPath);
-                AddLog("[학습 모델] " + Path.GetFileName(normalizedSelectedModelPath));
+                AddTrainLog("[학습 모델] " + Path.GetFileName(normalizedSelectedModelPath));
                 return normalizedSelectedModelPath;
             }
 
@@ -353,14 +360,14 @@ namespace Team4prog.UI
             if (pathMode == TrainingPathMode.WslLinux)
             {
                 string linuxModelFilePath = CombineLinuxPath(workingDir, "models", fileName);
-                AddLog("[학습 모델 자동 생성] " + fileName);
+                AddTrainLog("[학습 모델 자동 생성] " + fileName)    ;
                 return linuxModelFilePath;
             }
 
             string modelsDirectoryPath = Path.Combine(workingDir, "models");
             Directory.CreateDirectory(modelsDirectoryPath);
             string createdModelFilePath = Path.Combine(modelsDirectoryPath, fileName);
-            AddLog("[학습 모델 자동 생성] " + fileName);
+            AddTrainLog("[학습 모델 자동 생성] " + fileName);
             return createdModelFilePath;
         }
 
@@ -379,7 +386,7 @@ namespace Team4prog.UI
                 return normalizedSelectedModelPath;
             }
 
-            AddLog($"[학습] {ext} 모델은 학습 저장 대상으로 쓰지 않고 새 .h5 모델을 생성합니다.");
+            AddTrainLog($"[학습] {ext} 모델은 학습 저장 대상으로 쓰지 않고 새 .h5 모델을 생성합니다.");
             return null;
         }
 
@@ -626,11 +633,11 @@ namespace Team4prog.UI
                 string selectedModelFilePath = NormalizeUserPath(dialog.FileName);
                 AddModelToCombo(selectedModelFilePath);
                 cmbModelList.SelectedItem = selectedModelFilePath;
-                AddLog("[모델 선택] " + Path.GetFileName(selectedModelFilePath));
+                AddTrainLog("[모델 선택] " + Path.GetFileName(selectedModelFilePath));
             }
             catch (Exception ex)
             {
-                AddLog($"모델 선택 오류: {ex.Message}");
+                AddTrainLog($"모델 선택 오류: {ex.Message}");
             }
         }
 
@@ -681,13 +688,13 @@ namespace Team4prog.UI
                     File.Delete(normalizedSelectedModelPath);
                 }
 
-                AddLog("[모델 삭제] " + Path.GetFileName(normalizedSelectedModelPath));
+                AddTrainLog("[모델 삭제] " + Path.GetFileName(normalizedSelectedModelPath));
                 LoadModelList();
             }
             catch (Exception ex)
             {
                 MessageBox.Show("모델 삭제 실패: " + ex.Message);
-                AddLog($"모델 삭제 오류: {ex.Message}");
+                AddTrainLog($"모델 삭제 오류: {ex.Message}");
             }
         }
 
@@ -710,11 +717,11 @@ namespace Team4prog.UI
                 if (cmbModelList.Items.Count > 0)
                     cmbModelList.SelectedIndex = 0;
 
-                AddLog($"[모델 목록] {cmbModelList.Items.Count}개");
+                AddTrainLog($"[모델 목록] {cmbModelList.Items.Count}개");
             }
             catch (Exception ex)
             {
-                AddLog($"모델 목록 로드 오류: {ex.Message}");
+                AddTrainLog($"모델 목록 로드 오류: {ex.Message}");
             }
         }
 

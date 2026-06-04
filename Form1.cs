@@ -106,6 +106,10 @@ namespace Team4prog.UI
             listBoxLog.HorizontalScrollbar = true;
             listBoxLog.ScrollAlwaysVisible = true;
 
+            listBoxChartLoss.HorizontalScrollbar = true;
+            listBoxChartLoss.ScrollAlwaysVisible = true;
+            listBoxLog.SelectionMode = SelectionMode.MultiExtended;
+
             // Keep frames visible without distortion.
             picFrame.SizeMode = PictureBoxSizeMode.Zoom;
 
@@ -143,7 +147,7 @@ namespace Team4prog.UI
             InitializeChart();
 
             InitializeLossChart();
-            FixTrainerLayout();
+            // FixTrainerLayout();
 
             ApplyResponsiveLayout();
 
@@ -209,7 +213,7 @@ namespace Team4prog.UI
             try
             {
                 //ApplyTubManagerLayout();
-                FixTrainerLayout();
+                //FixTrainerLayout();
             }
             catch
             {

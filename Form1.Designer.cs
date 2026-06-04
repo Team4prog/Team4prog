@@ -71,7 +71,7 @@ namespace Team4prog.UI
             innerPanel = new Panel();
             picFrame = new PictureBox();
             panelTrainer = new Panel();
-            listBoxChartLost = new ListBox();
+            listBoxChartLoss = new ListBox();
             groupBoxPilotManager = new GroupBox();
             btnDeleteModel = new Button();
             cmbModelList = new ComboBox();
@@ -97,7 +97,7 @@ namespace Team4prog.UI
             // trackBarFrame
             // 
             trackBarFrame.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            trackBarFrame.Location = new Point(322, 836);
+            trackBarFrame.Location = new Point(322, 825);
             trackBarFrame.Margin = new Padding(2);
             trackBarFrame.Name = "trackBarFrame";
             trackBarFrame.Size = new Size(1983, 69);
@@ -107,7 +107,7 @@ namespace Team4prog.UI
             // 
             btnOpenFolder.BackColor = Color.Silver;
             btnOpenFolder.Font = new Font("Microsoft Sans Serif", 16F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            btnOpenFolder.Location = new Point(9, 72);
+            btnOpenFolder.Location = new Point(9, 47);
             btnOpenFolder.Margin = new Padding(2);
             btnOpenFolder.Name = "btnOpenFolder";
             btnOpenFolder.Size = new Size(197, 62);
@@ -119,7 +119,7 @@ namespace Team4prog.UI
             // 
             btnDelete.BackColor = Color.FromArgb(255, 128, 128);
             btnDelete.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            btnDelete.Location = new Point(210, 73);
+            btnDelete.Location = new Point(221, 45);
             btnDelete.Margin = new Padding(2);
             btnDelete.Name = "btnDelete";
             btnDelete.Size = new Size(90, 64);
@@ -135,11 +135,11 @@ namespace Team4prog.UI
             groupBoxData.Controls.Add(lblFrame);
             groupBoxData.Font = new Font("Yu Gothic UI", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
             groupBoxData.ForeColor = Color.FromArgb(192, 192, 255);
-            groupBoxData.Location = new Point(321, 740);
+            groupBoxData.Location = new Point(322, 740);
             groupBoxData.Margin = new Padding(2);
             groupBoxData.Name = "groupBoxData";
             groupBoxData.Padding = new Padding(2);
-            groupBoxData.Size = new Size(1981, 92);
+            groupBoxData.Size = new Size(1981, 81);
             groupBoxData.TabIndex = 4;
             groupBoxData.TabStop = false;
             // 
@@ -181,17 +181,17 @@ namespace Team4prog.UI
             listBoxLog.BackColor = Color.Silver;
             listBoxLog.Font = new Font("Tahoma", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
             listBoxLog.FormattingEnabled = true;
-            listBoxLog.Location = new Point(9, 628);
+            listBoxLog.Location = new Point(9, 604);
             listBoxLog.Margin = new Padding(2);
             listBoxLog.Name = "listBoxLog";
-            listBoxLog.Size = new Size(291, 412);
+            listBoxLog.Size = new Size(302, 460);
             listBoxLog.TabIndex = 6;
             // 
             // chartPanel
             // 
             chartPanel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             chartPanel.BackColor = Color.Black;
-            chartPanel.Location = new Point(9, 1054);
+            chartPanel.Location = new Point(9, 1114);
             chartPanel.Margin = new Padding(2);
             chartPanel.Name = "chartPanel";
             chartPanel.Size = new Size(2294, 318);
@@ -263,7 +263,7 @@ namespace Team4prog.UI
             nudSpeed.BorderStyle = BorderStyle.None;
             nudSpeed.DecimalPlaces = 2;
             nudSpeed.Increment = new decimal(new int[] { 1, 0, 0, 131072 });
-            nudSpeed.Location = new Point(1542, 36);
+            nudSpeed.Location = new Point(1524, 53);
             nudSpeed.Margin = new Padding(2);
             nudSpeed.Maximum = new decimal(new int[] { 5, 0, 0, 0 });
             nudSpeed.Minimum = new decimal(new int[] { 1, 0, 0, 65536 });
@@ -288,11 +288,11 @@ namespace Team4prog.UI
             groupBoxPlayControls.Controls.Add(btnPrev);
             groupBoxPlayControls.Font = new Font("Microsoft Sans Serif", 13.9999981F, FontStyle.Bold, GraphicsUnit.Point, 129);
             groupBoxPlayControls.ForeColor = Color.FromArgb(192, 192, 255);
-            groupBoxPlayControls.Location = new Point(322, 604);
+            groupBoxPlayControls.Location = new Point(322, 589);
             groupBoxPlayControls.Margin = new Padding(2);
             groupBoxPlayControls.Name = "groupBoxPlayControls";
             groupBoxPlayControls.Padding = new Padding(2);
-            groupBoxPlayControls.Size = new Size(1975, 140);
+            groupBoxPlayControls.Size = new Size(1975, 143);
             groupBoxPlayControls.TabIndex = 9;
             groupBoxPlayControls.TabStop = false;
             // 
@@ -346,7 +346,7 @@ namespace Team4prog.UI
             txtTubNavigator.BackColor = Color.FromArgb(64, 64, 64);
             txtTubNavigator.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
             txtTubNavigator.ForeColor = Color.White;
-            txtTubNavigator.Location = new Point(9, 145);
+            txtTubNavigator.Location = new Point(9, 11);
             txtTubNavigator.Margin = new Padding(2, 0, 2, 0);
             txtTubNavigator.Name = "txtTubNavigator";
             txtTubNavigator.Size = new Size(222, 27);
@@ -369,13 +369,13 @@ namespace Team4prog.UI
             groupBox1.Controls.Add(txtThrottleFilter);
             groupBox1.Controls.Add(btnSetFilter);
             groupBox1.Controls.Add(btnClearFilter);
-            groupBox1.Font = new Font("Microsoft Sans Serif", 11.999999F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            groupBox1.Font = new Font("Microsoft Sans Serif", 16F, FontStyle.Bold, GraphicsUnit.Point, 0);
             groupBox1.ForeColor = Color.FromArgb(192, 192, 255);
-            groupBox1.Location = new Point(322, 892);
+            groupBox1.Location = new Point(322, 886);
             groupBox1.Margin = new Padding(0);
             groupBox1.Name = "groupBox1";
             groupBox1.Padding = new Padding(0);
-            groupBox1.Size = new Size(1981, 160);
+            groupBox1.Size = new Size(1981, 183);
             groupBox1.TabIndex = 11;
             groupBox1.TabStop = false;
             // 
@@ -383,30 +383,30 @@ namespace Team4prog.UI
             // 
             cmbThrottleOp.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             cmbThrottleOp.FormattingEnabled = true;
-            cmbThrottleOp.Location = new Point(991, 94);
+            cmbThrottleOp.Location = new Point(994, 105);
             cmbThrottleOp.Margin = new Padding(2);
             cmbThrottleOp.Name = "cmbThrottleOp";
-            cmbThrottleOp.Size = new Size(124, 37);
+            cmbThrottleOp.Size = new Size(124, 45);
             cmbThrottleOp.TabIndex = 23;
             // 
             // cmbAngleOp
             // 
             cmbAngleOp.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             cmbAngleOp.FormattingEnabled = true;
-            cmbAngleOp.Location = new Point(272, 100);
+            cmbAngleOp.Location = new Point(271, 107);
             cmbAngleOp.Margin = new Padding(2);
             cmbAngleOp.Name = "cmbAngleOp";
-            cmbAngleOp.Size = new Size(124, 37);
+            cmbAngleOp.Size = new Size(124, 45);
             cmbAngleOp.TabIndex = 22;
             // 
             // lblRange
             // 
             lblRange.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             lblRange.AutoSize = true;
-            lblRange.Location = new Point(454, 33);
+            lblRange.Location = new Point(454, 40);
             lblRange.Margin = new Padding(2, 0, 2, 0);
             lblRange.Name = "lblRange";
-            lblRange.Size = new Size(71, 29);
+            lblRange.Size = new Size(95, 37);
             lblRange.TabIndex = 17;
             lblRange.Text = "[0, 0]";
             // 
@@ -415,10 +415,10 @@ namespace Team4prog.UI
             btnReload.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             btnReload.BackColor = Color.DimGray;
             btnReload.Font = new Font("한컴 고딕", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            btnReload.Location = new Point(1596, 17);
+            btnReload.Location = new Point(1600, 29);
             btnReload.Margin = new Padding(2);
             btnReload.Name = "btnReload";
-            btnReload.Size = new Size(177, 65);
+            btnReload.Size = new Size(177, 66);
             btnReload.TabIndex = 16;
             btnReload.Text = "초기화";
             btnReload.UseVisualStyleBackColor = false;
@@ -428,10 +428,10 @@ namespace Team4prog.UI
             btnRestore.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             btnRestore.BackColor = Color.DimGray;
             btnRestore.Font = new Font("한컴 고딕", 10F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            btnRestore.Location = new Point(1371, 17);
+            btnRestore.Location = new Point(1375, 29);
             btnRestore.Margin = new Padding(2);
             btnRestore.Name = "btnRestore";
-            btnRestore.Size = new Size(221, 65);
+            btnRestore.Size = new Size(221, 66);
             btnRestore.TabIndex = 15;
             btnRestore.Text = "삭제값 되돌리기";
             btnRestore.UseVisualStyleBackColor = false;
@@ -441,10 +441,10 @@ namespace Team4prog.UI
             btnDeleteRange.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             btnDeleteRange.BackColor = Color.DimGray;
             btnDeleteRange.Font = new Font("한컴 고딕", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            btnDeleteRange.Location = new Point(1190, 17);
+            btnDeleteRange.Location = new Point(1194, 29);
             btnDeleteRange.Margin = new Padding(2);
             btnDeleteRange.Name = "btnDeleteRange";
-            btnDeleteRange.Size = new Size(177, 65);
+            btnDeleteRange.Size = new Size(177, 66);
             btnDeleteRange.TabIndex = 14;
             btnDeleteRange.Text = "지정값 삭제";
             btnDeleteRange.UseVisualStyleBackColor = false;
@@ -455,10 +455,10 @@ namespace Team4prog.UI
             btnSetRight.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             btnSetRight.BackColor = Color.DimGray;
             btnSetRight.Font = new Font("한컴 고딕", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            btnSetRight.Location = new Point(73, 17);
+            btnSetRight.Location = new Point(77, 29);
             btnSetRight.Margin = new Padding(2);
             btnSetRight.Name = "btnSetRight";
-            btnSetRight.Size = new Size(177, 65);
+            btnSetRight.Size = new Size(177, 66);
             btnSetRight.TabIndex = 13;
             btnSetRight.Text = "시작점 지정";
             btnSetRight.UseVisualStyleBackColor = false;
@@ -469,10 +469,10 @@ namespace Team4prog.UI
             btnSetLeft.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             btnSetLeft.BackColor = Color.DimGray;
             btnSetLeft.Font = new Font("한컴 고딕", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            btnSetLeft.Location = new Point(254, 17);
+            btnSetLeft.Location = new Point(258, 29);
             btnSetLeft.Margin = new Padding(2);
             btnSetLeft.Name = "btnSetLeft";
-            btnSetLeft.Size = new Size(177, 65);
+            btnSetLeft.Size = new Size(177, 66);
             btnSetLeft.TabIndex = 12;
             btnSetLeft.Text = "끝점 지정";
             btnSetLeft.UseVisualStyleBackColor = false;
@@ -482,22 +482,22 @@ namespace Team4prog.UI
             // 
             txtAngleFilter.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             txtAngleFilter.BackColor = Color.Gray;
-            txtAngleFilter.Location = new Point(409, 99);
+            txtAngleFilter.Location = new Point(410, 106);
             txtAngleFilter.Margin = new Padding(2);
             txtAngleFilter.Name = "txtAngleFilter";
             txtAngleFilter.PlaceholderText = "각도";
-            txtAngleFilter.Size = new Size(431, 35);
+            txtAngleFilter.Size = new Size(431, 44);
             txtAngleFilter.TabIndex = 19;
             // 
             // txtThrottleFilter
             // 
             txtThrottleFilter.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             txtThrottleFilter.BackColor = Color.Gray;
-            txtThrottleFilter.Location = new Point(1119, 96);
+            txtThrottleFilter.Location = new Point(1138, 106);
             txtThrottleFilter.Margin = new Padding(2);
             txtThrottleFilter.Name = "txtThrottleFilter";
             txtThrottleFilter.PlaceholderText = "가속값";
-            txtThrottleFilter.Size = new Size(431, 35);
+            txtThrottleFilter.Size = new Size(431, 44);
             txtThrottleFilter.TabIndex = 20;
             // 
             // btnSetFilter
@@ -505,10 +505,10 @@ namespace Team4prog.UI
             btnSetFilter.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             btnSetFilter.BackColor = Color.DimGray;
             btnSetFilter.Font = new Font("한컴 고딕", 10F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            btnSetFilter.Location = new Point(73, 86);
+            btnSetFilter.Location = new Point(77, 98);
             btnSetFilter.Margin = new Padding(2);
             btnSetFilter.Name = "btnSetFilter";
-            btnSetFilter.Size = new Size(177, 65);
+            btnSetFilter.Size = new Size(177, 66);
             btnSetFilter.TabIndex = 18;
             btnSetFilter.Text = "필터 지정";
             btnSetFilter.UseVisualStyleBackColor = false;
@@ -519,10 +519,10 @@ namespace Team4prog.UI
             btnClearFilter.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             btnClearFilter.BackColor = Color.DimGray;
             btnClearFilter.Font = new Font("한컴 고딕", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            btnClearFilter.Location = new Point(1596, 87);
+            btnClearFilter.Location = new Point(1600, 99);
             btnClearFilter.Margin = new Padding(2);
             btnClearFilter.Name = "btnClearFilter";
-            btnClearFilter.Size = new Size(177, 65);
+            btnClearFilter.Size = new Size(177, 66);
             btnClearFilter.TabIndex = 21;
             btnClearFilter.Text = "텍스트박스 삭제";
             btnClearFilter.UseVisualStyleBackColor = false;
@@ -544,10 +544,10 @@ namespace Team4prog.UI
             listBoxFrames.Font = new Font("Tahoma", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
             listBoxFrames.FormattingEnabled = true;
             listBoxFrames.IntegralHeight = false;
-            listBoxFrames.Location = new Point(7, 187);
+            listBoxFrames.Location = new Point(7, 114);
             listBoxFrames.Margin = new Padding(0);
             listBoxFrames.Name = "listBoxFrames";
-            listBoxFrames.Size = new Size(293, 425);
+            listBoxFrames.Size = new Size(304, 488);
             listBoxFrames.TabIndex = 5;
             // 
             // panelTubManager
@@ -558,7 +558,7 @@ namespace Team4prog.UI
             panelTubManager.Location = new Point(0, 0);
             panelTubManager.Margin = new Padding(2);
             panelTubManager.Name = "panelTubManager";
-            panelTubManager.Size = new Size(2328, 1431);
+            panelTubManager.Size = new Size(2328, 1500);
             panelTubManager.TabIndex = 17;
             // 
             // innerPanel
@@ -577,14 +577,14 @@ namespace Team4prog.UI
             innerPanel.Location = new Point(10, 45);
             innerPanel.Margin = new Padding(2);
             innerPanel.Name = "innerPanel";
-            innerPanel.Size = new Size(2318, 1384);
+            innerPanel.Size = new Size(2318, 1444);
             innerPanel.TabIndex = 24;
             // 
             // picFrame
             // 
             picFrame.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             picFrame.BackColor = Color.White;
-            picFrame.Location = new Point(322, 29);
+            picFrame.Location = new Point(322, 11);
             picFrame.Margin = new Padding(2);
             picFrame.Name = "picFrame";
             picFrame.Size = new Size(1975, 581);
@@ -593,7 +593,7 @@ namespace Team4prog.UI
             // 
             // panelTrainer
             // 
-            panelTrainer.Controls.Add(listBoxChartLost);
+            panelTrainer.Controls.Add(listBoxChartLoss);
             panelTrainer.Controls.Add(groupBoxPilotManager);
             panelTrainer.Controls.Add(chartLoss);
             panelTrainer.Controls.Add(groupBoxTrainer);
@@ -601,40 +601,40 @@ namespace Team4prog.UI
             panelTrainer.Location = new Point(0, 0);
             panelTrainer.Margin = new Padding(2);
             panelTrainer.Name = "panelTrainer";
-            panelTrainer.Size = new Size(2328, 1431);
+            panelTrainer.Size = new Size(2328, 1500);
             panelTrainer.TabIndex = 18;
             // 
-            // listBoxChartLost
+            // listBoxChartLoss
             // 
-            listBoxChartLost.BackColor = Color.Gray;
-            listBoxChartLost.Font = new Font("한컴 고딕", 10F, FontStyle.Regular, GraphicsUnit.Point, 129);
-            listBoxChartLost.FormattingEnabled = true;
-            listBoxChartLost.Location = new Point(1559, 74);
-            listBoxChartLost.Name = "listBoxChartLost";
-            listBoxChartLost.Size = new Size(748, 706);
-            listBoxChartLost.TabIndex = 17;
+            listBoxChartLoss.BackColor = Color.Gray;
+            listBoxChartLoss.Font = new Font("한컴 고딕", 10F, FontStyle.Regular, GraphicsUnit.Point, 129);
+            listBoxChartLoss.FormattingEnabled = true;
+            listBoxChartLoss.Location = new Point(1559, 74);
+            listBoxChartLoss.Name = "listBoxChartLoss";
+            listBoxChartLoss.Size = new Size(748, 1330);
+            listBoxChartLoss.TabIndex = 17;
             // 
             // groupBoxPilotManager
             // 
             groupBoxPilotManager.Anchor = AnchorStyles.Left;
             groupBoxPilotManager.Controls.Add(btnDeleteModel);
             groupBoxPilotManager.Controls.Add(cmbModelList);
-            groupBoxPilotManager.Font = new Font("Verdana", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            groupBoxPilotManager.Font = new Font("맑은 고딕", 14F, FontStyle.Bold, GraphicsUnit.Point, 0);
             groupBoxPilotManager.ForeColor = Color.FromArgb(192, 192, 255);
-            groupBoxPilotManager.Location = new Point(10, 659);
+            groupBoxPilotManager.Location = new Point(10, 694);
             groupBoxPilotManager.Margin = new Padding(2);
             groupBoxPilotManager.Name = "groupBoxPilotManager";
             groupBoxPilotManager.Padding = new Padding(2);
             groupBoxPilotManager.Size = new Size(1521, 122);
             groupBoxPilotManager.TabIndex = 0;
             groupBoxPilotManager.TabStop = false;
-            groupBoxPilotManager.Text = "Pilot Manager";
+            groupBoxPilotManager.Text = "모델 관리 기능";
             // 
             // btnDeleteModel
             // 
             btnDeleteModel.BackColor = Color.DimGray;
             btnDeleteModel.Font = new Font("한컴 고딕", 11.999999F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            btnDeleteModel.Location = new Point(350, 32);
+            btnDeleteModel.Location = new Point(371, 39);
             btnDeleteModel.Margin = new Padding(2);
             btnDeleteModel.Name = "btnDeleteModel";
             btnDeleteModel.Size = new Size(178, 48);
@@ -649,14 +649,14 @@ namespace Team4prog.UI
             cmbModelList.Location = new Point(40, 41);
             cmbModelList.Margin = new Padding(2);
             cmbModelList.Name = "cmbModelList";
-            cmbModelList.Size = new Size(299, 33);
+            cmbModelList.Size = new Size(299, 46);
             cmbModelList.TabIndex = 0;
             // 
             // chartLoss
             // 
             chartLoss.Anchor = AnchorStyles.Left;
             chartLoss.BackColor = Color.Black;
-            chartLoss.Location = new Point(10, 265);
+            chartLoss.Location = new Point(10, 300);
             chartLoss.Margin = new Padding(2);
             chartLoss.Name = "chartLoss";
             chartLoss.Size = new Size(1521, 330);
@@ -669,16 +669,16 @@ namespace Team4prog.UI
             groupBoxTrainer.Controls.Add(btnTrain);
             groupBoxTrainer.Controls.Add(btnLoadModel);
             groupBoxTrainer.Controls.Add(cmbModelType);
-            groupBoxTrainer.Font = new Font("Verdana", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            groupBoxTrainer.Font = new Font("맑은 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
             groupBoxTrainer.ForeColor = Color.FromArgb(192, 192, 255);
-            groupBoxTrainer.Location = new Point(12, 74);
+            groupBoxTrainer.Location = new Point(12, 109);
             groupBoxTrainer.Margin = new Padding(2);
             groupBoxTrainer.Name = "groupBoxTrainer";
             groupBoxTrainer.Padding = new Padding(2);
             groupBoxTrainer.Size = new Size(1519, 145);
             groupBoxTrainer.TabIndex = 1;
             groupBoxTrainer.TabStop = false;
-            groupBoxTrainer.Text = "Trainer";
+            groupBoxTrainer.Text = "트레이너";
             // 
             // btnSelectCarFolder
             // 
@@ -698,10 +698,10 @@ namespace Team4prog.UI
             btnTrain.BackColor = Color.FromArgb(128, 255, 128);
             btnTrain.Font = new Font("맑은 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnTrain.ForeColor = Color.Black;
-            btnTrain.Location = new Point(994, 29);
+            btnTrain.Location = new Point(805, 43);
             btnTrain.Margin = new Padding(2);
             btnTrain.Name = "btnTrain";
-            btnTrain.Size = new Size(505, 37);
+            btnTrain.Size = new Size(505, 79);
             btnTrain.TabIndex = 2;
             btnTrain.Text = "학습";
             btnTrain.UseVisualStyleBackColor = false;
@@ -714,7 +714,7 @@ namespace Team4prog.UI
             btnLoadModel.Location = new Point(21, 85);
             btnLoadModel.Margin = new Padding(2);
             btnLoadModel.Name = "btnLoadModel";
-            btnLoadModel.Size = new Size(394, 45);
+            btnLoadModel.Size = new Size(526, 45);
             btnLoadModel.TabIndex = 1;
             btnLoadModel.Text = "모델 선택";
             btnLoadModel.UseVisualStyleBackColor = false;
@@ -724,10 +724,10 @@ namespace Team4prog.UI
             cmbModelType.BackColor = Color.DimGray;
             cmbModelType.FormattingEnabled = true;
             cmbModelType.Items.AddRange(new object[] { "linear", "categorical" });
-            cmbModelType.Location = new Point(233, 41);
+            cmbModelType.Location = new Point(233, 31);
             cmbModelType.Margin = new Padding(2);
             cmbModelType.Name = "cmbModelType";
-            cmbModelType.Size = new Size(182, 33);
+            cmbModelType.Size = new Size(314, 40);
             cmbModelType.TabIndex = 0;
             // 
             // Form1
@@ -735,10 +735,10 @@ namespace Team4prog.UI
             AutoScaleDimensions = new SizeF(144F, 144F);
             AutoScaleMode = AutoScaleMode.Dpi;
             BackColor = Color.FromArgb(64, 64, 64);
-            ClientSize = new Size(2328, 1431);
+            ClientSize = new Size(2328, 1500);
             Controls.Add(topBar);
-            Controls.Add(panelTrainer);
             Controls.Add(panelTubManager);
+            Controls.Add(panelTrainer);
             Margin = new Padding(2);
             Name = "Form1";
             Text = "DonkeyCar UI";
@@ -813,6 +813,6 @@ namespace Team4prog.UI
         private Label lblPlayForward;
         private Label lblStop;
         private Label lblPlayBackward;
-        private ListBox listBoxChartLost;
+        private ListBox listBoxChartLoss;
     }
 }
