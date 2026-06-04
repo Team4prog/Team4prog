@@ -92,27 +92,30 @@ namespace Team4prog.UI
             // 
             picFrame.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             picFrame.BackColor = Color.White;
-            picFrame.Location = new Point(323, 39);
+            picFrame.Location = new Point(242, 29);
+            picFrame.Margin = new Padding(2);
             picFrame.Name = "picFrame";
-            picFrame.Size = new Size(636, 347);
+            picFrame.Size = new Size(824, 260);
             picFrame.TabIndex = 0;
             picFrame.TabStop = false;
             // 
             // trackBarFrame
             // 
             trackBarFrame.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            trackBarFrame.Location = new Point(321, 534);
+            trackBarFrame.Location = new Point(242, 488);
+            trackBarFrame.Margin = new Padding(2);
             trackBarFrame.Name = "trackBarFrame";
-            trackBarFrame.Size = new Size(882, 90);
+            trackBarFrame.Size = new Size(1028, 69);
             trackBarFrame.TabIndex = 1;
             // 
             // btnOpenFolder
             // 
             btnOpenFolder.BackColor = Color.Silver;
             btnOpenFolder.Font = new Font("Microsoft Sans Serif", 16F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            btnOpenFolder.Location = new Point(111, 736);
+            btnOpenFolder.Location = new Point(9, 17);
+            btnOpenFolder.Margin = new Padding(2);
             btnOpenFolder.Name = "btnOpenFolder";
-            btnOpenFolder.Size = new Size(204, 55);
+            btnOpenFolder.Size = new Size(136, 41);
             btnOpenFolder.TabIndex = 2;
             btnOpenFolder.Text = "폴더 열기";
             btnOpenFolder.UseVisualStyleBackColor = false;
@@ -121,9 +124,10 @@ namespace Team4prog.UI
             // 
             btnDelete.BackColor = Color.FromArgb(255, 128, 128);
             btnDelete.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            btnDelete.Location = new Point(197, 39);
+            btnDelete.Location = new Point(147, 17);
+            btnDelete.Margin = new Padding(2);
             btnDelete.Name = "btnDelete";
-            btnDelete.Size = new Size(120, 35);
+            btnDelete.Size = new Size(90, 41);
             btnDelete.TabIndex = 7;
             btnDelete.Text = "삭제";
             btnDelete.UseVisualStyleBackColor = false;
@@ -136,9 +140,11 @@ namespace Team4prog.UI
             groupBoxData.Controls.Add(lblFrame);
             groupBoxData.Font = new Font("Yu Gothic UI", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
             groupBoxData.ForeColor = Color.FromArgb(192, 192, 255);
-            groupBoxData.Location = new Point(323, 407);
+            groupBoxData.Location = new Point(242, 397);
+            groupBoxData.Margin = new Padding(2);
             groupBoxData.Name = "groupBoxData";
-            groupBoxData.Size = new Size(882, 105);
+            groupBoxData.Padding = new Padding(2);
+            groupBoxData.Size = new Size(1028, 87);
             groupBoxData.TabIndex = 4;
             groupBoxData.TabStop = false;
             groupBoxData.Text = "Driving Data";
@@ -147,9 +153,10 @@ namespace Team4prog.UI
             // 
             lblThrottle.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             lblThrottle.AutoSize = true;
-            lblThrottle.Location = new Point(438, 35);
+            lblThrottle.Location = new Point(694, 26);
+            lblThrottle.Margin = new Padding(2, 0, 2, 0);
             lblThrottle.Name = "lblThrottle";
-            lblThrottle.Size = new Size(137, 45);
+            lblThrottle.Size = new Size(101, 32);
             lblThrottle.TabIndex = 2;
             lblThrottle.Text = "Throttle";
             // 
@@ -157,105 +164,117 @@ namespace Team4prog.UI
             // 
             lblAngle.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             lblAngle.AutoSize = true;
-            lblAngle.Location = new Point(233, 35);
+            lblAngle.Location = new Point(358, 26);
+            lblAngle.Margin = new Padding(2, 0, 2, 0);
             lblAngle.Name = "lblAngle";
-            lblAngle.Size = new Size(104, 45);
+            lblAngle.Size = new Size(77, 32);
             lblAngle.TabIndex = 1;
             lblAngle.Text = "Angle";
             // 
             // lblFrame
             // 
             lblFrame.AutoSize = true;
-            lblFrame.Location = new Point(53, 35);
+            lblFrame.Location = new Point(40, 26);
+            lblFrame.Margin = new Padding(2, 0, 2, 0);
             lblFrame.Name = "lblFrame";
-            lblFrame.Size = new Size(108, 45);
+            lblFrame.Size = new Size(81, 32);
             lblFrame.TabIndex = 0;
             lblFrame.Text = "Frame";
             // 
             // listBoxLog
             // 
-            listBoxLog.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            listBoxLog.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             listBoxLog.BackColor = Color.Silver;
             listBoxLog.Font = new Font("Tahoma", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
             listBoxLog.FormattingEnabled = true;
-            listBoxLog.Location = new Point(12, 428);
+            listBoxLog.Location = new Point(1070, 29);
+            listBoxLog.Margin = new Padding(2);
             listBoxLog.Name = "listBoxLog";
-            listBoxLog.Size = new Size(305, 268);
+            listBoxLog.Size = new Size(217, 364);
             listBoxLog.TabIndex = 6;
             // 
             // chartPanel
             // 
             chartPanel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             chartPanel.BackColor = Color.Black;
-            chartPanel.Location = new Point(12, 814);
+            chartPanel.Location = new Point(9, 736);
+            chartPanel.Margin = new Padding(2);
             chartPanel.Name = "chartPanel";
-            chartPanel.Size = new Size(1199, 281);
+            chartPanel.Size = new Size(1265, 211);
             chartPanel.TabIndex = 15;
             // 
             // btnPrev
             // 
             btnPrev.BackColor = Color.DimGray;
             btnPrev.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            btnPrev.Location = new Point(12, 119);
+            btnPrev.Location = new Point(187, 36);
+            btnPrev.Margin = new Padding(2);
             btnPrev.Name = "btnPrev";
-            btnPrev.Size = new Size(108, 52);
+            btnPrev.Size = new Size(81, 39);
             btnPrev.TabIndex = 8;
-            btnPrev.Text = "<";
+            btnPrev.Text = "◁";
             btnPrev.UseVisualStyleBackColor = false;
             // 
             // btnNext
             // 
             btnNext.BackColor = Color.DimGray;
             btnNext.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            btnNext.Location = new Point(126, 119);
+            btnNext.Location = new Point(532, 36);
+            btnNext.Margin = new Padding(2);
             btnNext.Name = "btnNext";
-            btnNext.Size = new Size(108, 52);
+            btnNext.Size = new Size(81, 39);
             btnNext.TabIndex = 9;
-            btnNext.Text = ">";
+            btnNext.Text = "▷";
             btnNext.UseVisualStyleBackColor = false;
             // 
             // btnPlayForward
             // 
             btnPlayForward.BackColor = Color.DimGray;
             btnPlayForward.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            btnPlayForward.Location = new Point(126, 177);
+            btnPlayForward.Location = new Point(447, 36);
+            btnPlayForward.Margin = new Padding(2);
             btnPlayForward.Name = "btnPlayForward";
-            btnPlayForward.Size = new Size(108, 52);
+            btnPlayForward.Size = new Size(81, 39);
             btnPlayForward.TabIndex = 11;
-            btnPlayForward.Text = ">>";
+            btnPlayForward.Text = "▶";
             btnPlayForward.UseVisualStyleBackColor = false;
             // 
             // btnPlayBackward
             // 
             btnPlayBackward.BackColor = Color.DimGray;
             btnPlayBackward.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            btnPlayBackward.Location = new Point(12, 177);
+            btnPlayBackward.Location = new Point(272, 36);
+            btnPlayBackward.Margin = new Padding(2);
             btnPlayBackward.Name = "btnPlayBackward";
-            btnPlayBackward.Size = new Size(108, 52);
+            btnPlayBackward.Size = new Size(81, 39);
             btnPlayBackward.TabIndex = 10;
-            btnPlayBackward.Text = "<<";
+            btnPlayBackward.Text = "◀";
             btnPlayBackward.UseVisualStyleBackColor = false;
             // 
             // btnStop
             // 
             btnStop.BackColor = Color.DimGray;
             btnStop.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            btnStop.Location = new Point(12, 235);
+            btnStop.Location = new Point(357, 36);
+            btnStop.Margin = new Padding(2);
             btnStop.Name = "btnStop";
-            btnStop.Size = new Size(222, 52);
+            btnStop.Size = new Size(81, 39);
             btnStop.TabIndex = 12;
-            btnStop.Text = "Stop";
+            btnStop.Text = "■";
             btnStop.UseVisualStyleBackColor = false;
             // 
             // nudSpeed
             // 
+            nudSpeed.BackColor = Color.LightGray;
+            nudSpeed.BorderStyle = BorderStyle.None;
             nudSpeed.DecimalPlaces = 2;
             nudSpeed.Increment = new decimal(new int[] { 1, 0, 0, 131072 });
-            nudSpeed.Location = new Point(126, 54);
+            nudSpeed.Location = new Point(679, 36);
+            nudSpeed.Margin = new Padding(2);
             nudSpeed.Maximum = new decimal(new int[] { 5, 0, 0, 0 });
             nudSpeed.Minimum = new decimal(new int[] { 1, 0, 0, 65536 });
             nudSpeed.Name = "nudSpeed";
-            nudSpeed.Size = new Size(108, 50);
+            nudSpeed.Size = new Size(102, 35);
             nudSpeed.TabIndex = 14;
             nudSpeed.Value = new decimal(new int[] { 1, 0, 0, 0 });
             // 
@@ -270,9 +289,11 @@ namespace Team4prog.UI
             groupBoxPlayControls.Controls.Add(btnPrev);
             groupBoxPlayControls.Font = new Font("Microsoft Sans Serif", 13.9999981F, FontStyle.Bold, GraphicsUnit.Point, 129);
             groupBoxPlayControls.ForeColor = Color.FromArgb(192, 192, 255);
-            groupBoxPlayControls.Location = new Point(971, 39);
+            groupBoxPlayControls.Location = new Point(246, 298);
+            groupBoxPlayControls.Margin = new Padding(2);
             groupBoxPlayControls.Name = "groupBoxPlayControls";
-            groupBoxPlayControls.Size = new Size(240, 347);
+            groupBoxPlayControls.Padding = new Padding(2);
+            groupBoxPlayControls.Size = new Size(820, 95);
             groupBoxPlayControls.TabIndex = 9;
             groupBoxPlayControls.TabStop = false;
             groupBoxPlayControls.Text = "PlayControls";
@@ -282,9 +303,10 @@ namespace Team4prog.UI
             txtTubNavigator.BackColor = Color.FromArgb(64, 64, 64);
             txtTubNavigator.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
             txtTubNavigator.ForeColor = Color.White;
-            txtTubNavigator.Location = new Point(12, 39);
+            txtTubNavigator.Location = new Point(246, 0);
+            txtTubNavigator.Margin = new Padding(2, 0, 2, 0);
             txtTubNavigator.Name = "txtTubNavigator";
-            txtTubNavigator.Size = new Size(179, 27);
+            txtTubNavigator.Size = new Size(143, 27);
             txtTubNavigator.TabIndex = 10;
             txtTubNavigator.Text = "Tub Navigator";
             txtTubNavigator.TextAlign = ContentAlignment.MiddleLeft;
@@ -306,11 +328,11 @@ namespace Team4prog.UI
             groupBox1.Controls.Add(btnClearFilter);
             groupBox1.Font = new Font("Microsoft Sans Serif", 11.999999F, FontStyle.Bold, GraphicsUnit.Point, 129);
             groupBox1.ForeColor = Color.FromArgb(192, 192, 255);
-            groupBox1.Location = new Point(321, 620);
+            groupBox1.Location = new Point(241, 559);
             groupBox1.Margin = new Padding(0);
             groupBox1.Name = "groupBox1";
             groupBox1.Padding = new Padding(0);
-            groupBox1.Size = new Size(882, 171);
+            groupBox1.Size = new Size(1028, 160);
             groupBox1.TabIndex = 11;
             groupBox1.TabStop = false;
             groupBox1.Text = "Tub Cleaner";
@@ -319,27 +341,30 @@ namespace Team4prog.UI
             // 
             cmbThrottleOp.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             cmbThrottleOp.FormattingEnabled = true;
-            cmbThrottleOp.Location = new Point(421, 118);
+            cmbThrottleOp.Location = new Point(522, 89);
+            cmbThrottleOp.Margin = new Padding(2);
             cmbThrottleOp.Name = "cmbThrottleOp";
-            cmbThrottleOp.Size = new Size(89, 45);
+            cmbThrottleOp.Size = new Size(68, 37);
             cmbThrottleOp.TabIndex = 23;
             // 
             // cmbAngleOp
             // 
             cmbAngleOp.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             cmbAngleOp.FormattingEnabled = true;
-            cmbAngleOp.Location = new Point(178, 118);
+            cmbAngleOp.Location = new Point(290, 89);
+            cmbAngleOp.Margin = new Padding(2);
             cmbAngleOp.Name = "cmbAngleOp";
-            cmbAngleOp.Size = new Size(89, 45);
+            cmbAngleOp.Size = new Size(68, 37);
             cmbAngleOp.TabIndex = 22;
             // 
             // lblRange
             // 
             lblRange.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             lblRange.AutoSize = true;
-            lblRange.Location = new Point(329, 60);
+            lblRange.Location = new Point(384, 37);
+            lblRange.Margin = new Padding(2, 0, 2, 0);
             lblRange.Name = "lblRange";
-            lblRange.Size = new Size(95, 37);
+            lblRange.Size = new Size(71, 29);
             lblRange.TabIndex = 17;
             lblRange.Text = "[0, 0]";
             // 
@@ -347,9 +372,11 @@ namespace Team4prog.UI
             // 
             btnReload.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             btnReload.BackColor = Color.DimGray;
-            btnReload.Location = new Point(732, 51);
+            btnReload.Font = new Font("Microsoft Sans Serif", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            btnReload.Location = new Point(757, 30);
+            btnReload.Margin = new Padding(2);
             btnReload.Name = "btnReload";
-            btnReload.Size = new Size(136, 49);
+            btnReload.Size = new Size(129, 48);
             btnReload.TabIndex = 16;
             btnReload.Text = "Reload";
             btnReload.UseVisualStyleBackColor = false;
@@ -358,9 +385,11 @@ namespace Team4prog.UI
             // 
             btnRestore.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             btnRestore.BackColor = Color.DimGray;
-            btnRestore.Location = new Point(590, 51);
+            btnRestore.Font = new Font("Microsoft Sans Serif", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            btnRestore.Location = new Point(625, 30);
+            btnRestore.Margin = new Padding(2);
             btnRestore.Name = "btnRestore";
-            btnRestore.Size = new Size(136, 49);
+            btnRestore.Size = new Size(128, 48);
             btnRestore.TabIndex = 15;
             btnRestore.Text = "Restore";
             btnRestore.UseVisualStyleBackColor = false;
@@ -369,9 +398,11 @@ namespace Team4prog.UI
             // 
             btnDeleteRange.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             btnDeleteRange.BackColor = Color.DimGray;
-            btnDeleteRange.Location = new Point(452, 51);
+            btnDeleteRange.Font = new Font("Microsoft Sans Serif", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            btnDeleteRange.Location = new Point(495, 30);
+            btnDeleteRange.Margin = new Padding(2);
             btnDeleteRange.Name = "btnDeleteRange";
-            btnDeleteRange.Size = new Size(132, 49);
+            btnDeleteRange.Size = new Size(126, 48);
             btnDeleteRange.TabIndex = 14;
             btnDeleteRange.Text = "Delete";
             btnDeleteRange.UseVisualStyleBackColor = false;
@@ -380,9 +411,11 @@ namespace Team4prog.UI
             // 
             btnSetRight.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             btnSetRight.BackColor = Color.DimGray;
-            btnSetRight.Location = new Point(178, 54);
+            btnSetRight.Font = new Font("Microsoft Sans Serif", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            btnSetRight.Location = new Point(77, 30);
+            btnSetRight.Margin = new Padding(2);
             btnSetRight.Name = "btnSetRight";
-            btnSetRight.Size = new Size(132, 46);
+            btnSetRight.Size = new Size(142, 48);
             btnSetRight.TabIndex = 13;
             btnSetRight.Text = "Set Right";
             btnSetRight.UseVisualStyleBackColor = false;
@@ -391,9 +424,11 @@ namespace Team4prog.UI
             // 
             btnSetLeft.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             btnSetLeft.BackColor = Color.DimGray;
-            btnSetLeft.Location = new Point(22, 54);
+            btnSetLeft.Font = new Font("Microsoft Sans Serif", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            btnSetLeft.Location = new Point(223, 30);
+            btnSetLeft.Margin = new Padding(2);
             btnSetLeft.Name = "btnSetLeft";
-            btnSetLeft.Size = new Size(137, 46);
+            btnSetLeft.Size = new Size(135, 48);
             btnSetLeft.TabIndex = 12;
             btnSetLeft.Text = "Set left";
             btnSetLeft.UseVisualStyleBackColor = false;
@@ -402,29 +437,33 @@ namespace Team4prog.UI
             // 
             txtAngleFilter.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             txtAngleFilter.BackColor = Color.Gray;
-            txtAngleFilter.Location = new Point(273, 118);
+            txtAngleFilter.Location = new Point(362, 91);
+            txtAngleFilter.Margin = new Padding(2);
             txtAngleFilter.Name = "txtAngleFilter";
             txtAngleFilter.PlaceholderText = "Angle";
-            txtAngleFilter.Size = new Size(133, 44);
+            txtAngleFilter.Size = new Size(156, 35);
             txtAngleFilter.TabIndex = 19;
             // 
             // txtThrottleFilter
             // 
             txtThrottleFilter.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             txtThrottleFilter.BackColor = Color.Gray;
-            txtThrottleFilter.Location = new Point(516, 118);
+            txtThrottleFilter.Location = new Point(594, 89);
+            txtThrottleFilter.Margin = new Padding(2);
             txtThrottleFilter.Name = "txtThrottleFilter";
             txtThrottleFilter.PlaceholderText = "Throttle";
-            txtThrottleFilter.Size = new Size(159, 44);
+            txtThrottleFilter.Size = new Size(159, 35);
             txtThrottleFilter.TabIndex = 20;
             // 
             // btnSetFilter
             // 
             btnSetFilter.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             btnSetFilter.BackColor = Color.DimGray;
-            btnSetFilter.Location = new Point(22, 113);
+            btnSetFilter.Font = new Font("Microsoft Sans Serif", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            btnSetFilter.Location = new Point(148, 85);
+            btnSetFilter.Margin = new Padding(2);
             btnSetFilter.Name = "btnSetFilter";
-            btnSetFilter.Size = new Size(137, 46);
+            btnSetFilter.Size = new Size(125, 45);
             btnSetFilter.TabIndex = 18;
             btnSetFilter.Text = "Set Filter";
             btnSetFilter.UseVisualStyleBackColor = false;
@@ -433,9 +472,11 @@ namespace Team4prog.UI
             // 
             btnClearFilter.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             btnClearFilter.BackColor = Color.DimGray;
-            btnClearFilter.Location = new Point(690, 113);
+            btnClearFilter.Font = new Font("Microsoft Sans Serif", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnClearFilter.Location = new Point(757, 85);
+            btnClearFilter.Margin = new Padding(2);
             btnClearFilter.Name = "btnClearFilter";
-            btnClearFilter.Size = new Size(136, 44);
+            btnClearFilter.Size = new Size(129, 45);
             btnClearFilter.TabIndex = 21;
             btnClearFilter.Text = "Clear";
             btnClearFilter.UseVisualStyleBackColor = false;
@@ -445,8 +486,9 @@ namespace Team4prog.UI
             topBar.Dock = DockStyle.Top;
             topBar.Enabled = false;
             topBar.Location = new Point(0, 0);
+            topBar.Margin = new Padding(2);
             topBar.Name = "topBar";
-            topBar.Size = new Size(1231, 35);
+            topBar.Size = new Size(1312, 41);
             topBar.TabIndex = 16;
             // 
             // listBoxFrames
@@ -456,10 +498,10 @@ namespace Team4prog.UI
             listBoxFrames.Font = new Font("Tahoma", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
             listBoxFrames.FormattingEnabled = true;
             listBoxFrames.IntegralHeight = false;
-            listBoxFrames.Location = new Point(12, 80);
+            listBoxFrames.Location = new Point(7, 60);
             listBoxFrames.Margin = new Padding(0);
             listBoxFrames.Name = "listBoxFrames";
-            listBoxFrames.Size = new Size(305, 316);
+            listBoxFrames.Size = new Size(230, 659);
             listBoxFrames.TabIndex = 5;
             // 
             // panelTubManager
@@ -468,8 +510,9 @@ namespace Team4prog.UI
             panelTubManager.Controls.Add(innerPanel);
             panelTubManager.Dock = DockStyle.Fill;
             panelTubManager.Location = new Point(0, 0);
+            panelTubManager.Margin = new Padding(2);
             panelTubManager.Name = "panelTubManager";
-            panelTubManager.Size = new Size(1231, 1114);
+            panelTubManager.Size = new Size(1312, 1006);
             panelTubManager.TabIndex = 17;
             // 
             // innerPanel
@@ -485,9 +528,10 @@ namespace Team4prog.UI
             innerPanel.Controls.Add(picFrame);
             innerPanel.Controls.Add(listBoxLog);
             innerPanel.Controls.Add(groupBoxPlayControls);
-            innerPanel.Location = new Point(0, 0);
+            innerPanel.Location = new Point(10, 45);
+            innerPanel.Margin = new Padding(2);
             innerPanel.Name = "innerPanel";
-            innerPanel.Size = new Size(1231, 1111);
+            innerPanel.Size = new Size(1289, 959);
             innerPanel.TabIndex = 24;
             // 
             // panelTrainer
@@ -497,8 +541,9 @@ namespace Team4prog.UI
             panelTrainer.Controls.Add(groupBoxTrainer);
             panelTrainer.Dock = DockStyle.Fill;
             panelTrainer.Location = new Point(0, 0);
+            panelTrainer.Margin = new Padding(2);
             panelTrainer.Name = "panelTrainer";
-            panelTrainer.Size = new Size(1231, 1114);
+            panelTrainer.Size = new Size(1312, 1006);
             panelTrainer.TabIndex = 18;
             // 
             // groupBoxPilotManager
@@ -507,9 +552,11 @@ namespace Team4prog.UI
             groupBoxPilotManager.Controls.Add(cmbModelList);
             groupBoxPilotManager.Font = new Font("Verdana", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
             groupBoxPilotManager.ForeColor = Color.FromArgb(192, 192, 255);
-            groupBoxPilotManager.Location = new Point(12, 833);
+            groupBoxPilotManager.Location = new Point(9, 625);
+            groupBoxPilotManager.Margin = new Padding(2);
             groupBoxPilotManager.Name = "groupBoxPilotManager";
-            groupBoxPilotManager.Size = new Size(1198, 221);
+            groupBoxPilotManager.Padding = new Padding(2);
+            groupBoxPilotManager.Size = new Size(898, 166);
             groupBoxPilotManager.TabIndex = 0;
             groupBoxPilotManager.TabStop = false;
             groupBoxPilotManager.Text = "Pilot Manager";
@@ -517,9 +564,10 @@ namespace Team4prog.UI
             // btnDeleteModel
             // 
             btnDeleteModel.BackColor = Color.DimGray;
-            btnDeleteModel.Location = new Point(486, 55);
+            btnDeleteModel.Location = new Point(364, 41);
+            btnDeleteModel.Margin = new Padding(2);
             btnDeleteModel.Name = "btnDeleteModel";
-            btnDeleteModel.Size = new Size(237, 34);
+            btnDeleteModel.Size = new Size(178, 26);
             btnDeleteModel.TabIndex = 1;
             btnDeleteModel.Text = "Delete Model";
             btnDeleteModel.UseVisualStyleBackColor = false;
@@ -528,18 +576,20 @@ namespace Team4prog.UI
             // 
             cmbModelList.BackColor = Color.DimGray;
             cmbModelList.FormattingEnabled = true;
-            cmbModelList.Location = new Point(54, 55);
+            cmbModelList.Location = new Point(40, 41);
+            cmbModelList.Margin = new Padding(2);
             cmbModelList.Name = "cmbModelList";
-            cmbModelList.Size = new Size(397, 40);
+            cmbModelList.Size = new Size(299, 33);
             cmbModelList.TabIndex = 0;
             // 
             // chartLoss
             // 
             chartLoss.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             chartLoss.BackColor = Color.Black;
-            chartLoss.Location = new Point(10, 470);
+            chartLoss.Location = new Point(8, 522);
+            chartLoss.Margin = new Padding(2);
             chartLoss.Name = "chartLoss";
-            chartLoss.Size = new Size(1205, 338);
+            chartLoss.Size = new Size(1293, 254);
             chartLoss.TabIndex = 16;
             // 
             // groupBoxTrainer
@@ -550,9 +600,11 @@ namespace Team4prog.UI
             groupBoxTrainer.Controls.Add(cmbModelType);
             groupBoxTrainer.Font = new Font("Verdana", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
             groupBoxTrainer.ForeColor = Color.FromArgb(192, 192, 255);
-            groupBoxTrainer.Location = new Point(10, 274);
+            groupBoxTrainer.Location = new Point(8, 206);
+            groupBoxTrainer.Margin = new Padding(2);
             groupBoxTrainer.Name = "groupBoxTrainer";
-            groupBoxTrainer.Size = new Size(1209, 141);
+            groupBoxTrainer.Padding = new Padding(2);
+            groupBoxTrainer.Size = new Size(907, 106);
             groupBoxTrainer.TabIndex = 1;
             groupBoxTrainer.TabStop = false;
             groupBoxTrainer.Text = "Trainer";
@@ -560,9 +612,10 @@ namespace Team4prog.UI
             // btnSelectCarFolder
             // 
             btnSelectCarFolder.BackColor = Color.DimGray;
-            btnSelectCarFolder.Location = new Point(28, 43);
+            btnSelectCarFolder.Location = new Point(21, 32);
+            btnSelectCarFolder.Margin = new Padding(2);
             btnSelectCarFolder.Name = "btnSelectCarFolder";
-            btnSelectCarFolder.Size = new Size(259, 37);
+            btnSelectCarFolder.Size = new Size(194, 28);
             btnSelectCarFolder.TabIndex = 20;
             btnSelectCarFolder.Text = "Select Car Folder";
             btnSelectCarFolder.UseVisualStyleBackColor = false;
@@ -572,9 +625,10 @@ namespace Team4prog.UI
             // 
             btnTrain.BackColor = Color.FromArgb(128, 255, 128);
             btnTrain.ForeColor = Color.Black;
-            btnTrain.Location = new Point(642, 87);
+            btnTrain.Location = new Point(482, 65);
+            btnTrain.Margin = new Padding(2);
             btnTrain.Name = "btnTrain";
-            btnTrain.Size = new Size(543, 40);
+            btnTrain.Size = new Size(407, 30);
             btnTrain.TabIndex = 2;
             btnTrain.Text = "Train";
             btnTrain.UseVisualStyleBackColor = false;
@@ -583,9 +637,10 @@ namespace Team4prog.UI
             // btnLoadModel
             // 
             btnLoadModel.BackColor = Color.DimGray;
-            btnLoadModel.Location = new Point(28, 87);
+            btnLoadModel.Location = new Point(21, 65);
+            btnLoadModel.Margin = new Padding(2);
             btnLoadModel.Name = "btnLoadModel";
-            btnLoadModel.Size = new Size(525, 40);
+            btnLoadModel.Size = new Size(394, 30);
             btnLoadModel.TabIndex = 1;
             btnLoadModel.Text = "Choose Model";
             btnLoadModel.UseVisualStyleBackColor = false;
@@ -595,20 +650,22 @@ namespace Team4prog.UI
             cmbModelType.BackColor = Color.DimGray;
             cmbModelType.FormattingEnabled = true;
             cmbModelType.Items.AddRange(new object[] { "linear", "categorical" });
-            cmbModelType.Location = new Point(311, 48);
+            cmbModelType.Location = new Point(233, 36);
+            cmbModelType.Margin = new Padding(2);
             cmbModelType.Name = "cmbModelType";
-            cmbModelType.Size = new Size(241, 40);
+            cmbModelType.Size = new Size(182, 33);
             cmbModelType.TabIndex = 0;
             // 
             // Form1
             // 
-            AutoScaleDimensions = new SizeF(192F, 192F);
+            AutoScaleDimensions = new SizeF(144F, 144F);
             AutoScaleMode = AutoScaleMode.Dpi;
             BackColor = Color.FromArgb(64, 64, 64);
-            ClientSize = new Size(1231, 1114);
+            ClientSize = new Size(1312, 1006);
             Controls.Add(topBar);
             Controls.Add(panelTubManager);
             Controls.Add(panelTrainer);
+            Margin = new Padding(2);
             Name = "Form1";
             Text = "DonkeyCar UI";
             ((System.ComponentModel.ISupportInitialize)picFrame).EndInit();

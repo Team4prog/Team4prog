@@ -208,7 +208,7 @@ namespace Team4prog.UI
         {
             try
             {
-                ApplyTubManagerLayout();
+                //ApplyTubManagerLayout();
                 FixTrainerLayout();
             }
             catch
@@ -217,6 +217,7 @@ namespace Team4prog.UI
             }
         }
 
+        /*
         private void ApplyTubManagerLayout()
         {
             if (panelTubManager == null || innerPanel == null)
@@ -280,7 +281,7 @@ namespace Team4prog.UI
 
             groupBoxPlayControls.Location = new Point(centerX + centerW + gap, topY);
             groupBoxPlayControls.Size = new Size(rightW, 300);
-            ArrangePlayControls();
+            // ArrangePlayControls();
 
             int dataY = picFrame.Bottom + 28;
             groupBoxData.Location = new Point(centerX, dataY);
@@ -296,7 +297,7 @@ namespace Team4prog.UI
             groupBox1.Location = new Point(centerX, trackBarFrame.Bottom + 30);
             groupBox1.Size = new Size(centerW + gap + rightW, 145);
 
-            ArrangeTubCleanerControls();
+            //ArrangeTubCleanerControls();
 
             chartPanel.Location = new Point(centerX, groupBox1.Bottom + 20);
             chartPanel.Size = new Size(centerW + gap + rightW, Math.Max(210, clientH - chartPanel.Location.Y - 30));
@@ -307,9 +308,9 @@ namespace Team4prog.UI
             chartPanel.Invalidate();
 
             innerPanel.ResumeLayout();
-        }
+        } */
 
-
+        /* 
         private void ArrangePlayControls()
         {
             if (groupBoxPlayControls == null)
@@ -339,9 +340,9 @@ namespace Team4prog.UI
 
             btnStop.Location = new Point(margin, 200);
             btnStop.Size = new Size(usableW, 45);
-        }
+        } */
 
-        private void ArrangeTubCleanerControls()
+        /* private void ArrangeTubCleanerControls()
         {
             if (groupBox1 == null)
                 return;
@@ -392,7 +393,7 @@ namespace Team4prog.UI
 
             btnClearFilter.Location = new Point(Math.Min(txtThrottleFilter.Right + 18, w - btnW - margin), y2);
             btnClearFilter.Size = new Size(btnW, btnH);
-        }
+        } */
 
         // Adds a timestamped entry and keeps the latest log visible.
         private void AddLog(string message)
