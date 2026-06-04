@@ -45,7 +45,6 @@ namespace Team4prog.UI
             btnPlayForward = new Button();
             btnPlayBackward = new Button();
             btnStop = new Button();
-            lblSpeed = new Label();
             nudSpeed = new NumericUpDown();
             groupBoxPlayControls = new GroupBox();
             txtTubNavigator = new Label();
@@ -63,10 +62,9 @@ namespace Team4prog.UI
             btnSetFilter = new Button();
             btnClearFilter = new Button();
             topBar = new AppNavigationBar();
-            btnTrainer = topBar.TrainerButton;
-            btnTubManager = topBar.TubManagerButton;
             listBoxFrames = new ListBox();
             panelTubManager = new Panel();
+            innerPanel = new Panel();
             panelTrainer = new Panel();
             groupBoxPilotManager = new GroupBox();
             btnDeleteModel = new Button();
@@ -77,7 +75,6 @@ namespace Team4prog.UI
             btnTrain = new Button();
             btnLoadModel = new Button();
             cmbModelType = new ComboBox();
-            innerPanel = new Panel();
             ((System.ComponentModel.ISupportInitialize)picFrame).BeginInit();
             ((System.ComponentModel.ISupportInitialize)trackBarFrame).BeginInit();
             groupBoxData.SuspendLayout();
@@ -85,10 +82,10 @@ namespace Team4prog.UI
             groupBoxPlayControls.SuspendLayout();
             groupBox1.SuspendLayout();
             panelTubManager.SuspendLayout();
+            innerPanel.SuspendLayout();
             panelTrainer.SuspendLayout();
             groupBoxPilotManager.SuspendLayout();
             groupBoxTrainer.SuspendLayout();
-            innerPanel.SuspendLayout();
             SuspendLayout();
             // 
             // picFrame
@@ -106,13 +103,13 @@ namespace Team4prog.UI
             trackBarFrame.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             trackBarFrame.Location = new Point(321, 534);
             trackBarFrame.Name = "trackBarFrame";
-            trackBarFrame.Size = new Size(882, 69);
+            trackBarFrame.Size = new Size(882, 90);
             trackBarFrame.TabIndex = 1;
             // 
             // btnOpenFolder
             // 
             btnOpenFolder.BackColor = Color.Silver;
-            btnOpenFolder.Font = new Font("한컴 고딕", 16F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnOpenFolder.Font = new Font("Microsoft Sans Serif", 16F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnOpenFolder.Location = new Point(111, 736);
             btnOpenFolder.Name = "btnOpenFolder";
             btnOpenFolder.Size = new Size(204, 55);
@@ -123,7 +120,7 @@ namespace Team4prog.UI
             // btnDelete
             // 
             btnDelete.BackColor = Color.FromArgb(255, 128, 128);
-            btnDelete.Font = new Font("한컴 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnDelete.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnDelete.Location = new Point(197, 39);
             btnDelete.Name = "btnDelete";
             btnDelete.Size = new Size(120, 35);
@@ -152,7 +149,7 @@ namespace Team4prog.UI
             lblThrottle.AutoSize = true;
             lblThrottle.Location = new Point(438, 35);
             lblThrottle.Name = "lblThrottle";
-            lblThrottle.Size = new Size(101, 32);
+            lblThrottle.Size = new Size(137, 45);
             lblThrottle.TabIndex = 2;
             lblThrottle.Text = "Throttle";
             // 
@@ -162,7 +159,7 @@ namespace Team4prog.UI
             lblAngle.AutoSize = true;
             lblAngle.Location = new Point(233, 35);
             lblAngle.Name = "lblAngle";
-            lblAngle.Size = new Size(77, 32);
+            lblAngle.Size = new Size(104, 45);
             lblAngle.TabIndex = 1;
             lblAngle.Text = "Angle";
             // 
@@ -171,7 +168,7 @@ namespace Team4prog.UI
             lblFrame.AutoSize = true;
             lblFrame.Location = new Point(53, 35);
             lblFrame.Name = "lblFrame";
-            lblFrame.Size = new Size(81, 32);
+            lblFrame.Size = new Size(108, 45);
             lblFrame.TabIndex = 0;
             lblFrame.Text = "Frame";
             // 
@@ -183,7 +180,7 @@ namespace Team4prog.UI
             listBoxLog.FormattingEnabled = true;
             listBoxLog.Location = new Point(12, 428);
             listBoxLog.Name = "listBoxLog";
-            listBoxLog.Size = new Size(305, 292);
+            listBoxLog.Size = new Size(305, 268);
             listBoxLog.TabIndex = 6;
             // 
             // chartPanel
@@ -198,7 +195,7 @@ namespace Team4prog.UI
             // btnPrev
             // 
             btnPrev.BackColor = Color.DimGray;
-            btnPrev.Font = new Font("한컴 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnPrev.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnPrev.Location = new Point(12, 119);
             btnPrev.Name = "btnPrev";
             btnPrev.Size = new Size(108, 52);
@@ -209,7 +206,7 @@ namespace Team4prog.UI
             // btnNext
             // 
             btnNext.BackColor = Color.DimGray;
-            btnNext.Font = new Font("한컴 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnNext.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnNext.Location = new Point(126, 119);
             btnNext.Name = "btnNext";
             btnNext.Size = new Size(108, 52);
@@ -220,7 +217,7 @@ namespace Team4prog.UI
             // btnPlayForward
             // 
             btnPlayForward.BackColor = Color.DimGray;
-            btnPlayForward.Font = new Font("한컴 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnPlayForward.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnPlayForward.Location = new Point(126, 177);
             btnPlayForward.Name = "btnPlayForward";
             btnPlayForward.Size = new Size(108, 52);
@@ -231,7 +228,7 @@ namespace Team4prog.UI
             // btnPlayBackward
             // 
             btnPlayBackward.BackColor = Color.DimGray;
-            btnPlayBackward.Font = new Font("한컴 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnPlayBackward.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnPlayBackward.Location = new Point(12, 177);
             btnPlayBackward.Name = "btnPlayBackward";
             btnPlayBackward.Size = new Size(108, 52);
@@ -242,22 +239,13 @@ namespace Team4prog.UI
             // btnStop
             // 
             btnStop.BackColor = Color.DimGray;
-            btnStop.Font = new Font("한컴 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnStop.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnStop.Location = new Point(12, 235);
             btnStop.Name = "btnStop";
             btnStop.Size = new Size(222, 52);
             btnStop.TabIndex = 12;
             btnStop.Text = "Stop";
             btnStop.UseVisualStyleBackColor = false;
-            // 
-            // lblSpeed
-            // 
-            lblSpeed.AutoSize = true;
-            lblSpeed.Location = new Point(12, 62);
-            lblSpeed.Name = "lblSpeed";
-            lblSpeed.Size = new Size(95, 36);
-            lblSpeed.TabIndex = 13;
-            lblSpeed.Text = "1.00x";
             // 
             // nudSpeed
             // 
@@ -267,7 +255,7 @@ namespace Team4prog.UI
             nudSpeed.Maximum = new decimal(new int[] { 5, 0, 0, 0 });
             nudSpeed.Minimum = new decimal(new int[] { 1, 0, 0, 65536 });
             nudSpeed.Name = "nudSpeed";
-            nudSpeed.Size = new Size(108, 44);
+            nudSpeed.Size = new Size(108, 50);
             nudSpeed.TabIndex = 14;
             nudSpeed.Value = new decimal(new int[] { 1, 0, 0, 0 });
             // 
@@ -280,8 +268,7 @@ namespace Team4prog.UI
             groupBoxPlayControls.Controls.Add(btnPlayBackward);
             groupBoxPlayControls.Controls.Add(btnNext);
             groupBoxPlayControls.Controls.Add(btnPrev);
-            groupBoxPlayControls.Controls.Add(lblSpeed);
-            groupBoxPlayControls.Font = new Font("함초롬바탕 확장", 13.9999981F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            groupBoxPlayControls.Font = new Font("Microsoft Sans Serif", 13.9999981F, FontStyle.Bold, GraphicsUnit.Point, 129);
             groupBoxPlayControls.ForeColor = Color.FromArgb(192, 192, 255);
             groupBoxPlayControls.Location = new Point(971, 39);
             groupBoxPlayControls.Name = "groupBoxPlayControls";
@@ -293,7 +280,6 @@ namespace Team4prog.UI
             // txtTubNavigator
             // 
             txtTubNavigator.BackColor = Color.FromArgb(64, 64, 64);
-            txtTubNavigator.BorderStyle = BorderStyle.None;
             txtTubNavigator.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
             txtTubNavigator.ForeColor = Color.White;
             txtTubNavigator.Location = new Point(12, 39);
@@ -318,7 +304,7 @@ namespace Team4prog.UI
             groupBox1.Controls.Add(txtThrottleFilter);
             groupBox1.Controls.Add(btnSetFilter);
             groupBox1.Controls.Add(btnClearFilter);
-            groupBox1.Font = new Font("한컴 고딕", 11.999999F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            groupBox1.Font = new Font("Microsoft Sans Serif", 11.999999F, FontStyle.Bold, GraphicsUnit.Point, 129);
             groupBox1.ForeColor = Color.FromArgb(192, 192, 255);
             groupBox1.Location = new Point(321, 620);
             groupBox1.Margin = new Padding(0);
@@ -335,7 +321,7 @@ namespace Team4prog.UI
             cmbThrottleOp.FormattingEnabled = true;
             cmbThrottleOp.Location = new Point(421, 118);
             cmbThrottleOp.Name = "cmbThrottleOp";
-            cmbThrottleOp.Size = new Size(89, 39);
+            cmbThrottleOp.Size = new Size(89, 45);
             cmbThrottleOp.TabIndex = 23;
             // 
             // cmbAngleOp
@@ -344,7 +330,7 @@ namespace Team4prog.UI
             cmbAngleOp.FormattingEnabled = true;
             cmbAngleOp.Location = new Point(178, 118);
             cmbAngleOp.Name = "cmbAngleOp";
-            cmbAngleOp.Size = new Size(89, 39);
+            cmbAngleOp.Size = new Size(89, 45);
             cmbAngleOp.TabIndex = 22;
             // 
             // lblRange
@@ -353,7 +339,7 @@ namespace Team4prog.UI
             lblRange.AutoSize = true;
             lblRange.Location = new Point(329, 60);
             lblRange.Name = "lblRange";
-            lblRange.Size = new Size(77, 31);
+            lblRange.Size = new Size(95, 37);
             lblRange.TabIndex = 17;
             lblRange.Text = "[0, 0]";
             // 
@@ -419,7 +405,7 @@ namespace Team4prog.UI
             txtAngleFilter.Location = new Point(273, 118);
             txtAngleFilter.Name = "txtAngleFilter";
             txtAngleFilter.PlaceholderText = "Angle";
-            txtAngleFilter.Size = new Size(133, 39);
+            txtAngleFilter.Size = new Size(133, 44);
             txtAngleFilter.TabIndex = 19;
             // 
             // txtThrottleFilter
@@ -429,7 +415,7 @@ namespace Team4prog.UI
             txtThrottleFilter.Location = new Point(516, 118);
             txtThrottleFilter.Name = "txtThrottleFilter";
             txtThrottleFilter.PlaceholderText = "Throttle";
-            txtThrottleFilter.Size = new Size(159, 39);
+            txtThrottleFilter.Size = new Size(159, 44);
             txtThrottleFilter.TabIndex = 20;
             // 
             // btnSetFilter
@@ -456,6 +442,8 @@ namespace Team4prog.UI
             // 
             // topBar
             // 
+            topBar.Dock = DockStyle.Top;
+            topBar.Enabled = false;
             topBar.Location = new Point(0, 0);
             topBar.Name = "topBar";
             topBar.Size = new Size(1231, 35);
@@ -483,6 +471,24 @@ namespace Team4prog.UI
             panelTubManager.Name = "panelTubManager";
             panelTubManager.Size = new Size(1231, 1114);
             panelTubManager.TabIndex = 17;
+            // 
+            // innerPanel
+            // 
+            innerPanel.Controls.Add(groupBox1);
+            innerPanel.Controls.Add(txtTubNavigator);
+            innerPanel.Controls.Add(groupBoxData);
+            innerPanel.Controls.Add(listBoxFrames);
+            innerPanel.Controls.Add(chartPanel);
+            innerPanel.Controls.Add(btnDelete);
+            innerPanel.Controls.Add(btnOpenFolder);
+            innerPanel.Controls.Add(trackBarFrame);
+            innerPanel.Controls.Add(picFrame);
+            innerPanel.Controls.Add(listBoxLog);
+            innerPanel.Controls.Add(groupBoxPlayControls);
+            innerPanel.Location = new Point(0, 0);
+            innerPanel.Name = "innerPanel";
+            innerPanel.Size = new Size(1231, 1111);
+            innerPanel.TabIndex = 24;
             // 
             // panelTrainer
             // 
@@ -524,7 +530,7 @@ namespace Team4prog.UI
             cmbModelList.FormattingEnabled = true;
             cmbModelList.Location = new Point(54, 55);
             cmbModelList.Name = "cmbModelList";
-            cmbModelList.Size = new Size(397, 33);
+            cmbModelList.Size = new Size(397, 40);
             cmbModelList.TabIndex = 0;
             // 
             // chartLoss
@@ -591,29 +597,12 @@ namespace Team4prog.UI
             cmbModelType.Items.AddRange(new object[] { "linear", "categorical" });
             cmbModelType.Location = new Point(311, 48);
             cmbModelType.Name = "cmbModelType";
-            cmbModelType.Size = new Size(241, 33);
+            cmbModelType.Size = new Size(241, 40);
             cmbModelType.TabIndex = 0;
-            // 
-            // innerPanel
-            // 
-            innerPanel.Controls.Add(groupBox1);
-            innerPanel.Controls.Add(txtTubNavigator);
-            innerPanel.Controls.Add(groupBoxData);
-            innerPanel.Controls.Add(listBoxFrames);
-            innerPanel.Controls.Add(chartPanel);
-            innerPanel.Controls.Add(btnDelete);
-            innerPanel.Controls.Add(btnOpenFolder);
-            innerPanel.Controls.Add(trackBarFrame);
-            innerPanel.Controls.Add(picFrame);
-            innerPanel.Controls.Add(listBoxLog);
-            innerPanel.Controls.Add(groupBoxPlayControls);
-            innerPanel.Location = new Point(0, 0);
-            innerPanel.Name = "innerPanel";
-            innerPanel.Size = new Size(1231, 1111);
-            innerPanel.TabIndex = 24;
             // 
             // Form1
             // 
+            AutoScaleDimensions = new SizeF(192F, 192F);
             AutoScaleMode = AutoScaleMode.Dpi;
             BackColor = Color.FromArgb(64, 64, 64);
             ClientSize = new Size(1231, 1114);
@@ -628,16 +617,14 @@ namespace Team4prog.UI
             groupBoxData.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)nudSpeed).EndInit();
             groupBoxPlayControls.ResumeLayout(false);
-            groupBoxPlayControls.PerformLayout();
             groupBox1.ResumeLayout(false);
             groupBox1.PerformLayout();
             panelTubManager.ResumeLayout(false);
+            innerPanel.ResumeLayout(false);
+            innerPanel.PerformLayout();
             panelTrainer.ResumeLayout(false);
             groupBoxPilotManager.ResumeLayout(false);
             groupBoxTrainer.ResumeLayout(false);
-            groupBoxTrainer.PerformLayout();
-            innerPanel.ResumeLayout(false);
-            innerPanel.PerformLayout();
             ResumeLayout(false);
         }
 
@@ -658,7 +645,6 @@ namespace Team4prog.UI
         private Button btnPlayForward;
         private Button btnPlayBackward;
         private Button btnNext;
-        private Label lblSpeed;
         private NumericUpDown nudSpeed;
         private Label txtTubNavigator;
         private GroupBox groupBox1;

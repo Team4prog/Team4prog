@@ -58,8 +58,19 @@ namespace Team4prog.UI
             try
             {
                 // Enable the navigation bar and connect it to the two main panels.
-                if (this.Controls.Find("topBar", true).FirstOrDefault() is Control topBar)
-                    topBar.Enabled = true;
+                if (this.Controls.Find("topBar", true).FirstOrDefault() is AppNavigationBar navBar)
+                {
+                    navBar.Enabled = true;
+                    btnTubManager = navBar.TubManagerButton;
+                    btnTrainer = navBar.TrainerButton;
+
+                    navBar.HelpButton.Click += (s, e) =>
+                    {
+                        var help = new HelpForm();
+                        help.TopMost = true;
+                        help.Show();
+                    };
+                }
 
                 if (btnTubManager != null)
                 {
@@ -69,16 +80,6 @@ namespace Team4prog.UI
                 if (btnTrainer != null)
                 {
                     btnTrainer.Click += (s, e) => ShowTrainer();
-                }
-
-                if (this.Controls.Find("topBar", true).FirstOrDefault() is AppNavigationBar navBar)
-                {
-                    navBar.HelpButton.Click += (s, e) =>
-                    {
-                        var help = new HelpForm();
-                        help.TopMost = true;
-                        help.Show();
-                    };
                 }
 
                 if (panelTubManager != null)
@@ -174,6 +175,7 @@ namespace Team4prog.UI
 
                 panelTrainer.Visible = false;
 
+                topBar.BringToFront();
                 ApplyResponsiveLayout();
             }
             catch (Exception ex)
@@ -191,6 +193,7 @@ namespace Team4prog.UI
 
                 panelTubManager.Visible = false;
 
+                topBar.BringToFront();
                 ApplyResponsiveLayout();
                 chartLoss.Invalidate();
             }
@@ -318,9 +321,6 @@ namespace Team4prog.UI
 
             int usableW = Math.Max(160, w - margin * 2);
             int halfW = Math.Max(70, (usableW - gap) / 2);
-
-            lblSpeed.Location = new Point(margin, 45);
-            lblSpeed.AutoSize = true;
 
             nudSpeed.Location = new Point(Math.Max(margin + 80, w - 105), 40);
             nudSpeed.Size = new Size(90, 32);

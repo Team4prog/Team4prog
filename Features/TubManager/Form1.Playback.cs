@@ -20,7 +20,7 @@ namespace Team4prog.UI
             {
                 playbackSpeed = (double)nudSpeed.Value;
                 UpdateTimerIntervalFromSpeed();
-                lblSpeed.Text = $"{playbackSpeed:F2}x";
+                
             }
             catch (Exception ex)
             {
