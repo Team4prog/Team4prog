@@ -20,6 +20,10 @@ namespace Team4prog.UI
         private List<string> imagePaths = new List<string>();
         private List<double?> angles = new List<double?>();
         private List<double?> throttles = new List<double?>();
+        private List<double?> pilotAngles = new List<double?>();
+        private List<double?> pilotThrottles = new List<double?>();
+        private string? selectedTrainedModelPath = null;
+        private bool showTrainedModelOverlay = false;
         private int currentIndex = -1;
         private System.Windows.Forms.Timer timerPlayback;
         private bool isPlayingForward = false;
@@ -44,10 +48,14 @@ namespace Team4prog.UI
         private List<string> originalImagePaths = new List<string>();
         private List<double?> originalAngles = new List<double?>();
         private List<double?> originalThrottles = new List<double?>();
+        private List<double?> originalPilotAngles = new List<double?>();
+        private List<double?> originalPilotThrottles = new List<double?>();
 
         private List<string> filteredImagePaths = new List<string>();
         private List<double?> filteredAngles = new List<double?>();
         private List<double?> filteredThrottles = new List<double?>();
+        private List<double?> filteredPilotAngles = new List<double?>();
+        private List<double?> filteredPilotThrottles = new List<double?>();
         private string carFolderPath = "";
 
         public Form1()
@@ -140,6 +148,7 @@ namespace Team4prog.UI
             btnPlayForward.Click += btnPlayForward_Click;
             btnPlayBackward.Click += btnPlayBackward_Click;
             btnStop.Click += btnStop_Click;
+            Btn_showtrain.Click += Btn_showtrain_Click;
             nudSpeed.ValueChanged += nudSpeed_ValueChanged;
             listBoxFrames.SelectedIndexChanged += listBoxFrames_SelectedIndexChanged;
             trackBarFrame.Scroll += trackBarFrame_Scroll;

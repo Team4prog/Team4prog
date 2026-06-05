@@ -15,6 +15,9 @@ namespace Team4prog.UI
     // Tub Manager frame IO: folder selection, image/JSON loading, frame display, and list/trackbar sync.
     public partial class Form1
     {
+        private bool isReverseBadgeVisible = false;
+        private bool isPicFrameOverlayPaintHooked = false;
+
         private void btnDelete_Click(object? sender, EventArgs e)
         {
             try
@@ -103,6 +106,10 @@ namespace Team4prog.UI
                         angles.RemoveAt(idx);
                     if (throttles.Count > idx)
                         throttles.RemoveAt(idx);
+                    if (pilotAngles.Count > idx)
+                        pilotAngles.RemoveAt(idx);
+                    if (pilotThrottles.Count > idx)
+                        pilotThrottles.RemoveAt(idx);
 
                     AddLog($"[삭제 완료] {imageFileName}");
 
@@ -256,6 +263,8 @@ namespace Team4prog.UI
                 }
 
                 currentIndex = -1;
+                isReverseBadgeVisible = false;
+                picFrame.Invalidate();
                 lblFrame.Text = "Frame: N/A";
                 lblAngle.Text = "Angle: N/A";
                 lblThrottle.Text = "Throttle: N/A";
@@ -287,6 +296,58 @@ namespace Team4prog.UI
             }
         }
 
+        private void Btn_showtrain_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                string initialDirectory = GetTubManagerModelSearchFolder();
+                using var dialog = new OpenFileDialog();
+                dialog.Title = "학습된 모델 선택";
+                dialog.Filter = "Model files (*.h5;*.keras;*.tflite;*.onnx;*.pt;*.pkl)|*.h5;*.keras;*.tflite;*.onnx;*.pt;*.pkl|All files (*.*)|*.*";
+                if (Directory.Exists(initialDirectory))
+                    dialog.InitialDirectory = initialDirectory;
+
+                if (dialog.ShowDialog() != DialogResult.OK)
+                    return;
+
+                selectedTrainedModelPath = NormalizeUserPath(dialog.FileName);
+                showTrainedModelOverlay = true;
+                Btn_showtrain.Text = "모델 표시";
+                AddExceptionLog("[학습된 모델 선택] " + Path.GetFileName(selectedTrainedModelPath));
+
+                if (!pilotAngles.Any(value => value.HasValue))
+                    AddExceptionLog("[학습된 모델 표시] pilot 예측값이 없어 user angle/throttle 값으로 화살표를 표시합니다.");
+
+                if (currentIndex >= 0 && currentIndex < imagePaths.Count)
+                    ShowImage(currentIndex);
+            }
+            catch (Exception ex)
+            {
+                AddExceptionLog("[학습된 모델 선택 오류] " + ex.Message);
+            }
+        }
+
+        private string GetTubManagerModelSearchFolder()
+        {
+            if (string.IsNullOrWhiteSpace(currentFolder))
+                return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
+            string normalizedFolder = NormalizeUserPath(currentFolder);
+            string directModels = Path.Combine(normalizedFolder, "models");
+            if (Directory.Exists(directModels))
+                return directModels;
+
+            DirectoryInfo? parent = Directory.GetParent(normalizedFolder);
+            if (parent != null)
+            {
+                string siblingModels = Path.Combine(parent.FullName, "models");
+                if (Directory.Exists(siblingModels))
+                    return siblingModels;
+            }
+
+            return normalizedFolder;
+        }
+
         // Reset current state and load all image frames from the folder.
         private void LoadImages(string folderPath)
         {
@@ -307,6 +368,8 @@ namespace Team4prog.UI
                 // Clear driving values until JSON metadata is loaded.
                 angles.Clear();
                 throttles.Clear();
+                pilotAngles.Clear();
+                pilotThrottles.Clear();
 
                 if (!Directory.Exists(folderPath))
                 {
@@ -437,6 +500,8 @@ namespace Team4prog.UI
                     listBoxFrames.Items.Add(Path.GetFileName(abs));
                     angles.Add(frame.Angle);
                     throttles.Add(frame.Throttle);
+                    pilotAngles.Add(frame.PilotAngle);
+                    pilotThrottles.Add(frame.PilotThrottle);
                 }
 
                 if (imagePaths.Count == 0)
@@ -511,6 +576,8 @@ namespace Team4prog.UI
             {
                 angles.Clear();
                 throttles.Clear();
+                pilotAngles.Clear();
+                pilotThrottles.Clear();
 
                 if (!Directory.Exists(folderPath))
                 {
@@ -543,6 +610,10 @@ namespace Team4prog.UI
                         angles.Add(null);
                     while (throttles.Count < imagePaths.Count)
                         throttles.Add(null);
+                    while (pilotAngles.Count < imagePaths.Count)
+                        pilotAngles.Add(null);
+                    while (pilotThrottles.Count < imagePaths.Count)
+                        pilotThrottles.Add(null);
                     return;
                 }
 
@@ -556,6 +627,8 @@ namespace Team4prog.UI
                         // Support DonkeyCar flat keys first, then nested user.angle/user.throttle, then simple fallback keys.
                         JToken? angleToken = null;
                         JToken? throttleToken = null;
+                        JToken? pilotAngleToken = null;
+                        JToken? pilotThrottleToken = null;
 
                         if (jobj.TryGetValue("user/angle", out var atok))
                             angleToken = atok;
@@ -567,8 +640,20 @@ namespace Team4prog.UI
                         else
                             throttleToken = jobj.SelectToken("user.throttle") ?? jobj["throttle"];
 
+                        if (jobj.TryGetValue("pilot/angle", out var patok))
+                            pilotAngleToken = patok;
+                        else
+                            pilotAngleToken = jobj.SelectToken("pilot.angle") ?? jobj["pilot_angle"];
+
+                        if (jobj.TryGetValue("pilot/throttle", out var pttok))
+                            pilotThrottleToken = pttok;
+                        else
+                            pilotThrottleToken = jobj.SelectToken("pilot.throttle") ?? jobj["pilot_throttle"];
+
                         double? ang = null;
                         double? thr = null;
+                        double? pilotAng = null;
+                        double? pilotThr = null;
 
                         if (angleToken != null)
                         {
@@ -582,8 +667,22 @@ namespace Team4prog.UI
                                 thr = t;
                         }
 
+                        if (pilotAngleToken != null)
+                        {
+                            if (double.TryParse(pilotAngleToken.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var pa))
+                                pilotAng = pa;
+                        }
+
+                        if (pilotThrottleToken != null)
+                        {
+                            if (double.TryParse(pilotThrottleToken.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var pt))
+                                pilotThr = pt;
+                        }
+
                         angles.Add(ang);
                         throttles.Add(thr);
+                        pilotAngles.Add(pilotAng);
+                        pilotThrottles.Add(pilotThr);
                     }
                     catch (Exception ex)
                     {
@@ -591,6 +690,8 @@ namespace Team4prog.UI
                         // Keep list alignment even when one JSON file cannot be parsed.
                         angles.Add(null);
                         throttles.Add(null);
+                        pilotAngles.Add(null);
+                        pilotThrottles.Add(null);
                     }
                 }
 
@@ -606,6 +707,10 @@ namespace Team4prog.UI
                     angles.Add(null);
                 while (throttles.Count < imagePaths.Count)
                     throttles.Add(null);
+                while (pilotAngles.Count < imagePaths.Count)
+                    pilotAngles.Add(null);
+                while (pilotThrottles.Count < imagePaths.Count)
+                    pilotThrottles.Add(null);
 
             }
             catch (Exception ex)
@@ -644,8 +749,10 @@ namespace Team4prog.UI
                 using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
                 using (var img = Image.FromStream(fs))
                 {
-                    picFrame.Image = new Bitmap(img);
+                    picFrame.Image = CreateFramePreviewBitmap(img, index);
                 }
+
+                EnsurePicFrameOverlayPaintHooked();
 
                 currentIndex = index;
                 lblFrame.Text = $"Frame: {currentIndex}";
@@ -660,6 +767,9 @@ namespace Team4prog.UI
                     lblThrottle.Text = $"Throttle: {throttle.ToString("F2", CultureInfo.InvariantCulture)}";
                 else
                     lblThrottle.Text = "Throttle: N/A";
+
+                isReverseBadgeVisible = throttles.Count > index && throttles[index] is double throttleValue && throttleValue < 0;
+                picFrame.Invalidate();
 
                 AddExceptionLog($"이미지 표시: {Path.GetFileName(imagePaths[index])} (인덱스 {index})");
                 HighlightCurrentIndex(index);
@@ -684,6 +794,243 @@ namespace Team4prog.UI
             {
                 AddExceptionLog($"이미지 표시 오류: {ex.Message}");
             }
+        }
+
+        private Bitmap CreateFramePreviewBitmap(Image sourceImage, int index)
+        {
+            var preview = new Bitmap(sourceImage);
+
+            if (angles.Count > index && angles[index] is double angle)
+                DrawDrivingPathOverlay(preview, angle);
+
+            DrawTrainedModelArrowOverlay(preview, index);
+            return preview;
+        }
+
+        private void DrawDrivingPathOverlay(Bitmap frame, double angle)
+        {
+            if (frame.Width <= 0 || frame.Height <= 0)
+                return;
+
+            float startX = frame.Width * 0.50f;
+            float startY = frame.Height * 0.98f;
+            float endY = frame.Height * 0.30f;
+
+            double clampedAngle = Math.Max(-1.0, Math.Min(1.0, angle));
+            float maxSteerOffset = frame.Width * 0.32f;
+            float endX = startX + (float)(clampedAngle * maxSteerOffset);
+
+            using var g = Graphics.FromImage(frame);
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+            float lineWidth = Math.Max(4f, frame.Width / 120f);
+            using var centerPen = new Pen(Color.Lime, lineWidth)
+            {
+                StartCap = System.Drawing.Drawing2D.LineCap.Round,
+                EndCap = System.Drawing.Drawing2D.LineCap.Round
+            };
+            g.DrawLine(centerPen, startX, startY, startX, endY);
+        }
+
+        private void DrawTrainedModelArrowOverlay(Bitmap frame, int index)
+        {
+            if (!showTrainedModelOverlay || string.IsNullOrWhiteSpace(selectedTrainedModelPath))
+                return;
+
+            double? modelAngle = GetModelOverlayValue(pilotAngles, angles, index);
+            double? modelThrottle = GetModelOverlayValue(pilotThrottles, throttles, index);
+            if (!modelAngle.HasValue)
+                return;
+
+            double clampedAngle = Math.Max(-1.0, Math.Min(1.0, modelAngle.Value));
+            bool isReverse = modelThrottle.HasValue && modelThrottle.Value < 0;
+
+            float startX = frame.Width * 0.50f;
+            float startY = isReverse ? frame.Height * 0.48f : frame.Height * 0.78f;
+            float endY = isReverse ? frame.Height * 0.70f : frame.Height * 0.56f;
+            float endX = startX + (float)(clampedAngle * frame.Width * 0.10f);
+
+            using var g = Graphics.FromImage(frame);
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+            float lineWidth = Math.Max(3f, frame.Width / 220f);
+            using var arrowCap = new System.Drawing.Drawing2D.AdjustableArrowCap(lineWidth * 0.9f, lineWidth * 1.2f, true);
+            using var arrowPen = new Pen(Color.Orange, lineWidth)
+            {
+                StartCap = System.Drawing.Drawing2D.LineCap.Round,
+                CustomEndCap = arrowCap
+            };
+
+            g.DrawLine(arrowPen, startX, startY, endX, endY);
+        }
+
+        private static double? GetModelOverlayValue(List<double?> primaryValues, List<double?> fallbackValues, int index)
+        {
+            if (primaryValues.Count > index && primaryValues[index].HasValue)
+                return primaryValues[index];
+
+            if (fallbackValues.Count > index && fallbackValues[index].HasValue)
+                return fallbackValues[index];
+
+            return null;
+        }
+
+        private void DrawSteeringWheelOverlay(Graphics g, RectangleF bounds, double angle)
+        {
+            if (bounds.Width <= 0 || bounds.Height <= 0)
+                return;
+
+            float wheelSize = Math.Min(bounds.Width, bounds.Height);
+            float centerX = bounds.X + bounds.Width / 2f;
+            float centerY = bounds.Y + bounds.Height / 2f;
+            float radius = wheelSize / 2f;
+
+            var state = g.Save();
+            g.TranslateTransform(centerX, centerY);
+            g.RotateTransform((float)(angle * 90.0));
+
+            using var shadowBrush = new SolidBrush(Color.FromArgb(55, 0, 0, 0));
+            g.FillEllipse(shadowBrush, -radius - 3, -radius + 2, wheelSize + 6, wheelSize + 6);
+
+            using var innerBrush = new SolidBrush(Color.FromArgb(235, 245, 248, 250));
+            g.FillEllipse(innerBrush, -radius, -radius, wheelSize, wheelSize);
+
+            using var rimPen = new Pen(Color.FromArgb(45, 55, 65), Math.Max(7f, wheelSize / 12f))
+            {
+                StartCap = System.Drawing.Drawing2D.LineCap.Round,
+                EndCap = System.Drawing.Drawing2D.LineCap.Round
+            };
+            using var gripPen = new Pen(Color.FromArgb(35, 45, 55), Math.Max(6f, wheelSize / 14f))
+            {
+                StartCap = System.Drawing.Drawing2D.LineCap.Round,
+                EndCap = System.Drawing.Drawing2D.LineCap.Round
+            };
+            using var spokePen = new Pen(Color.FromArgb(0, 145, 210), Math.Max(4f, wheelSize / 18f))
+            {
+                StartCap = System.Drawing.Drawing2D.LineCap.Round,
+                EndCap = System.Drawing.Drawing2D.LineCap.Round
+            };
+            using var markerPen = new Pen(Color.FromArgb(230, 30, 45, 55), Math.Max(3f, wheelSize / 28f))
+            {
+                StartCap = System.Drawing.Drawing2D.LineCap.Round,
+                EndCap = System.Drawing.Drawing2D.LineCap.Round
+            };
+            using var hubBrush = new SolidBrush(Color.FromArgb(245, 30, 38, 45));
+
+            g.DrawEllipse(rimPen, -radius, -radius, wheelSize, wheelSize);
+            g.DrawLine(gripPen, -radius + wheelSize * 0.16f, -wheelSize * 0.04f, radius - wheelSize * 0.16f, -wheelSize * 0.04f);
+            g.DrawLine(spokePen, 0, 0, -radius + wheelSize * 0.23f, -wheelSize * 0.04f);
+            g.DrawLine(spokePen, 0, 0, radius - wheelSize * 0.23f, -wheelSize * 0.04f);
+            g.DrawLine(spokePen, 0, 0, 0, radius - wheelSize * 0.20f);
+            g.DrawLine(markerPen, 0, -radius + wheelSize * 0.08f, 0, -radius + wheelSize * 0.25f);
+            g.FillEllipse(hubBrush, -wheelSize * 0.15f, -wheelSize * 0.15f, wheelSize * 0.30f, wheelSize * 0.30f);
+
+            g.Restore(state);
+        }
+
+        private void EnsurePicFrameOverlayPaintHooked()
+        {
+            if (isPicFrameOverlayPaintHooked)
+                return;
+
+            picFrame.Paint += PicFrame_Paint;
+            isPicFrameOverlayPaintHooked = true;
+        }
+
+        private void PicFrame_Paint(object? sender, PaintEventArgs e)
+        {
+            if (picFrame.Image == null)
+                return;
+
+            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+            if (currentIndex >= 0 && angles.Count > currentIndex && angles[currentIndex] is double angle)
+                DrawSteeringWheelOverlay(e.Graphics, GetSteeringWheelBounds(), Math.Max(-1.0, Math.Min(1.0, angle)));
+
+            if (isReverseBadgeVisible)
+                DrawReverseBadge(e.Graphics, GetReverseBadgeBounds());
+        }
+
+        private RectangleF GetSteeringWheelBounds()
+        {
+            Image? image = picFrame.Image;
+            if (image == null)
+                return RectangleF.Empty;
+
+            Rectangle imageRect = GetZoomedImageBounds(picFrame.ClientSize, image.Size);
+            float margin = Math.Max(14f, Math.Min(picFrame.ClientSize.Width, picFrame.ClientSize.Height) * 0.035f);
+            float rightBlankLeft = imageRect.Right + margin;
+            float rightBlankWidth = picFrame.ClientSize.Width - rightBlankLeft - margin;
+            float wheelSize = Math.Max(70f, Math.Min(130f, Math.Min(rightBlankWidth, imageRect.Height * 0.30f)));
+
+            float x = rightBlankWidth >= wheelSize
+                ? rightBlankLeft + (rightBlankWidth - wheelSize) / 2f
+                : picFrame.ClientSize.Width - wheelSize - margin;
+            float y = imageRect.Top + imageRect.Height * 0.52f;
+
+            if (y + wheelSize > picFrame.ClientSize.Height - margin)
+                y = picFrame.ClientSize.Height - wheelSize - margin;
+
+            return new RectangleF(x, y, wheelSize, wheelSize);
+        }
+
+        private RectangleF GetReverseBadgeBounds()
+        {
+            string text = "후진";
+            Image? image = picFrame.Image;
+            if (image == null)
+                return RectangleF.Empty;
+
+            Rectangle imageRect = GetZoomedImageBounds(picFrame.ClientSize, image.Size);
+            float fontSize = Math.Max(28f, Math.Min(picFrame.ClientSize.Width, picFrame.ClientSize.Height) * 0.08f);
+
+            using var font = new Font("Malgun Gothic", fontSize, FontStyle.Bold, GraphicsUnit.Pixel);
+            Size textSize = TextRenderer.MeasureText(text, font);
+            float paddingX = fontSize * 0.45f;
+            float paddingY = fontSize * 0.25f;
+            float badgeWidth = textSize.Width + paddingX * 2f;
+            float badgeHeight = textSize.Height + paddingY * 2f;
+            float margin = Math.Max(14f, fontSize * 0.35f);
+            float rightBlankLeft = imageRect.Right + margin;
+            float x = rightBlankLeft + badgeWidth <= picFrame.ClientSize.Width - margin
+                ? rightBlankLeft
+                : picFrame.ClientSize.Width - badgeWidth - margin;
+            float y = Math.Max(14f, fontSize * 0.35f);
+
+            return new RectangleF(x, y, badgeWidth, badgeHeight);
+        }
+
+        private void DrawReverseBadge(Graphics g, RectangleF rect)
+        {
+            string text = "후진";
+            float fontSize = Math.Max(28f, Math.Min(picFrame.ClientSize.Width, picFrame.ClientSize.Height) * 0.08f);
+            float paddingX = fontSize * 0.45f;
+            float paddingY = fontSize * 0.25f;
+
+            using var backgroundBrush = new SolidBrush(Color.FromArgb(225, 220, 40, 40));
+            using var borderPen = new Pen(Color.White, Math.Max(2f, fontSize / 12f));
+            using var textBrush = new SolidBrush(Color.White);
+            using var font = new Font("Malgun Gothic", fontSize, FontStyle.Bold, GraphicsUnit.Pixel);
+
+            g.FillRectangle(backgroundBrush, rect);
+            g.DrawRectangle(borderPen, rect.X, rect.Y, rect.Width, rect.Height);
+            g.DrawString(text, font, textBrush, rect.X + paddingX, rect.Y + paddingY);
+        }
+
+        private static Rectangle GetZoomedImageBounds(Size clientSize, Size imageSize)
+        {
+            if (clientSize.Width <= 0 || clientSize.Height <= 0 || imageSize.Width <= 0 || imageSize.Height <= 0)
+                return Rectangle.Empty;
+
+            double ratio = Math.Min(
+                clientSize.Width / (double)imageSize.Width,
+                clientSize.Height / (double)imageSize.Height);
+
+            int width = (int)Math.Round(imageSize.Width * ratio);
+            int height = (int)Math.Round(imageSize.Height * ratio);
+            int x = (clientSize.Width - width) / 2;
+            int y = (clientSize.Height - height) / 2;
+            return new Rectangle(x, y, width, height);
         }
 
         // Selecting a list item updates the trackbar and displayed frame.

@@ -64,11 +64,15 @@ namespace Team4prog.UI
                     originalImagePaths = new List<string>(imagePaths);
                     originalAngles = new List<double?>(angles);
                     originalThrottles = new List<double?>(throttles);
+                    originalPilotAngles = new List<double?>(pilotAngles);
+                    originalPilotThrottles = new List<double?>(pilotThrottles);
                 }
 
                 filteredImagePaths.Clear();
                 filteredAngles.Clear();
                 filteredThrottles.Clear();
+                filteredPilotAngles.Clear();
+                filteredPilotThrottles.Clear();
 
                 for (int i = 0; i < originalAngles.Count; i++)
                 {
@@ -95,12 +99,16 @@ namespace Team4prog.UI
                         filteredImagePaths.Add(originalImagePaths[i]);
                         filteredAngles.Add(originalAngles[i]);
                         filteredThrottles.Add(originalThrottles[i]);
+                        filteredPilotAngles.Add(originalPilotAngles.Count > i ? originalPilotAngles[i] : null);
+                        filteredPilotThrottles.Add(originalPilotThrottles.Count > i ? originalPilotThrottles[i] : null);
                     }
                 }
 
                 imagePaths = new List<string>(filteredImagePaths);
                 angles = new List<double?>(filteredAngles);
                 throttles = new List<double?>(filteredThrottles);
+                pilotAngles = new List<double?>(filteredPilotAngles);
+                pilotThrottles = new List<double?>(filteredPilotThrottles);
 
                 RebuildListBoxFrames();
                 trackBarFrame.Maximum = Math.Max(0, imagePaths.Count - 1);
@@ -179,10 +187,14 @@ namespace Team4prog.UI
             imagePaths = new List<string>(originalImagePaths);
             angles = new List<double?>(originalAngles);
             throttles = new List<double?>(originalThrottles);
+            pilotAngles = new List<double?>(originalPilotAngles);
+            pilotThrottles = new List<double?>(originalPilotThrottles);
 
             originalImagePaths.Clear();
             originalAngles.Clear();
             originalThrottles.Clear();
+            originalPilotAngles.Clear();
+            originalPilotThrottles.Clear();
 
             RebuildListBoxFrames();
             trackBarFrame.Minimum = 0;

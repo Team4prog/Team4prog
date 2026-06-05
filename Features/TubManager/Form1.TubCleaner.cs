@@ -122,6 +122,8 @@ namespace Team4prog.UI
                     imagePaths.RemoveAt(i);
                     if (angles.Count > i) angles.RemoveAt(i);
                     if (throttles.Count > i) throttles.RemoveAt(i);
+                    if (pilotAngles.Count > i) pilotAngles.RemoveAt(i);
+                    if (pilotThrottles.Count > i) pilotThrottles.RemoveAt(i);
                 }
 
                 // Keep the deleted frames in their original order for restoration.
@@ -212,6 +214,9 @@ namespace Team4prog.UI
                         throttles.Insert(idx, null);
                     else
                         throttles.Insert(idx, t);
+
+                    pilotAngles.Insert(idx, null);
+                    pilotThrottles.Insert(idx, null);
 
                     if (firstRestoredIndex < 0)
                         firstRestoredIndex = idx;

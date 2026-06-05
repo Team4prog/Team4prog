@@ -16,6 +16,12 @@ namespace Team4prog.UI.Features.Catalog
 
         [JsonProperty("user/throttle")]
         public double? Throttle { get; set; }
+
+        [JsonProperty("pilot/angle")]
+        public double? PilotAngle { get; set; }
+
+        [JsonProperty("pilot/throttle")]
+        public double? PilotThrottle { get; set; }
     }
 }
 
