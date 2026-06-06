@@ -1,4 +1,4 @@
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -60,6 +60,12 @@ namespace Team4prog.UI
             if (isTrainingRunning)
             {
                 MessageBox.Show("이미 학습 프로세스가 실행 중입니다.");
+                return;
+            }
+
+            if (HasTrashFramesForTrainingBlock())
+            {
+                ShowTrashTrainingBlockedMessage();
                 return;
             }
 

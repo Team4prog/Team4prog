@@ -1,4 +1,4 @@
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -120,6 +120,7 @@ namespace Team4prog.UI
             listBoxChartLoss.HorizontalScrollbar = true;
             listBoxChartLoss.ScrollAlwaysVisible = true;
             listBoxLog.SelectionMode = SelectionMode.MultiExtended;
+            listBoxFrames.SelectionMode = SelectionMode.MultiExtended;
 
             // Keep frames visible without distortion.
             picFrame.SizeMode = PictureBoxSizeMode.Zoom;

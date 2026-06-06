@@ -22,121 +22,24 @@ namespace Team4prog.UI
         {
             try
             {
-                if (listBoxFrames.SelectedIndex < 0 || listBoxFrames.SelectedIndex >= imagePaths.Count)
-                {
-                    MessageBox.Show("Select an item to delete.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
-                }
-
-                var dr = MessageBox.Show("정말 삭제하시겠습니까?", "확인", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                if (dr != DialogResult.Yes)
+                // 1순위: 휴지통(listBoxLog)에서 선택한 항목 영구 삭제
+                // Shift/Ctrl 다중 선택은 listBoxLog.SelectionMode = MultiExtended 상태라 가능함.
+                if (DeleteSelectedTrashFramesPermanently())
                     return;
 
-                dr = MessageBox.Show("이미지와 연결된 JSON 파일이 실제로 삭제됩니다. 계속하시겠습니까?", "삭제 재확인", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-                if (dr != DialogResult.Yes)
+                // 2순위: 현재 불러온 프레임 목록에서 선택한 사진 영구 삭제
+                if (DeleteSelectedLoadedFramesPermanently())
                     return;
 
-                int idx = listBoxFrames.SelectedIndex;
-                string imagePath = imagePaths[idx];
-                string imageFileName = Path.GetFileName(imagePath);
-
-                double a = angles[idx] ?? double.NaN;
-                double t = throttles[idx] ?? double.NaN;
-
-                // Delete the image file first; if this fails, leave UI state unchanged.
-                try
-                {
-                    if (File.Exists(imagePath))
-                    {
-                        File.Delete(imagePath);
-                    }
-                    else
-                    {
-                        AddLog($"[삭제 경고] 이미지 파일이 이미 없습니다: {imageFileName}");
-                    }
-                }
-                catch (UnauthorizedAccessException ex)
-                {
-                    MessageBox.Show("파일 삭제 권한이 없습니다.\n" + ex.Message, "삭제 실패", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    AddLog($"[삭제 실패] 권한 오류 - {imageFileName}: {ex.Message}");
-                    return;
-                }
-                catch (IOException ex)
-                {
-                    MessageBox.Show("파일이 사용 중이거나 접근할 수 없습니다.\n" + ex.Message, "삭제 실패", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    AddLog($"[삭제 실패] I/O 오류 - {imageFileName}: {ex.Message}");
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    AddLog($"[삭제 실패] {imageFileName}: {ex.Message}");
-                    return;
-                }
-
-                // Delete the paired JSON file when it exists.
-                string jsonPath = Path.ChangeExtension(imagePath, ".json");
-                if (File.Exists(jsonPath))
-                {
-                    try
-                    {
-                        File.Delete(jsonPath);
-                    }
-                    catch (Exception ex)
-                    {
-                        AddLog($"[삭제 실패] {Path.GetFileName(jsonPath)}: {ex.Message}");
-                        // Continue because the image file was already deleted successfully.
-                    }
-                }
-
-                RemoveImageFromCatalogs(imagePath);
-
-                // Store restore data only after the file delete succeeds.
-                deletedImagePaths.Add(imagePath);
-                deletedAngles.Add(a);
-                deletedThrottles.Add(t);
-                deletedIndices.Add(idx);
-
-                // Remove the deleted frame from in-memory lists and visible controls.
-                try
-                {
-                    imagePaths.RemoveAt(idx);
-                    listBoxFrames.Items.RemoveAt(idx);
-
-                    if (angles.Count > idx)
-                        angles.RemoveAt(idx);
-                    if (throttles.Count > idx)
-                        throttles.RemoveAt(idx);
-                    if (pilotAngles.Count > idx)
-                        pilotAngles.RemoveAt(idx);
-                    if (pilotThrottles.Count > idx)
-                        pilotThrottles.RemoveAt(idx);
-
-                    AddLog($"[삭제 완료] {imageFileName}");
-
-                    trackBarFrame.Minimum = 0;
-                    trackBarFrame.Maximum = Math.Max(0, imagePaths.Count - 1);
-
-                    if (imagePaths.Count == 0)
-                    {
-                        ClearImageDisplay();
-                        trackBarFrame.Value = 0;
-                    }
-                    else
-                    {
-                        int newIdx = Math.Min(idx, imagePaths.Count - 1);
-                        // Updating selection reuses the normal ShowImage path.
-                        listBoxFrames.SelectedIndex = newIdx;
-                        trackBarFrame.Value = newIdx;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    AddLog($"[삭제 실패] 목록 동기화 오류: {ex.Message}");
-                }
+                MessageBox.Show(
+                    "삭제할 휴지통 항목 또는 프레임을 선택하세요.",
+                    "삭제 대상 없음",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                AddLog($"[삭제 실패] 알 수 없는 오류: {ex.Message}");
+                AddExceptionLog($"[삭제 실패] 알 수 없는 오류: {ex.Message}");
             }
         }
 
