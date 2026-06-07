@@ -46,10 +46,9 @@ namespace Team4prog.UI
             try
             {
                 if (imagePaths.Count == 0) return;
-                int idx = Math.Max(0, (listBoxFrames.SelectedIndex >= 0 ? listBoxFrames.SelectedIndex : currentIndex));
+                int idx = Math.Max(0, currentIndex >= 0 ? currentIndex : listBoxFrames.SelectedIndex);
                 idx = Math.Max(0, idx - 1);
-                listBoxFrames.SelectedIndex = idx;
-                trackBarFrame.Value = idx;
+                SetPlaybackFrame(idx);
             }
             catch (Exception ex)
             {
@@ -62,10 +61,9 @@ namespace Team4prog.UI
             try
             {
                 if (imagePaths.Count == 0) return;
-                int idx = Math.Min(imagePaths.Count - 1, (listBoxFrames.SelectedIndex >= 0 ? listBoxFrames.SelectedIndex : currentIndex));
+                int idx = Math.Min(imagePaths.Count - 1, currentIndex >= 0 ? currentIndex : listBoxFrames.SelectedIndex);
                 idx = Math.Min(imagePaths.Count - 1, idx + 1);
-                listBoxFrames.SelectedIndex = idx;
-                trackBarFrame.Value = idx;
+                SetPlaybackFrame(idx);
             }
             catch (Exception ex)
             {
@@ -80,6 +78,9 @@ namespace Team4prog.UI
                 AddLog("재생 불가: 이미지가 없습니다.");
                 return;
             }
+            if (currentIndex < 0)
+                SetPlaybackFrame(listBoxFrames.SelectedIndex >= 0 ? listBoxFrames.SelectedIndex : 0);
+
             isPlayingForward = true;
             isPlayingBackward = false;
             UpdateTimerIntervalFromSpeed();
@@ -94,6 +95,9 @@ namespace Team4prog.UI
                 AddLog("재생 불가: 이미지가 없습니다.");
                 return;
             }
+            if (currentIndex < 0)
+                SetPlaybackFrame(listBoxFrames.SelectedIndex >= 0 ? listBoxFrames.SelectedIndex : imagePaths.Count - 1);
+
             isPlayingForward = false;
             isPlayingBackward = true;
             UpdateTimerIntervalFromSpeed();
@@ -116,7 +120,7 @@ namespace Team4prog.UI
                 if (imagePaths.Count == 0)
                     return;
 
-                int idx = (listBoxFrames.SelectedIndex >= 0 ? listBoxFrames.SelectedIndex : currentIndex);
+                int idx = currentIndex >= 0 ? currentIndex : listBoxFrames.SelectedIndex;
                 if (idx < 0) idx = 0;
 
                 if (isPlayingForward)
@@ -144,10 +148,7 @@ namespace Team4prog.UI
                 // Keep the list and trackbar in sync while the timer advances frames.
                 if (idx >= 0 && idx < imagePaths.Count)
                 {
-                    // Setting SelectedIndex triggers ShowImage via event
-                    if (listBoxFrames.SelectedIndex != idx)
-                        listBoxFrames.SelectedIndex = idx;
-                    trackBarFrame.Value = idx;
+                    SetPlaybackFrame(idx);
                 }
             }
             catch (Exception ex)
@@ -155,6 +156,31 @@ namespace Team4prog.UI
                 AddLog($"재생 중 오류: {ex.Message}");
                 btnStop_Click(null, EventArgs.Empty);
             }
+        }
+
+        private void SetPlaybackFrame(int idx)
+        {
+            if (idx < 0 || idx >= imagePaths.Count)
+                return;
+
+            ClearFrameDragSelectionState();
+            isApplyingFrameDragSelection = true;
+            listBoxFrames.BeginUpdate();
+            try
+            {
+                listBoxFrames.ClearSelected();
+                listBoxFrames.SetSelected(idx, true);
+            }
+            finally
+            {
+                listBoxFrames.EndUpdate();
+                isApplyingFrameDragSelection = false;
+            }
+
+            if (trackBarFrame.Value != idx)
+                trackBarFrame.Value = idx;
+
+            ShowImage(idx);
         }
 
     }

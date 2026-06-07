@@ -24,13 +24,20 @@ namespace Team4prog.UI
                     MessageBox.Show("Select a frame to set the range.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
-                leftIndex = idx;
+
+                if (leftIndex >= 0 && idx < leftIndex)
+                {
+                    MessageBox.Show("우측 지정값이 좌측 지정값보다 작아서 지정할 수 없습니다.", "범위 지정 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                rightIndex = idx;
                 UpdateRangeLabel();
-                AddLog($"[Set Left] {leftIndex}");
+                AddLog($"[Set Right] {rightIndex}");
             }
             catch (Exception ex)
             {
-                AddLog($"Set Left 오류: {ex.Message}");
+                AddLog($"Set Right 오류: {ex.Message}");
             }
         }
 
@@ -44,13 +51,15 @@ namespace Team4prog.UI
                     MessageBox.Show("Select a frame to set the range.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
-                rightIndex = idx;
+
+                leftIndex = idx;
+                rightIndex = -1;
                 UpdateRangeLabel();
-                AddLog($"[Set Right] {rightIndex}");
+                AddLog($"[Set Left] {leftIndex}");
             }
             catch (Exception ex)
             {
-                AddLog($"Set Right 오류: {ex.Message}");
+                AddLog($"Set Left 오류: {ex.Message}");
             }
         }
 
@@ -58,16 +67,15 @@ namespace Team4prog.UI
         {
             try
             {
-                // Keep the default display until both range ends are selected.
                 if (leftIndex < 0 || rightIndex < 0)
                 {
-                    lblRange.Text = "[0, 0]";
+                    int l = leftIndex >= 0 ? leftIndex : 0;
+                    int r = rightIndex >= 0 ? rightIndex : 0;
+                    lblRange.Text = $"[{l}, {r}]";
                     return;
                 }
 
-                int l = Math.Min(leftIndex, rightIndex);
-                int r = Math.Max(leftIndex, rightIndex);
-                lblRange.Text = $"[{l}, {r}]";
+                lblRange.Text = $"[{leftIndex}, {rightIndex}]";
             }
             catch (Exception ex)
             {
@@ -81,14 +89,15 @@ namespace Team4prog.UI
             {
                 if (leftIndex < 0 || rightIndex < 0)
                 {
-                    MessageBox.Show("Set the range to delete first.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("삭제할 시작점과 끝점을 먼저 지정하세요.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
 
                 int l = leftIndex, r = rightIndex;
-                if (l > r)
+                if (rightIndex < leftIndex)
                 {
-                    var t = l; l = r; r = t;
+                    MessageBox.Show("우측 지정값이 좌측 지정값보다 작아서 삭제할 수 없습니다.", "범위 지정 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
                 }
 
                 if (imagePaths.Count == 0)

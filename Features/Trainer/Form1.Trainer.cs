@@ -80,6 +80,18 @@ namespace Team4prog.UI
                     return;
                 }
 
+                if (HasTrashFrames())
+                {
+                    int trashCount = Math.Max(deletedImagePaths.Count, listBoxLog.Items.Count);
+                    MessageBox.Show(
+                        $"휴지통에 {trashCount}개의 파일이 있어서 학습할 수 없습니다.\n복원하거나 영구 삭제한 뒤 다시 학습하세요.",
+                        "학습 불가",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    AddTrainLog($"[학습 불가] 휴지통 파일 {trashCount}개");
+                    return;
+                }
+
                 string workingDir = NormalizeUserPath(carFolderPath);
                 TrainingPathMode pathMode = GetTrainingPathMode(workingDir);
 

@@ -30,12 +30,25 @@ namespace Team4prog.UI
         {
             try
             {
+                ClearFilterInputs();
                 ResetFilter();
             }
             catch (Exception ex)
             {
                 AddLog($"필터 해제 오류: {ex.Message}");
             }
+        }
+
+        private void ClearFilterInputs()
+        {
+            txtAngleFilter.Clear();
+            txtThrottleFilter.Clear();
+            cmbAngleOp.SelectedIndex = -1;
+            cmbAngleOp.Text = string.Empty;
+            cmbThrottleOp.SelectedIndex = -1;
+            cmbThrottleOp.Text = string.Empty;
+            txtAngleFilter.BackColor = SystemColors.Window;
+            txtThrottleFilter.BackColor = SystemColors.Window;
         }
 
 
@@ -115,9 +128,7 @@ namespace Team4prog.UI
 
                 if (imagePaths.Count > 0)
                 {
-                    listBoxFrames.SelectedIndex = 0;
-                    trackBarFrame.Value = 0;
-                    ShowImage(0);
+                    SetPlaybackFrame(0);
                 }
                 else
                 {
@@ -180,7 +191,6 @@ namespace Team4prog.UI
         {
             if (originalImagePaths.Count == 0)
             {
-                AddLog("원본 데이터가 없습니다.");
                 return;
             }
 
@@ -201,9 +211,7 @@ namespace Team4prog.UI
             trackBarFrame.Maximum = Math.Max(0, imagePaths.Count - 1);
             if (imagePaths.Count > 0)
             {
-                listBoxFrames.SelectedIndex = 0;
-                trackBarFrame.Value = 0;
-                ShowImage(0);
+                SetPlaybackFrame(0);
             }
             AddLog("[필터 해제]");
             UpdateChart();

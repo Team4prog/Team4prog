@@ -30,6 +30,18 @@ namespace Team4prog.UI
         private bool isPlayingBackward = false;
         private double playbackSpeed = 1.0;
         private bool isTrainingRunning = false;
+        private bool isCtrlDraggingFrameSelection = false;
+        private bool isPlainDraggingFrameSelection = false;
+        private bool isApplyingFrameDragSelection = false;
+        private int lastCtrlDraggedFrameIndex = -1;
+        private int lastPlainDraggedFrameIndex = -1;
+        private int ctrlDragStartFrameIndex = -1;
+        private bool isCtrlDraggingTrashSelection = false;
+        private bool isPlainDraggingTrashSelection = false;
+        private bool isApplyingTrashDragSelection = false;
+        private int lastCtrlDraggedTrashIndex = -1;
+        private int lastPlainDraggedTrashIndex = -1;
+        private int ctrlDragStartTrashIndex = -1;
 
         // Range deletion state for Tub Cleaner.
         private int leftIndex = -1;
@@ -120,6 +132,7 @@ namespace Team4prog.UI
             listBoxChartLoss.HorizontalScrollbar = true;
             listBoxChartLoss.ScrollAlwaysVisible = true;
             listBoxLog.SelectionMode = SelectionMode.MultiExtended;
+            listBoxFrames.SelectionMode = SelectionMode.MultiExtended;
 
             // Keep frames visible without distortion.
             picFrame.SizeMode = PictureBoxSizeMode.Zoom;
@@ -136,11 +149,7 @@ namespace Team4prog.UI
 
             // Feature event wiring. Implementations live in the partial files under Features/*.
             btnOpenFolder.Click += btnOpenFolder_Click;
-            btnSetFilter.Click += btnSetFilter_Click;
             btnClearFilter.Click += btnClearFilter_Click;
-            btnSetLeft.Click += btnSetLeft_Click;
-            btnSetRight.Click += btnSetRight_Click;
-            btnDeleteRange.Click += btnDeleteRange_Click;
             btnRestore.Click += btnRestore_Click;
             btnReload.Click += btnReload_Click;
             btnPrev.Click += btnPrev_Click;
@@ -151,6 +160,13 @@ namespace Team4prog.UI
             Btn_showtrain.Click += Btn_showtrain_Click;
             nudSpeed.ValueChanged += nudSpeed_ValueChanged;
             listBoxFrames.SelectedIndexChanged += listBoxFrames_SelectedIndexChanged;
+            listBoxFrames.MouseDown += listBoxFrames_MouseDown;
+            listBoxFrames.MouseMove += listBoxFrames_MouseMove;
+            listBoxFrames.MouseUp += listBoxFrames_MouseUp;
+            listBoxLog.SelectedIndexChanged += listBoxLog_SelectedIndexChanged;
+            listBoxLog.MouseDown += listBoxLog_MouseDown;
+            listBoxLog.MouseMove += listBoxLog_MouseMove;
+            listBoxLog.MouseUp += listBoxLog_MouseUp;
             trackBarFrame.Scroll += trackBarFrame_Scroll;
 
             this.MinimumSize = new Size(1000, 700);
@@ -243,13 +259,205 @@ namespace Team4prog.UI
         {
             try
             {
-                //ApplyTubManagerLayout();
-                //FixTrainerLayout();
+                ApplyTubManagerLayout();
+                ApplyTrainerLayout();
             }
             catch
             {
                 // 레이아웃 조정 오류가 나도 UI 실행은 막지 않음.
             }
+        }
+
+        private void ApplyTubManagerLayout()
+        {
+            if (panelTubManager == null || innerPanel == null || !panelTubManager.Visible)
+                return;
+
+            const int margin = 10;
+            const int gap = 10;
+            int topOffset = topBar != null && topBar.Visible ? topBar.Height + 4 : 0;
+            int viewW = Math.Max(980, panelTubManager.ClientSize.Width - SystemInformation.VerticalScrollBarWidth);
+            int viewH = Math.Max(700, panelTubManager.ClientSize.Height - topOffset);
+            int contentW = Math.Max(980, viewW - margin * 2);
+
+            int leftW = Clamp((int)(contentW * 0.13), 205, 260);
+            int rightW = Clamp((int)(contentW * 0.13), 190, 260);
+            int mainX = margin + leftW + gap;
+            int rightX = margin + contentW - rightW;
+            int mainW = Math.Max(500, rightX - mainX - gap);
+
+            int topY = margin;
+            int cleanerH = 120;
+            int dataH = 52;
+            int trackH = 48;
+            int playH = 88;
+            int chartMinH = 190;
+            int fixedBelowMedia = gap + playH + gap + dataH + trackH + gap + cleanerH + gap + chartMinH + margin;
+            int mediaH = Clamp(viewH - topY - fixedBelowMedia, 260, 520);
+
+            int playY = topY + mediaH + gap;
+            int dataY = playY + playH + gap;
+            int trackY = dataY + dataH;
+            int cleanerY = trackY + trackH + gap;
+            int chartY = cleanerY + cleanerH + gap;
+            int chartH = Math.Max(chartMinH, viewH - chartY - margin);
+
+            innerPanel.SuspendLayout();
+            panelTubManager.AutoScroll = true;
+            innerPanel.Location = new Point(0, topOffset);
+            innerPanel.Size = new Size(contentW + margin * 2, chartY + chartH + margin);
+            panelTubManager.AutoScrollMinSize = new Size(innerPanel.Width, innerPanel.Bottom + margin);
+
+            txtTubNavigator.Location = new Point(margin, topY);
+            txtTubNavigator.Size = new Size(leftW, 24);
+
+            int buttonY = txtTubNavigator.Bottom + 5;
+            int deleteW = 66;
+            btnOpenFolder.Location = new Point(margin, buttonY);
+            btnOpenFolder.Size = new Size(leftW - deleteW - gap, 45);
+            btnDelete.Location = new Point(btnOpenFolder.Right + gap, buttonY);
+            btnDelete.Size = new Size(deleteW, 45);
+
+            int frameListY = btnOpenFolder.Bottom + 8;
+            int logLabelY = topY + mediaH + gap;
+            int frameListH = Math.Max(120, logLabelY - frameListY - 28);
+            listBoxFrames.Location = new Point(margin, frameListY);
+            listBoxFrames.Size = new Size(leftW, frameListH);
+
+            label1.Location = new Point(margin, logLabelY);
+            label1.Size = new Size(leftW, 24);
+            listBoxLog.Location = new Point(margin, label1.Bottom + 4);
+            listBoxLog.Size = new Size(leftW, Math.Max(120, cleanerY + cleanerH - listBoxLog.Top));
+
+            picFrame.Location = new Point(mainX, topY);
+            picFrame.Size = new Size(mainW, mediaH);
+            picFrame.SizeMode = PictureBoxSizeMode.Zoom;
+
+            listBoxException.Location = new Point(rightX, topY);
+            listBoxException.Size = new Size(rightW, mediaH);
+
+            groupBoxPlayControls.Location = new Point(mainX, playY);
+            groupBoxPlayControls.Size = new Size(mainW + gap + rightW, playH);
+            ArrangePlayControls();
+
+            groupBoxData.Location = new Point(mainX, dataY);
+            groupBoxData.Size = new Size(mainW + gap + rightW, dataH);
+            lblFrame.Location = new Point(35, 20);
+            lblAngle.Location = new Point(Math.Max(35, groupBoxData.Width / 2 - lblAngle.Width / 2), 20);
+            lblThrottle.Location = new Point(Math.Max(35, groupBoxData.Width - lblThrottle.Width - 35), 20);
+
+            trackBarFrame.Location = new Point(mainX, trackY);
+            trackBarFrame.Size = new Size(mainW + gap + rightW, trackH);
+
+            groupBox1.Location = new Point(mainX, cleanerY);
+            groupBox1.Size = new Size(mainW + gap + rightW, cleanerH);
+            ArrangeTubCleanerControls();
+
+            chartPanel.Location = new Point(margin, chartY);
+            chartPanel.Size = new Size(contentW, chartH);
+            chartPanel.Invalidate();
+
+            innerPanel.ResumeLayout();
+        }
+
+        private void ApplyTrainerLayout()
+        {
+            if (panelTrainer == null || !panelTrainer.Visible)
+                return;
+
+            chartLoss?.Invalidate();
+        }
+
+        private void ArrangePlayControls()
+        {
+            if (groupBoxPlayControls == null)
+                return;
+
+            const int gap = 24;
+            int buttonW = 105;
+            int buttonH = 34;
+            int y = 18;
+            int labelY = y + buttonH + 8;
+            Control[] buttons = { btnPrev, btnPlayBackward, btnStop, btnPlayForward, btnNext };
+            Label[] labels = { lblPrev, lblPlayBackward, lblStop, lblPlayForward, lblNext };
+            int controlsW = buttons.Length * buttonW + (buttons.Length - 1) * gap;
+            int speedAreaW = 260;
+            int startX = Math.Max(15, (groupBoxPlayControls.ClientSize.Width - controlsW - speedAreaW) / 2);
+
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                int x = startX + i * (buttonW + gap);
+                buttons[i].Location = new Point(x, y);
+                buttons[i].Size = new Size(buttonW, buttonH);
+                labels[i].AutoSize = true;
+                labels[i].Location = new Point(x + (buttonW - labels[i].Width) / 2, labelY);
+            }
+
+            int rightX = Math.Max(startX + controlsW + gap, groupBoxPlayControls.ClientSize.Width - 260);
+            nudSpeed.Location = new Point(rightX, y + 6);
+            nudSpeed.Size = new Size(85, 28);
+            Btn_showtrain.Location = new Point(rightX + 115, y - 2);
+            Btn_showtrain.Size = new Size(145, 42);
+        }
+
+        private void ArrangeTubCleanerControls()
+        {
+            if (groupBox1 == null)
+                return;
+
+            const int margin = 14;
+            const int gap = 8;
+            int w = groupBox1.ClientSize.Width;
+            int buttonW = 112;
+            int buttonH = 38;
+            int y1 = 18;
+            int y2 = 68;
+
+            btnSetRight.Location = new Point(margin, y1);
+            btnSetRight.Size = new Size(buttonW, buttonH);
+            btnSetLeft.Location = new Point(btnSetRight.Right + gap, y1);
+            btnSetLeft.Size = new Size(buttonW, buttonH);
+            lblRange.Location = new Point(btnSetLeft.Right + 20, y1 + 8);
+
+            int rightButtonsW = buttonW * 3 + gap * 2;
+            int rightButtonsX = Math.Max(lblRange.Right + 25, w - rightButtonsW - margin);
+            btnDeleteRange.Location = new Point(rightButtonsX, y1);
+            btnDeleteRange.Size = new Size(buttonW, buttonH);
+            btnRestore.Location = new Point(btnDeleteRange.Right + gap, y1);
+            btnRestore.Size = new Size(buttonW, buttonH);
+            btnReload.Location = new Point(btnRestore.Right + gap, y1);
+            btnReload.Size = new Size(buttonW, buttonH);
+
+            btnSetFilter.Location = new Point(margin, y2);
+            btnSetFilter.Size = new Size(buttonW, buttonH);
+
+            int opW = 84;
+            int clearW = 120;
+            int filterX = btnSetFilter.Right + gap;
+            int available = Math.Max(360, w - filterX - clearW - gap - margin);
+            int textW = Math.Max(110, (available - opW * 2 - gap * 4) / 2);
+
+            cmbAngleOp.Location = new Point(filterX, y2 + 4);
+            cmbAngleOp.Size = new Size(opW, 34);
+            txtAngleFilter.Location = new Point(cmbAngleOp.Right + gap, y2 + 4);
+            txtAngleFilter.Size = new Size(textW, 34);
+            cmbThrottleOp.Location = new Point(txtAngleFilter.Right + gap * 2, y2 + 4);
+            cmbThrottleOp.Size = new Size(opW, 34);
+            txtThrottleFilter.Location = new Point(cmbThrottleOp.Right + gap, y2 + 4);
+            txtThrottleFilter.Size = new Size(textW, 34);
+            btnClearFilter.Location = new Point(Math.Min(txtThrottleFilter.Right + gap, w - clearW - margin), y2);
+            btnClearFilter.Size = new Size(clearW, buttonH);
+        }
+
+        private static int Clamp(int value, int min, int max)
+        {
+            if (value < min)
+                return min;
+
+            if (value > max)
+                return max;
+
+            return value;
         }
 
         /*
