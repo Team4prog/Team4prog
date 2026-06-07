@@ -111,19 +111,10 @@ namespace Team4prog.UI
             int gap = 10;
             int h = 36;
 
-            int leftW = Math.Min(520, Math.Max(380, (w - pad * 2 - gap) / 2));
-            int rightX = pad + leftW + gap + 30;
-            int rightW = w - rightX - pad;
-
-            if (rightW < 300)
-            {
-                leftW = Math.Max(320, w / 2 - 35);
-                rightX = pad + leftW + gap;
-                rightW = Math.Max(260, w - rightX - pad);
-            }
-
-            int selectW = Math.Min(260, Math.Max(190, leftW / 2));
-            int comboW = Math.Max(120, leftW - selectW - gap);
+            int selectW = Math.Min(230, Math.Max(150, w / 6));
+            int comboW = Math.Min(240, Math.Max(150, w / 5));
+            int trainX = pad + selectW + gap + comboW + gap + 20;
+            int trainW = Math.Max(260, w - trainX - pad);
 
             btnSelectCarFolder.Location = new Point(pad, 36);
             btnSelectCarFolder.Size = new Size(selectW, h);
@@ -131,11 +122,11 @@ namespace Team4prog.UI
             cmbModelType.Location = new Point(btnSelectCarFolder.Right + gap, 39);
             cmbModelType.Size = new Size(comboW, 32);
 
-            btnLoadModel.Location = new Point(pad, 79);
-            btnLoadModel.Size = new Size(leftW, h);
+            btnLoadModel.Visible = false;
+            btnLoadModel.Enabled = false;
 
-            btnTrain.Location = new Point(rightX, 39);
-            btnTrain.Size = new Size(rightW, h + 2);
+            btnTrain.Location = new Point(trainX, 34);
+            btnTrain.Size = new Size(trainW, h + 2);
         }
 
         private void ArrangePilotManagerControls()
@@ -144,18 +135,18 @@ namespace Team4prog.UI
                 return;
 
             int w = groupBoxPilotManager.ClientSize.Width;
-            int pad = 45;
+            int pad = 22;
             int gap = 10;
-            int y = 52;
+            int y = 34;
             int h = 34;
 
-            int comboW = Math.Min(410, Math.Max(260, w / 3));
-            int btnW = Math.Min(240, Math.Max(160, w - comboW - pad * 2 - gap - 20));
+            int btnW = 140;
+            int comboW = Math.Max(260, w - btnW - pad * 2 - gap);
 
             cmbModelList.Location = new Point(pad, y);
             cmbModelList.Size = new Size(comboW, h);
 
-            btnDeleteModel.Location = new Point(cmbModelList.Right + gap + 20, y);
+            btnDeleteModel.Location = new Point(cmbModelList.Right + gap, y);
             btnDeleteModel.Size = new Size(btnW, h);
         }
 

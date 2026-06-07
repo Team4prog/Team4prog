@@ -133,6 +133,8 @@ namespace Team4prog.UI
             listBoxChartLoss.ScrollAlwaysVisible = true;
             listBoxLog.SelectionMode = SelectionMode.MultiExtended;
             listBoxFrames.SelectionMode = SelectionMode.MultiExtended;
+            btnLoadModel.Visible = false;
+            btnLoadModel.Enabled = false;
 
             // Keep frames visible without distortion.
             picFrame.SizeMode = PictureBoxSizeMode.Zoom;
@@ -365,6 +367,40 @@ namespace Team4prog.UI
             if (panelTrainer == null || !panelTrainer.Visible)
                 return;
 
+            const int margin = 12;
+            const int gap = 10;
+            int topOffset = topBar != null && topBar.Visible ? topBar.Height + 4 : 0;
+            int viewW = Math.Max(980, panelTrainer.ClientSize.Width - SystemInformation.VerticalScrollBarWidth);
+            int viewH = Math.Max(700, panelTrainer.ClientSize.Height - topOffset);
+            int contentW = Math.Max(980, viewW - margin * 2);
+            int logW = Clamp((int)(contentW * 0.27), 260, 430);
+            int mainW = Math.Max(600, contentW - logW - gap);
+
+            int trainerH = 96;
+            int pilotH = 86;
+            int chartY = topOffset + margin + trainerH + gap;
+            int pilotY = Math.Max(chartY + 220 + gap, viewH - pilotH - margin);
+            int chartH = Math.Max(220, pilotY - chartY - gap);
+
+            panelTrainer.SuspendLayout();
+            panelTrainer.AutoScroll = true;
+            panelTrainer.AutoScrollMinSize = new Size(contentW + margin * 2, Math.Max(viewH + 1, pilotY + pilotH + margin));
+
+            groupBoxTrainer.Location = new Point(margin, topOffset + margin);
+            groupBoxTrainer.Size = new Size(mainW, trainerH);
+            ArrangeTrainerControls();
+
+            chartLoss.Location = new Point(margin, chartY);
+            chartLoss.Size = new Size(mainW, chartH);
+
+            groupBoxPilotManager.Location = new Point(margin, pilotY);
+            groupBoxPilotManager.Size = new Size(mainW, pilotH);
+            ArrangePilotManagerControls();
+
+            listBoxChartLoss.Location = new Point(groupBoxTrainer.Right + gap, topOffset + margin);
+            listBoxChartLoss.Size = new Size(logW, Math.Max(300, pilotY + pilotH - listBoxChartLoss.Top));
+
+            panelTrainer.ResumeLayout();
             chartLoss?.Invalidate();
         }
 
