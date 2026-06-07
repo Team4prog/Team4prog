@@ -81,6 +81,7 @@ namespace Team4prog.UI
             groupBoxTrainer = new GroupBox();
             btnSelectCarFolder = new Button();
             btnTrain = new Button();
+            btnLoadModel = new Button();
             cmbModelType = new ComboBox();
             ((System.ComponentModel.ISupportInitialize)trackBarFrame).BeginInit();
             groupBoxData.SuspendLayout();
@@ -703,6 +704,7 @@ namespace Team4prog.UI
             groupBoxTrainer.Anchor = AnchorStyles.Left;
             groupBoxTrainer.Controls.Add(btnSelectCarFolder);
             groupBoxTrainer.Controls.Add(btnTrain);
+            groupBoxTrainer.Controls.Add(btnLoadModel);
             groupBoxTrainer.Controls.Add(cmbModelType);
             groupBoxTrainer.Font = new Font("맑은 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
             groupBoxTrainer.ForeColor = Color.FromArgb(192, 192, 255);
@@ -742,6 +744,18 @@ namespace Team4prog.UI
             btnTrain.UseVisualStyleBackColor = false;
             btnTrain.Click += btnTrain_Click;
             // 
+            // btnLoadModel
+            // 
+            btnLoadModel.BackColor = Color.DimGray;
+            btnLoadModel.Font = new Font("Microsoft Sans Serif", 13.9999981F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnLoadModel.Location = new Point(14, 57);
+            btnLoadModel.Margin = new Padding(2);
+            btnLoadModel.Name = "btnLoadModel";
+            btnLoadModel.Size = new Size(350, 30);
+            btnLoadModel.TabIndex = 1;
+            btnLoadModel.Text = "모델 선택";
+            btnLoadModel.UseVisualStyleBackColor = false;
+            // 
             // cmbModelType
             // 
             cmbModelType.BackColor = Color.DimGray;
@@ -759,8 +773,8 @@ namespace Team4prog.UI
             AutoScaleMode = AutoScaleMode.Dpi;
             BackColor = Color.FromArgb(64, 64, 64);
             ClientSize = new Size(1282, 703);
-            Controls.Add(panelTrainer);
             Controls.Add(panelTubManager);
+            Controls.Add(panelTrainer);
             Margin = new Padding(2);
             Name = "Form1";
             Text = "DonkeyCar UI";
@@ -838,5 +852,6 @@ namespace Team4prog.UI
         private ListBox listBoxException;
         private Label label1;
         private Button Btn_showtrain;
+        private Button btnLoadModel;
     }
 }
