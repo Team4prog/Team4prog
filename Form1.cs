@@ -292,7 +292,7 @@ namespace Team4prog.UI
             int cleanerH = 120;
             int dataH = 52;
             int trackH = 48;
-            int playH = 88;
+            int playH = 107;
             int chartMinH = 190;
             int fixedBelowMedia = gap + playH + gap + dataH + trackH + gap + cleanerH + gap + chartMinH + margin;
             int mediaH = Clamp(viewH - topY - fixedBelowMedia, 260, 520);
@@ -411,7 +411,7 @@ namespace Team4prog.UI
 
             const int gap = 24;
             int buttonW = 105;
-            int buttonH = 34;
+            int buttonH = 38;
             int y = 18;
             int labelY = y + buttonH + 8;
             Control[] buttons = { btnPrev, btnPlayBackward, btnStop, btnPlayForward, btnNext };

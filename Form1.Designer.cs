@@ -207,33 +207,36 @@ namespace Team4prog.UI
             btnPrev.Location = new Point(302, 24);
             btnPrev.Margin = new Padding(2);
             btnPrev.Name = "btnPrev";
-            btnPrev.Size = new Size(106, 38);
+            btnPrev.Size = new Size(106, 43);
             btnPrev.TabIndex = 8;
             btnPrev.Text = "◁";
+            btnPrev.TextAlign = ContentAlignment.TopCenter;
             btnPrev.UseVisualStyleBackColor = false;
             // 
             // btnNext
             // 
             btnNext.BackColor = Color.DimGray;
-            btnNext.Font = new Font("Microsoft Sans Serif", 20F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnNext.Font = new Font("Microsoft Sans Serif", 18F, FontStyle.Bold, GraphicsUnit.Point, 0);
             btnNext.Location = new Point(809, 24);
             btnNext.Margin = new Padding(2);
             btnNext.Name = "btnNext";
-            btnNext.Size = new Size(106, 38);
+            btnNext.Size = new Size(106, 42);
             btnNext.TabIndex = 9;
             btnNext.Text = "▷";
+            btnNext.TextAlign = ContentAlignment.TopCenter;
             btnNext.UseVisualStyleBackColor = false;
             // 
             // btnPlayForward
             // 
             btnPlayForward.BackColor = Color.DimGray;
-            btnPlayForward.Font = new Font("Microsoft Sans Serif", 20F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnPlayForward.Font = new Font("Microsoft Sans Serif", 18F, FontStyle.Bold, GraphicsUnit.Point, 0);
             btnPlayForward.Location = new Point(688, 24);
             btnPlayForward.Margin = new Padding(2);
             btnPlayForward.Name = "btnPlayForward";
-            btnPlayForward.Size = new Size(106, 38);
+            btnPlayForward.Size = new Size(106, 43);
             btnPlayForward.TabIndex = 11;
             btnPlayForward.Text = "▶▶";
+            btnPlayForward.TextAlign = ContentAlignment.TopCenter;
             btnPlayForward.UseVisualStyleBackColor = false;
             // 
             // btnPlayBackward
@@ -243,21 +246,23 @@ namespace Team4prog.UI
             btnPlayBackward.Location = new Point(434, 24);
             btnPlayBackward.Margin = new Padding(2);
             btnPlayBackward.Name = "btnPlayBackward";
-            btnPlayBackward.Size = new Size(106, 38);
+            btnPlayBackward.Size = new Size(106, 43);
             btnPlayBackward.TabIndex = 10;
             btnPlayBackward.Text = "◀◀";
+            btnPlayBackward.TextAlign = ContentAlignment.TopCenter;
             btnPlayBackward.UseVisualStyleBackColor = false;
             // 
             // btnStop
             // 
             btnStop.BackColor = Color.DimGray;
-            btnStop.Font = new Font("Microsoft Sans Serif", 20F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnStop.Font = new Font("Microsoft Sans Serif", 18F, FontStyle.Bold, GraphicsUnit.Point, 0);
             btnStop.Location = new Point(562, 24);
             btnStop.Margin = new Padding(2);
             btnStop.Name = "btnStop";
-            btnStop.Size = new Size(106, 38);
+            btnStop.Size = new Size(106, 43);
             btnStop.TabIndex = 12;
             btnStop.Text = "■";
+            btnStop.TextAlign = ContentAlignment.TopCenter;
             btnStop.UseVisualStyleBackColor = false;
             // 
             // nudSpeed
@@ -292,11 +297,11 @@ namespace Team4prog.UI
             groupBoxPlayControls.Controls.Add(btnPrev);
             groupBoxPlayControls.Font = new Font("Microsoft Sans Serif", 13.9999981F, FontStyle.Bold, GraphicsUnit.Point, 129);
             groupBoxPlayControls.ForeColor = Color.FromArgb(192, 192, 255);
-            groupBoxPlayControls.Location = new Point(214, 393);
+            groupBoxPlayControls.Location = new Point(214, 392);
             groupBoxPlayControls.Margin = new Padding(2);
             groupBoxPlayControls.Name = "groupBoxPlayControls";
             groupBoxPlayControls.Padding = new Padding(2);
-            groupBoxPlayControls.Size = new Size(1317, 95);
+            groupBoxPlayControls.Size = new Size(1317, 107);
             groupBoxPlayControls.TabIndex = 9;
             groupBoxPlayControls.TabStop = false;
             // 
@@ -314,7 +319,7 @@ namespace Team4prog.UI
             // lblNext
             // 
             lblNext.AutoSize = true;
-            lblNext.Location = new Point(834, 68);
+            lblNext.Location = new Point(830, 75);
             lblNext.Margin = new Padding(2, 0, 2, 0);
             lblNext.Name = "lblNext";
             lblNext.Size = new Size(61, 24);
@@ -324,7 +329,7 @@ namespace Team4prog.UI
             // lblPlayForward
             // 
             lblPlayForward.AutoSize = true;
-            lblPlayForward.Location = new Point(718, 68);
+            lblPlayForward.Location = new Point(718, 75);
             lblPlayForward.Margin = new Padding(2, 0, 2, 0);
             lblPlayForward.Name = "lblPlayForward";
             lblPlayForward.Size = new Size(40, 24);
@@ -334,7 +339,7 @@ namespace Team4prog.UI
             // lblStop
             // 
             lblStop.AutoSize = true;
-            lblStop.Location = new Point(598, 68);
+            lblStop.Location = new Point(594, 75);
             lblStop.Margin = new Padding(2, 0, 2, 0);
             lblStop.Name = "lblStop";
             lblStop.Size = new Size(40, 24);
@@ -344,7 +349,7 @@ namespace Team4prog.UI
             // lblPlayBackward
             // 
             lblPlayBackward.AutoSize = true;
-            lblPlayBackward.Location = new Point(458, 68);
+            lblPlayBackward.Location = new Point(456, 75);
             lblPlayBackward.Margin = new Padding(2, 0, 2, 0);
             lblPlayBackward.Name = "lblPlayBackward";
             lblPlayBackward.Size = new Size(55, 24);
@@ -354,7 +359,7 @@ namespace Team4prog.UI
             // lblPrev
             // 
             lblPrev.AutoSize = true;
-            lblPrev.Location = new Point(323, 68);
+            lblPrev.Location = new Point(322, 75);
             lblPrev.Margin = new Padding(2, 0, 2, 0);
             lblPrev.Name = "lblPrev";
             lblPrev.Size = new Size(61, 24);
