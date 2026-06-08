@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -15,113 +16,551 @@ namespace Team4prog.UI
     // Tub Manager frame IO: folder selection, image/JSON loading, frame display, and list/trackbar sync.
     public partial class Form1
     {
+        private bool isReverseBadgeVisible = false;
+        private bool isPicFrameOverlayPaintHooked = false;
+
         private void btnDelete_Click(object? sender, EventArgs e)
         {
             try
             {
-                if (listBoxFrames.SelectedIndex < 0 || listBoxFrames.SelectedIndex >= imagePaths.Count)
+                if (listBoxLog.SelectedIndices.Count > 0)
+                {
+                    PermanentlyDeleteSelectedTrashFrames();
+                    return;
+                }
+
+                var selectedFrameIndices = listBoxFrames.SelectedIndices
+                    .Cast<int>()
+                    .Where(i => i >= 0 && i < imagePaths.Count)
+                    .Distinct()
+                    .OrderByDescending(i => i)
+                    .ToList();
+
+                if (selectedFrameIndices.Count == 0)
                 {
                     MessageBox.Show("Select an item to delete.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
 
-                var dr = MessageBox.Show("정말 삭제하시겠습니까?", "확인", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                var dr = MessageBox.Show($"선택한 {selectedFrameIndices.Count}개 프레임을 영구 삭제하시겠습니까?", "확인", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 if (dr != DialogResult.Yes)
                     return;
 
-                dr = MessageBox.Show("이미지와 연결된 JSON 파일이 실제로 삭제됩니다. 계속하시겠습니까?", "삭제 재확인", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                dr = MessageBox.Show("이미지, 연결된 JSON 파일, catalog 항목이 실제로 삭제됩니다. 계속하시겠습니까?", "삭제 재확인", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                 if (dr != DialogResult.Yes)
                     return;
 
-                int idx = listBoxFrames.SelectedIndex;
-                string imagePath = imagePaths[idx];
-                string imageFileName = Path.GetFileName(imagePath);
+                int firstDeletedIndex = selectedFrameIndices.Min();
+                int deletedCount = 0;
 
-                // Delete the image file first; if this fails, leave UI state unchanged.
-                try
+                foreach (int idx in selectedFrameIndices)
                 {
-                    if (File.Exists(imagePath))
-                    {
-                        File.Delete(imagePath);
-                    }
-                    else
-                    {
-                        AddLog($"[삭제 경고] 이미지 파일이 이미 없습니다: {imageFileName}");
-                    }
-                }
-                catch (UnauthorizedAccessException ex)
-                {
-                    MessageBox.Show("파일 삭제 권한이 없습니다.\n" + ex.Message, "삭제 실패", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    AddLog($"[삭제 실패] 권한 오류 - {imageFileName}: {ex.Message}");
-                    return;
-                }
-                catch (IOException ex)
-                {
-                    MessageBox.Show("파일이 사용 중이거나 접근할 수 없습니다.\n" + ex.Message, "삭제 실패", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    AddLog($"[삭제 실패] I/O 오류 - {imageFileName}: {ex.Message}");
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    AddLog($"[삭제 실패] {imageFileName}: {ex.Message}");
-                    return;
-                }
+                    string imagePath = imagePaths[idx];
+                    string imageFileName = Path.GetFileName(imagePath);
 
-                // Delete the paired JSON file when it exists.
-                string jsonPath = Path.ChangeExtension(imagePath, ".json");
-                if (File.Exists(jsonPath))
-                {
-                    try
-                    {
-                        File.Delete(jsonPath);
-                    }
-                    catch (Exception ex)
-                    {
-                        AddLog($"[삭제 실패] {Path.GetFileName(jsonPath)}: {ex.Message}");
-                        // Continue because the image file was already deleted successfully.
-                    }
-                }
+                    if (!DeleteFrameFilesAndCatalog(imagePath, showMessageOnFailure: selectedFrameIndices.Count == 1))
+                        continue;
 
-                RemoveImageFromCatalogs(imagePath);
-
-                // Remove the deleted frame from in-memory lists and visible controls.
-                try
-                {
                     imagePaths.RemoveAt(idx);
-                    listBoxFrames.Items.RemoveAt(idx);
-
+                    if (listBoxFrames.Items.Count > idx)
+                        listBoxFrames.Items.RemoveAt(idx);
+                    RemoveFrameFromFilterBackups(imagePath);
                     if (angles.Count > idx)
                         angles.RemoveAt(idx);
                     if (throttles.Count > idx)
                         throttles.RemoveAt(idx);
+                    if (pilotAngles.Count > idx)
+                        pilotAngles.RemoveAt(idx);
+                    if (pilotThrottles.Count > idx)
+                        pilotThrottles.RemoveAt(idx);
 
-                    AddLog($"[삭제 완료] {imageFileName}");
-
-                    trackBarFrame.Minimum = 0;
-                    trackBarFrame.Maximum = Math.Max(0, imagePaths.Count - 1);
-
-                    if (imagePaths.Count == 0)
-                    {
-                        ClearImageDisplay();
-                        trackBarFrame.Value = 0;
-                    }
-                    else
-                    {
-                        int newIdx = Math.Min(idx, imagePaths.Count - 1);
-                        // Updating selection reuses the normal ShowImage path.
-                        listBoxFrames.SelectedIndex = newIdx;
-                        trackBarFrame.Value = newIdx;
-                    }
+                    AddExceptionLog($"[영구 삭제 완료] {imageFileName}");
+                    deletedCount++;
                 }
-                catch (Exception ex)
+
+                if (deletedCount == 0)
+                    return;
+
+                trackBarFrame.Minimum = 0;
+                trackBarFrame.Maximum = Math.Max(0, imagePaths.Count - 1);
+
+                if (imagePaths.Count == 0)
                 {
-                    AddLog($"[삭제 실패] 목록 동기화 오류: {ex.Message}");
+                    ClearImageDisplay();
+                    trackBarFrame.Value = 0;
+                }
+                else
+                {
+                    int newIdx = Math.Min(firstDeletedIndex, imagePaths.Count - 1);
+                    listBoxFrames.SelectedIndex = newIdx;
+                    trackBarFrame.Value = newIdx;
                 }
             }
             catch (Exception ex)
             {
                 AddLog($"[삭제 실패] 알 수 없는 오류: {ex.Message}");
             }
+        }
+
+        private void PermanentlyDeleteSelectedTrashFrames()
+        {
+            var selectedTrashIndices = listBoxLog.SelectedIndices
+                .Cast<int>()
+                .Where(i => i >= 0 && i < deletedImagePaths.Count)
+                .Distinct()
+                .OrderByDescending(i => i)
+                .ToList();
+
+            if (selectedTrashIndices.Count == 0)
+            {
+                MessageBox.Show("영구 삭제할 휴지통 항목을 선택하세요.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var dr = MessageBox.Show(
+                $"휴지통에서 선택한 {selectedTrashIndices.Count}개 항목을 영구 삭제하시겠습니까?",
+                "확인",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+            if (dr != DialogResult.Yes)
+                return;
+
+            dr = MessageBox.Show(
+                "이미지, 연결된 JSON 파일, catalog 항목이 실제로 삭제됩니다. 계속하시겠습니까?",
+                "삭제 재확인",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning);
+            if (dr != DialogResult.Yes)
+                return;
+
+            int deletedCount = 0;
+            foreach (int trashIndex in selectedTrashIndices)
+            {
+                string imagePath = deletedImagePaths[trashIndex];
+                if (!DeleteFrameFilesAndCatalog(imagePath, showMessageOnFailure: false))
+                    continue;
+
+                if (trashIndex < listBoxLog.Items.Count)
+                    listBoxLog.Items.RemoveAt(trashIndex);
+                deletedImagePaths.RemoveAt(trashIndex);
+                deletedAngles.RemoveAt(trashIndex);
+                deletedThrottles.RemoveAt(trashIndex);
+                deletedIndices.RemoveAt(trashIndex);
+                deletedCount++;
+            }
+
+            AddExceptionLog($"[휴지통 영구 삭제 완료] {deletedCount}개");
+        }
+
+        private bool DeleteFrameFilesAndCatalog(string imagePath, bool showMessageOnFailure)
+        {
+            string imageFileName = Path.GetFileName(imagePath);
+
+            try
+            {
+                if (File.Exists(imagePath))
+                {
+                    File.Delete(imagePath);
+                }
+                else
+                {
+                    AddExceptionLog($"[삭제 경고] 이미지 파일이 이미 없습니다: {imageFileName}");
+                }
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                if (showMessageOnFailure)
+                    MessageBox.Show("파일 삭제 권한이 없습니다.\n" + ex.Message, "삭제 실패", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                AddExceptionLog($"[삭제 실패] 권한 오류 - {imageFileName}: {ex.Message}");
+                return false;
+            }
+            catch (IOException ex)
+            {
+                if (showMessageOnFailure)
+                    MessageBox.Show("파일이 사용 중이거나 접근할 수 없습니다.\n" + ex.Message, "삭제 실패", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                AddExceptionLog($"[삭제 실패] I/O 오류 - {imageFileName}: {ex.Message}");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                AddExceptionLog($"[삭제 실패] {imageFileName}: {ex.Message}");
+                return false;
+            }
+
+            string jsonPath = Path.ChangeExtension(imagePath, ".json");
+            if (File.Exists(jsonPath))
+            {
+                try
+                {
+                    File.Delete(jsonPath);
+                }
+                catch (Exception ex)
+                {
+                    AddExceptionLog($"[삭제 실패] {Path.GetFileName(jsonPath)}: {ex.Message}");
+                }
+            }
+
+            RemoveImageFromCatalogs(imagePath);
+            return true;
+        }
+
+        private bool HasTrashFrames()
+        {
+            return deletedImagePaths.Count > 0 || listBoxLog.Items.Count > 0;
+        }
+
+        private void ClearTrashFrames()
+        {
+            deletedImagePaths.Clear();
+            deletedAngles.Clear();
+            deletedThrottles.Clear();
+            deletedIndices.Clear();
+            listBoxLog.Items.Clear();
+        }
+
+        [DllImport("user32.dll")]
+        private static extern short GetKeyState(int virtualKey);
+
+        private static bool IsLeftControlKeyDown()
+        {
+            return (GetKeyState((int)Keys.LControlKey) & 0x8000) != 0;
+        }
+
+        private void listBoxFrames_MouseDown(object? sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Left)
+                return;
+
+            int index = listBoxFrames.IndexFromPoint(e.Location);
+            if (index < 0 || index >= listBoxFrames.Items.Count)
+                return;
+
+            if (!IsLeftControlKeyDown())
+            {
+                isPlainDraggingFrameSelection = true;
+                lastPlainDraggedFrameIndex = -1;
+                BeginInvoke(new Action(() => SelectSingleFrameOnly(index)));
+                return;
+            }
+
+            isCtrlDraggingFrameSelection = true;
+            ctrlDragStartFrameIndex = index;
+            lastCtrlDraggedFrameIndex = -1;
+            BeginInvoke(new Action(() => SelectFrameDragRange(index)));
+        }
+
+        private void listBoxFrames_MouseMove(object? sender, MouseEventArgs e)
+        {
+            if (isPlainDraggingFrameSelection)
+            {
+                if (e.Button != MouseButtons.Left || IsLeftControlKeyDown())
+                {
+                    isPlainDraggingFrameSelection = false;
+                    lastPlainDraggedFrameIndex = -1;
+                    return;
+                }
+
+                int plainIndex = listBoxFrames.IndexFromPoint(e.Location);
+                if (plainIndex >= 0 && plainIndex < listBoxFrames.Items.Count && plainIndex != lastPlainDraggedFrameIndex)
+                    BeginInvoke(new Action(() => SelectSingleFrameOnly(plainIndex)));
+
+                return;
+            }
+
+            if (!isCtrlDraggingFrameSelection)
+                return;
+
+            if (e.Button != MouseButtons.Left || !IsLeftControlKeyDown())
+            {
+                isCtrlDraggingFrameSelection = false;
+                lastCtrlDraggedFrameIndex = -1;
+                ctrlDragStartFrameIndex = -1;
+                return;
+            }
+
+            int index = listBoxFrames.IndexFromPoint(e.Location);
+            if (index < 0 || index >= listBoxFrames.Items.Count || index == lastCtrlDraggedFrameIndex)
+                return;
+
+            BeginInvoke(new Action(() => SelectFrameDragRange(index)));
+        }
+
+        private void listBoxFrames_MouseUp(object? sender, MouseEventArgs e)
+        {
+            if (isCtrlDraggingFrameSelection)
+            {
+                int mouseIndex = listBoxFrames.IndexFromPoint(e.Location);
+                int finalIndex = mouseIndex >= 0 && mouseIndex < listBoxFrames.Items.Count
+                    ? mouseIndex
+                    : lastCtrlDraggedFrameIndex >= 0 ? lastCtrlDraggedFrameIndex : ctrlDragStartFrameIndex;
+                BeginInvoke(new Action(() =>
+                {
+                    SelectFrameDragRange(finalIndex);
+                    ApplySelectedFrameRangeToDeleteRange();
+                    ClearFrameDragSelectionState();
+                }));
+                return;
+            }
+
+            if (isPlainDraggingFrameSelection)
+            {
+                int finalIndex = listBoxFrames.SelectedIndex >= 0 ? listBoxFrames.SelectedIndex : lastPlainDraggedFrameIndex;
+                BeginInvoke(new Action(() =>
+                {
+                    SelectSingleFrameOnly(finalIndex);
+                    ClearFrameDragSelectionState();
+                }));
+                return;
+            }
+
+            ClearFrameDragSelectionState();
+        }
+
+        private void ClearFrameDragSelectionState()
+        {
+            isPlainDraggingFrameSelection = false;
+            isCtrlDraggingFrameSelection = false;
+            lastPlainDraggedFrameIndex = -1;
+            lastCtrlDraggedFrameIndex = -1;
+            ctrlDragStartFrameIndex = -1;
+        }
+
+        private void SelectSingleFrameOnly(int index)
+        {
+            if (index < 0 || index >= listBoxFrames.Items.Count)
+                return;
+
+            isApplyingFrameDragSelection = true;
+            try
+            {
+                listBoxFrames.BeginUpdate();
+                listBoxFrames.ClearSelected();
+                listBoxFrames.SetSelected(index, true);
+            }
+            finally
+            {
+                listBoxFrames.EndUpdate();
+                isApplyingFrameDragSelection = false;
+            }
+
+            lastPlainDraggedFrameIndex = index;
+        }
+
+        private void SelectFrameDragRange(int index)
+        {
+            if (index < 0 || index >= listBoxFrames.Items.Count)
+                return;
+
+            int start = ctrlDragStartFrameIndex >= 0 ? ctrlDragStartFrameIndex : index;
+            int l = Math.Min(start, index);
+            int r = Math.Max(start, index);
+
+            isApplyingFrameDragSelection = true;
+            try
+            {
+                listBoxFrames.BeginUpdate();
+                listBoxFrames.ClearSelected();
+
+                for (int i = l; i <= r; i++)
+                {
+                    listBoxFrames.SetSelected(i, true);
+                }
+            }
+            finally
+            {
+                listBoxFrames.EndUpdate();
+                isApplyingFrameDragSelection = false;
+            }
+
+            lastCtrlDraggedFrameIndex = index;
+        }
+
+        private void ApplySelectedFrameRangeToDeleteRange()
+        {
+            var selectedIndices = listBoxFrames.SelectedIndices
+                .Cast<int>()
+                .Where(i => i >= 0 && i < imagePaths.Count)
+                .ToList();
+
+            if (selectedIndices.Count == 0)
+                return;
+
+            leftIndex = selectedIndices.Min();
+            rightIndex = selectedIndices.Max();
+            UpdateRangeLabel();
+        }
+
+        private void listBoxLog_MouseDown(object? sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Left)
+                return;
+
+            int index = listBoxLog.IndexFromPoint(e.Location);
+            if (index < 0 || index >= listBoxLog.Items.Count)
+                return;
+
+            if (!IsLeftControlKeyDown())
+            {
+                isPlainDraggingTrashSelection = true;
+                lastPlainDraggedTrashIndex = -1;
+                BeginInvoke(new Action(() => SelectSingleTrashOnly(index)));
+                return;
+            }
+
+            isCtrlDraggingTrashSelection = true;
+            ctrlDragStartTrashIndex = index;
+            lastCtrlDraggedTrashIndex = -1;
+            BeginInvoke(new Action(() => SelectTrashDragRange(index)));
+        }
+
+        private void listBoxLog_MouseMove(object? sender, MouseEventArgs e)
+        {
+            if (isPlainDraggingTrashSelection)
+            {
+                if (e.Button != MouseButtons.Left || IsLeftControlKeyDown())
+                {
+                    isPlainDraggingTrashSelection = false;
+                    lastPlainDraggedTrashIndex = -1;
+                    return;
+                }
+
+                int plainIndex = listBoxLog.IndexFromPoint(e.Location);
+                if (plainIndex >= 0 && plainIndex < listBoxLog.Items.Count && plainIndex != lastPlainDraggedTrashIndex)
+                    BeginInvoke(new Action(() => SelectSingleTrashOnly(plainIndex)));
+
+                return;
+            }
+
+            if (!isCtrlDraggingTrashSelection)
+                return;
+
+            if (e.Button != MouseButtons.Left || !IsLeftControlKeyDown())
+            {
+                isCtrlDraggingTrashSelection = false;
+                lastCtrlDraggedTrashIndex = -1;
+                ctrlDragStartTrashIndex = -1;
+                return;
+            }
+
+            int index = listBoxLog.IndexFromPoint(e.Location);
+            if (index < 0 || index >= listBoxLog.Items.Count || index == lastCtrlDraggedTrashIndex)
+                return;
+
+            BeginInvoke(new Action(() => SelectTrashDragRange(index)));
+        }
+
+        private void listBoxLog_MouseUp(object? sender, MouseEventArgs e)
+        {
+            if (isCtrlDraggingTrashSelection)
+            {
+                int mouseIndex = listBoxLog.IndexFromPoint(e.Location);
+                int finalIndex = mouseIndex >= 0 && mouseIndex < listBoxLog.Items.Count
+                    ? mouseIndex
+                    : lastCtrlDraggedTrashIndex >= 0 ? lastCtrlDraggedTrashIndex : ctrlDragStartTrashIndex;
+                BeginInvoke(new Action(() =>
+                {
+                    SelectTrashDragRange(finalIndex);
+                    ClearTrashDragSelectionState();
+                }));
+                return;
+            }
+
+            if (isPlainDraggingTrashSelection)
+            {
+                int finalIndex = listBoxLog.SelectedIndex >= 0 ? listBoxLog.SelectedIndex : lastPlainDraggedTrashIndex;
+                BeginInvoke(new Action(() =>
+                {
+                    SelectSingleTrashOnly(finalIndex);
+                    ClearTrashDragSelectionState();
+                }));
+                return;
+            }
+
+            ClearTrashDragSelectionState();
+        }
+
+        private void ClearTrashDragSelectionState()
+        {
+            isPlainDraggingTrashSelection = false;
+            isCtrlDraggingTrashSelection = false;
+            lastPlainDraggedTrashIndex = -1;
+            lastCtrlDraggedTrashIndex = -1;
+            ctrlDragStartTrashIndex = -1;
+        }
+
+        private void SelectSingleTrashOnly(int index)
+        {
+            if (index < 0 || index >= listBoxLog.Items.Count)
+                return;
+
+            isApplyingTrashDragSelection = true;
+            try
+            {
+                listBoxLog.BeginUpdate();
+                listBoxLog.ClearSelected();
+                listBoxLog.SetSelected(index, true);
+            }
+            finally
+            {
+                listBoxLog.EndUpdate();
+                isApplyingTrashDragSelection = false;
+            }
+
+            lastPlainDraggedTrashIndex = index;
+        }
+
+        private void SelectTrashDragRange(int index)
+        {
+            if (index < 0 || index >= listBoxLog.Items.Count)
+                return;
+
+            int start = ctrlDragStartTrashIndex >= 0 ? ctrlDragStartTrashIndex : index;
+            int l = Math.Min(start, index);
+            int r = Math.Max(start, index);
+
+            isApplyingTrashDragSelection = true;
+            try
+            {
+                listBoxLog.BeginUpdate();
+                listBoxLog.ClearSelected();
+
+                for (int i = l; i <= r; i++)
+                {
+                    listBoxLog.SetSelected(i, true);
+                }
+            }
+            finally
+            {
+                listBoxLog.EndUpdate();
+                isApplyingTrashDragSelection = false;
+            }
+
+            lastCtrlDraggedTrashIndex = index;
+        }
+
+        private void RemoveFrameFromFilterBackups(string imagePath)
+        {
+            RemoveFrameFromListsByPath(imagePath, originalImagePaths, originalAngles, originalThrottles, originalPilotAngles, originalPilotThrottles);
+            RemoveFrameFromListsByPath(imagePath, filteredImagePaths, filteredAngles, filteredThrottles, filteredPilotAngles, filteredPilotThrottles);
+        }
+
+        private static void RemoveFrameFromListsByPath(
+            string imagePath,
+            List<string> paths,
+            List<double?> angleValues,
+            List<double?> throttleValues,
+            List<double?> pilotAngleValues,
+            List<double?> pilotThrottleValues)
+        {
+            int idx = paths.FindIndex(path => string.Equals(path, imagePath, StringComparison.OrdinalIgnoreCase));
+            if (idx < 0)
+                return;
+
+            paths.RemoveAt(idx);
+            if (angleValues.Count > idx) angleValues.RemoveAt(idx);
+            if (throttleValues.Count > idx) throttleValues.RemoveAt(idx);
+            if (pilotAngleValues.Count > idx) pilotAngleValues.RemoveAt(idx);
+            if (pilotThrottleValues.Count > idx) pilotThrottleValues.RemoveAt(idx);
         }
 
         private void RemoveImageFromCatalogs(string imagePath)
@@ -136,7 +575,7 @@ namespace Team4prog.UI
             }
             catch (Exception ex)
             {
-                AddLog($"catalog 삭제 오류: {ex.Message}");
+                AddExceptionLog($"catalog 삭제 오류: {ex.Message}");
             }
         }
 
@@ -200,11 +639,11 @@ namespace Team4prog.UI
                     return;
 
                 File.WriteAllLines(catalogPath, keptLines);
-                AddLog($"[catalog 삭제] {Path.GetFileName(catalogPath)}에서 {removed}개 항목 제거");
+                AddExceptionLog($"[catalog 삭제] {Path.GetFileName(catalogPath)}에서 {removed}개 항목 제거");
             }
             catch (Exception ex)
             {
-                AddLog($"[catalog 삭제 실패] {Path.GetFileName(catalogPath)}: {ex.Message}");
+                AddExceptionLog($"[catalog 삭제 실패] {Path.GetFileName(catalogPath)}: {ex.Message}");
             }
         }
 
@@ -247,14 +686,16 @@ namespace Team4prog.UI
                 }
 
                 currentIndex = -1;
+                isReverseBadgeVisible = false;
+                picFrame.Invalidate();
                 lblFrame.Text = "Frame: N/A";
                 lblAngle.Text = "Angle: N/A";
                 lblThrottle.Text = "Throttle: N/A";
-                AddLog("Image display cleared.");
+                AddExceptionLog("Image display cleared.");
             }
             catch (Exception ex)
             {
-                AddLog($"이미지 초기화 오류: {ex.Message}");
+                AddExceptionLog($"이미지 초기화 오류: {ex.Message}");
             }
         }
 
@@ -269,13 +710,65 @@ namespace Team4prog.UI
         private void btnOpenFolder_Click(object? sender, EventArgs e)
         {
             using var dlg = new FolderBrowserDialog();
-            dlg.Description = "이미지 폴더를 선택하세요.";
+            dlg.Description = "이미지(data)폴더를 선택하세요.";
             if (dlg.ShowDialog() == DialogResult.OK)
             {
                 string folder = dlg.SelectedPath;
-                AddLog($"폴더 선택: {folder}");
+                AddExceptionLog($"폴더 선택: {folder}");
                 LoadImages(folder);
             }
+        }
+
+        private void Btn_showtrain_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                string initialDirectory = GetTubManagerModelSearchFolder();
+                using var dialog = new OpenFileDialog();
+                dialog.Title = "학습된 모델 선택";
+                dialog.Filter = "Model files (*.h5;*.keras;*.tflite;*.onnx;*.pt;*.pkl)|*.h5;*.keras;*.tflite;*.onnx;*.pt;*.pkl|All files (*.*)|*.*";
+                if (Directory.Exists(initialDirectory))
+                    dialog.InitialDirectory = initialDirectory;
+
+                if (dialog.ShowDialog() != DialogResult.OK)
+                    return;
+
+                selectedTrainedModelPath = NormalizeUserPath(dialog.FileName);
+                showTrainedModelOverlay = true;
+                Btn_showtrain.Text = "모델 표시";
+                AddExceptionLog("[학습된 모델 선택] " + Path.GetFileName(selectedTrainedModelPath));
+
+                if (!pilotAngles.Any(value => value.HasValue))
+                    AddExceptionLog("[학습된 모델 표시] pilot 예측값이 없어 user angle/throttle 값으로 화살표를 표시합니다.");
+
+                if (currentIndex >= 0 && currentIndex < imagePaths.Count)
+                    ShowImage(currentIndex);
+            }
+            catch (Exception ex)
+            {
+                AddExceptionLog("[학습된 모델 선택 오류] " + ex.Message);
+            }
+        }
+
+        private string GetTubManagerModelSearchFolder()
+        {
+            if (string.IsNullOrWhiteSpace(currentFolder))
+                return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
+            string normalizedFolder = NormalizeUserPath(currentFolder);
+            string directModels = Path.Combine(normalizedFolder, "models");
+            if (Directory.Exists(directModels))
+                return directModels;
+
+            DirectoryInfo? parent = Directory.GetParent(normalizedFolder);
+            if (parent != null)
+            {
+                string siblingModels = Path.Combine(parent.FullName, "models");
+                if (Directory.Exists(siblingModels))
+                    return siblingModels;
+            }
+
+            return normalizedFolder;
         }
 
         // Reset current state and load all image frames from the folder.
@@ -289,20 +782,19 @@ namespace Team4prog.UI
                 currentIndex = -1;
                 leftIndex = -1;
                 rightIndex = -1;
-                deletedImagePaths.Clear();
-                deletedAngles.Clear();
-                deletedThrottles.Clear();
-                deletedIndices.Clear();
+                ClearTrashFrames();
                 UpdateRangeLabel();
 
                 // Clear driving values until JSON metadata is loaded.
                 angles.Clear();
                 throttles.Clear();
+                pilotAngles.Clear();
+                pilotThrottles.Clear();
 
                 if (!Directory.Exists(folderPath))
                 {
                     MessageBox.Show("선택한 폴더가 존재하지 않습니다.", "로드 실패", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    AddLog($"폴더가 존재하지 않습니다: {folderPath}");
+                    AddExceptionLog($"폴더가 존재하지 않습니다: {folderPath}");
                     return;
                 }
 
@@ -314,10 +806,10 @@ namespace Team4prog.UI
                 {
                     if (LoadFromCatalogJsonl(folderPath, catalogPath))
                     {
-                        AddLog("catalog_0.catalog 로드 완료");
+                        AddExceptionLog("catalog_0.catalog 로드 완료");
                         return;
                     }
-                    AddLog("catalog_0.catalog 로드 실패: 이미지 스캔 방식으로 fallback 합니다.");
+                    AddExceptionLog("catalog_0.catalog 로드 실패: 이미지 스캔 방식으로 fallback 합니다.");
                 }
 
                 // Fallback: scan image files. Prefer "images/" subfolder when present to avoid picking up unrelated PNGs.
@@ -345,14 +837,14 @@ namespace Team4prog.UI
                 }
                 catch (Exception ex)
                 {
-                    AddLog($"파일 정렬 중 오류 발생: {ex.Message}. 기본 정렬을 사용합니다.");
+                    AddExceptionLog($"파일 정렬 중 오류 발생: {ex.Message}. 기본 정렬을 사용합니다.");
                     files = files.OrderBy(f => f).ToArray();
                 }
 
                 if (files.Length == 0)
                 {
                     MessageBox.Show("선택한 폴더에 jpg/png 이미지가 없습니다.", "로드 실패", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    AddLog("이미지 파일이 없습니다.");
+                    AddExceptionLog("이미지 파일이 없습니다.");
                     trackBarFrame.Minimum = 0;
                     trackBarFrame.Maximum = 0;
                     ClearImageDisplay();
@@ -372,14 +864,14 @@ namespace Team4prog.UI
 
                 listBoxFrames.SelectedIndex = 0;
 
-                AddLog($"이미지 로드 완료: {imagePaths.Count}개");
+                AddExceptionLog($"이미지 로드 완료: {imagePaths.Count}개");
                 // Load matching driving metadata from JSON files only when the folder looks like per-frame JSON layout.
                 // (Some folders contain unrelated JSON files like database.json.)
                 if (Directory.EnumerateFiles(folderPath, "*.json").Any(f => Path.GetFileName(f).EndsWith(".json", StringComparison.OrdinalIgnoreCase) &&
                                                                          Path.GetFileName(f).Contains("_", StringComparison.OrdinalIgnoreCase) == false))
                 {
                     // Heuristic: if JSON files are not frame-indexed, skip parsing to avoid noisy errors.
-                    AddLog("JSON 메타데이터 파싱 스킵(프레임 JSON 레이아웃 아님)");
+                    AddExceptionLog("JSON 메타데이터 파싱 스킵(프레임 JSON 레이아웃 아님)");
                 }
                 else
                 {
@@ -389,7 +881,7 @@ namespace Team4prog.UI
             }
             catch (Exception ex)
             {
-                AddLog($"이미지 로드 오류: {ex.Message}");
+                AddExceptionLog($"이미지 로드 오류: {ex.Message}");
             }
         }
 
@@ -428,6 +920,8 @@ namespace Team4prog.UI
                     listBoxFrames.Items.Add(Path.GetFileName(abs));
                     angles.Add(frame.Angle);
                     throttles.Add(frame.Throttle);
+                    pilotAngles.Add(frame.PilotAngle);
+                    pilotThrottles.Add(frame.PilotThrottle);
                 }
 
                 if (imagePaths.Count == 0)
@@ -439,14 +933,14 @@ namespace Team4prog.UI
                 listBoxFrames.SelectedIndex = 0;
 
                 if (skippedMissing > 0)
-                    AddLog($"catalog 경고: 이미지 누락으로 {skippedMissing}개 프레임 스킵");
+                    AddExceptionLog($"catalog 경고: 이미지 누락으로 {skippedMissing}개 프레임 스킵");
 
                 UpdateChart();
                 return true;
             }
             catch (Exception ex)
             {
-                AddLog($"catalog 파싱 오류: {ex.Message}");
+                AddExceptionLog($"catalog 파싱 오류: {ex.Message}");
                 return false;
             }
         }
@@ -490,7 +984,7 @@ namespace Team4prog.UI
             }
             catch (Exception ex)
             {
-                AddLog($"숫자 추출 오류 ({Path.GetFileName(filePath)}): {ex.Message}");
+                AddExceptionLog($"숫자 추출 오류 ({Path.GetFileName(filePath)}): {ex.Message}");
                 return null;
             }
         }
@@ -502,10 +996,12 @@ namespace Team4prog.UI
             {
                 angles.Clear();
                 throttles.Clear();
+                pilotAngles.Clear();
+                pilotThrottles.Clear();
 
                 if (!Directory.Exists(folderPath))
                 {
-                    AddLog($"JSON 폴더가 존재하지 않습니다: {folderPath}");
+                    AddExceptionLog($"JSON 폴더가 존재하지 않습니다: {folderPath}");
                     return;
                 }
 
@@ -523,17 +1019,21 @@ namespace Team4prog.UI
                 }
                 catch (Exception ex)
                 {
-                    AddLog($"JSON 파일 정렬 중 오류: {ex.Message}");
+                    AddExceptionLog($"JSON 파일 정렬 중 오류: {ex.Message}");
                     jsonFiles = jsonFiles.OrderBy(f => f).ToArray();
                 }
 
                 if (jsonFiles.Length == 0)
                 {
-                    AddLog("JSON 파일이 없습니다.");
+                    AddExceptionLog("JSON 파일이 없습니다.");
                     while (angles.Count < imagePaths.Count)
                         angles.Add(null);
                     while (throttles.Count < imagePaths.Count)
                         throttles.Add(null);
+                    while (pilotAngles.Count < imagePaths.Count)
+                        pilotAngles.Add(null);
+                    while (pilotThrottles.Count < imagePaths.Count)
+                        pilotThrottles.Add(null);
                     return;
                 }
 
@@ -547,6 +1047,8 @@ namespace Team4prog.UI
                         // Support DonkeyCar flat keys first, then nested user.angle/user.throttle, then simple fallback keys.
                         JToken? angleToken = null;
                         JToken? throttleToken = null;
+                        JToken? pilotAngleToken = null;
+                        JToken? pilotThrottleToken = null;
 
                         if (jobj.TryGetValue("user/angle", out var atok))
                             angleToken = atok;
@@ -558,8 +1060,20 @@ namespace Team4prog.UI
                         else
                             throttleToken = jobj.SelectToken("user.throttle") ?? jobj["throttle"];
 
+                        if (jobj.TryGetValue("pilot/angle", out var patok))
+                            pilotAngleToken = patok;
+                        else
+                            pilotAngleToken = jobj.SelectToken("pilot.angle") ?? jobj["pilot_angle"];
+
+                        if (jobj.TryGetValue("pilot/throttle", out var pttok))
+                            pilotThrottleToken = pttok;
+                        else
+                            pilotThrottleToken = jobj.SelectToken("pilot.throttle") ?? jobj["pilot_throttle"];
+
                         double? ang = null;
                         double? thr = null;
+                        double? pilotAng = null;
+                        double? pilotThr = null;
 
                         if (angleToken != null)
                         {
@@ -573,23 +1087,39 @@ namespace Team4prog.UI
                                 thr = t;
                         }
 
+                        if (pilotAngleToken != null)
+                        {
+                            if (double.TryParse(pilotAngleToken.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var pa))
+                                pilotAng = pa;
+                        }
+
+                        if (pilotThrottleToken != null)
+                        {
+                            if (double.TryParse(pilotThrottleToken.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var pt))
+                                pilotThr = pt;
+                        }
+
                         angles.Add(ang);
                         throttles.Add(thr);
+                        pilotAngles.Add(pilotAng);
+                        pilotThrottles.Add(pilotThr);
                     }
                     catch (Exception ex)
                     {
-                        AddLog($"JSON 파싱 오류 ({Path.GetFileName(jf)}): {ex.Message}");
+                        AddExceptionLog($"JSON 파싱 오류 ({Path.GetFileName(jf)}): {ex.Message}");
                         // Keep list alignment even when one JSON file cannot be parsed.
                         angles.Add(null);
                         throttles.Add(null);
+                        pilotAngles.Add(null);
+                        pilotThrottles.Add(null);
                     }
                 }
 
-                AddLog($"JSON 로드 완료: {jsonFiles.Length}개");
+                AddExceptionLog($"JSON 로드 완료: {jsonFiles.Length}개");
 
                 if (jsonFiles.Length != imagePaths.Count)
                 {
-                    AddLog($"경고: 이미지 개수({imagePaths.Count})와 JSON 개수({jsonFiles.Length})가 다릅니다.");
+                    AddExceptionLog($"경고: 이미지 개수({imagePaths.Count})와 JSON 개수({jsonFiles.Length})가 다릅니다.");
                 }
 
                 // Keep metadata lists aligned with imagePaths so frame navigation can stay index-safe.
@@ -597,11 +1127,15 @@ namespace Team4prog.UI
                     angles.Add(null);
                 while (throttles.Count < imagePaths.Count)
                     throttles.Add(null);
+                while (pilotAngles.Count < imagePaths.Count)
+                    pilotAngles.Add(null);
+                while (pilotThrottles.Count < imagePaths.Count)
+                    pilotThrottles.Add(null);
 
             }
             catch (Exception ex)
             {
-                AddLog($"JSON 로드 오류: {ex.Message}");
+                AddExceptionLog($"JSON 로드 오류: {ex.Message}");
             }
         }
 
@@ -610,7 +1144,7 @@ namespace Team4prog.UI
         {
             if (index < 0 || index >= imagePaths.Count)
             {
-                AddLog($"잘못된 인덱스: {index}");
+                AddExceptionLog($"잘못된 인덱스: {index}");
                 return;
             }
 
@@ -628,15 +1162,17 @@ namespace Team4prog.UI
                 string path = imagePaths[index];
                 if (!File.Exists(path))
                 {
-                    AddLog($"이미지 파일이 없습니다: {path}");
+                    AddExceptionLog($"이미지 파일이 없습니다: {path}");
                     return;
                 }
 
                 using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
                 using (var img = Image.FromStream(fs))
                 {
-                    picFrame.Image = new Bitmap(img);
+                    picFrame.Image = CreateFramePreviewBitmap(img, index);
                 }
+
+                EnsurePicFrameOverlayPaintHooked();
 
                 currentIndex = index;
                 lblFrame.Text = $"Frame: {currentIndex}";
@@ -652,34 +1188,279 @@ namespace Team4prog.UI
                 else
                     lblThrottle.Text = "Throttle: N/A";
 
-                AddLog($"이미지 표시: {Path.GetFileName(imagePaths[index])} (인덱스 {index})");
+                isReverseBadgeVisible = throttles.Count > index && throttles[index] is double throttleValue && throttleValue < 0;
+                picFrame.Invalidate();
+
                 HighlightCurrentIndex(index);
             }
             catch (FileNotFoundException ex)
             {
-                AddLog($"이미지 파일 없음: {ex.Message}");
+                AddExceptionLog($"이미지 파일 없음: {ex.Message}");
             }
             catch (UnauthorizedAccessException ex)
             {
-                AddLog($"이미지 접근 권한 오류: {ex.Message}");
+                AddExceptionLog($"이미지 접근 권한 오류: {ex.Message}");
             }
             catch (IOException ex)
             {
-                AddLog($"이미지 I/O 오류: {ex.Message}");
+                AddExceptionLog($"이미지 I/O 오류: {ex.Message}");
             }
             catch (OutOfMemoryException ex)
             {
-                AddLog($"이미지 형식 오류 또는 메모리 부족: {ex.Message}");
+                AddExceptionLog($"이미지 형식 오류 또는 메모리 부족: {ex.Message}");
             }
             catch (Exception ex)
             {
-                AddLog($"이미지 표시 오류: {ex.Message}");
+                AddExceptionLog($"이미지 표시 오류: {ex.Message}");
             }
+        }
+
+        private Bitmap CreateFramePreviewBitmap(Image sourceImage, int index)
+        {
+            var preview = new Bitmap(sourceImage);
+
+            if (angles.Count > index && angles[index] is double angle)
+                DrawDrivingPathOverlay(preview, angle);
+
+            DrawTrainedModelArrowOverlay(preview, index);
+            return preview;
+        }
+
+        private void DrawDrivingPathOverlay(Bitmap frame, double angle)
+        {
+            if (frame.Width <= 0 || frame.Height <= 0)
+                return;
+
+            float startX = frame.Width * 0.50f;
+            float startY = frame.Height * 0.98f;
+            float endY = frame.Height * 0.30f;
+
+            double clampedAngle = Math.Max(-1.0, Math.Min(1.0, angle));
+            float maxSteerOffset = frame.Width * 0.32f;
+            float endX = startX + (float)(clampedAngle * maxSteerOffset);
+
+            using var g = Graphics.FromImage(frame);
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+            float lineWidth = Math.Max(4f, frame.Width / 120f);
+            using var centerPen = new Pen(Color.Lime, lineWidth)
+            {
+                StartCap = System.Drawing.Drawing2D.LineCap.Round,
+                EndCap = System.Drawing.Drawing2D.LineCap.Round
+            };
+            g.DrawLine(centerPen, startX, startY, startX, endY);
+        }
+
+        private void DrawTrainedModelArrowOverlay(Bitmap frame, int index)
+        {
+            if (!showTrainedModelOverlay || string.IsNullOrWhiteSpace(selectedTrainedModelPath))
+                return;
+
+            double? modelAngle = GetModelOverlayValue(pilotAngles, angles, index);
+            double? modelThrottle = GetModelOverlayValue(pilotThrottles, throttles, index);
+            if (!modelAngle.HasValue)
+                return;
+
+            double clampedAngle = Math.Max(-1.0, Math.Min(1.0, modelAngle.Value));
+            bool isReverse = modelThrottle.HasValue && modelThrottle.Value < 0;
+
+            float startX = frame.Width * 0.50f;
+            float startY = isReverse ? frame.Height * 0.48f : frame.Height * 0.78f;
+            float endY = isReverse ? frame.Height * 0.70f : frame.Height * 0.56f;
+            float endX = startX + (float)(clampedAngle * frame.Width * 0.10f);
+
+            using var g = Graphics.FromImage(frame);
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+            float lineWidth = Math.Max(3f, frame.Width / 220f);
+            using var arrowCap = new System.Drawing.Drawing2D.AdjustableArrowCap(lineWidth * 0.9f, lineWidth * 1.2f, true);
+            using var arrowPen = new Pen(Color.Orange, lineWidth)
+            {
+                StartCap = System.Drawing.Drawing2D.LineCap.Round,
+                CustomEndCap = arrowCap
+            };
+
+            g.DrawLine(arrowPen, startX, startY, endX, endY);
+        }
+
+        private static double? GetModelOverlayValue(List<double?> primaryValues, List<double?> fallbackValues, int index)
+        {
+            if (primaryValues.Count > index && primaryValues[index].HasValue)
+                return primaryValues[index];
+
+            if (fallbackValues.Count > index && fallbackValues[index].HasValue)
+                return fallbackValues[index];
+
+            return null;
+        }
+
+        private void DrawSteeringWheelOverlay(Graphics g, RectangleF bounds, double angle)
+        {
+            if (bounds.Width <= 0 || bounds.Height <= 0)
+                return;
+
+            float wheelSize = Math.Min(bounds.Width, bounds.Height);
+            float centerX = bounds.X + bounds.Width / 2f;
+            float centerY = bounds.Y + bounds.Height / 2f;
+            float radius = wheelSize / 2f;
+
+            var state = g.Save();
+            g.TranslateTransform(centerX, centerY);
+            g.RotateTransform((float)(angle * 90.0));
+
+            using var shadowBrush = new SolidBrush(Color.FromArgb(55, 0, 0, 0));
+            g.FillEllipse(shadowBrush, -radius - 3, -radius + 2, wheelSize + 6, wheelSize + 6);
+
+            using var innerBrush = new SolidBrush(Color.FromArgb(235, 245, 248, 250));
+            g.FillEllipse(innerBrush, -radius, -radius, wheelSize, wheelSize);
+
+            using var rimPen = new Pen(Color.FromArgb(45, 55, 65), Math.Max(7f, wheelSize / 12f))
+            {
+                StartCap = System.Drawing.Drawing2D.LineCap.Round,
+                EndCap = System.Drawing.Drawing2D.LineCap.Round
+            };
+            using var gripPen = new Pen(Color.FromArgb(35, 45, 55), Math.Max(6f, wheelSize / 14f))
+            {
+                StartCap = System.Drawing.Drawing2D.LineCap.Round,
+                EndCap = System.Drawing.Drawing2D.LineCap.Round
+            };
+            using var spokePen = new Pen(Color.FromArgb(0, 145, 210), Math.Max(4f, wheelSize / 18f))
+            {
+                StartCap = System.Drawing.Drawing2D.LineCap.Round,
+                EndCap = System.Drawing.Drawing2D.LineCap.Round
+            };
+            using var markerPen = new Pen(Color.FromArgb(230, 30, 45, 55), Math.Max(3f, wheelSize / 28f))
+            {
+                StartCap = System.Drawing.Drawing2D.LineCap.Round,
+                EndCap = System.Drawing.Drawing2D.LineCap.Round
+            };
+            using var hubBrush = new SolidBrush(Color.FromArgb(245, 30, 38, 45));
+
+            g.DrawEllipse(rimPen, -radius, -radius, wheelSize, wheelSize);
+            g.DrawLine(gripPen, -radius + wheelSize * 0.16f, -wheelSize * 0.04f, radius - wheelSize * 0.16f, -wheelSize * 0.04f);
+            g.DrawLine(spokePen, 0, 0, -radius + wheelSize * 0.23f, -wheelSize * 0.04f);
+            g.DrawLine(spokePen, 0, 0, radius - wheelSize * 0.23f, -wheelSize * 0.04f);
+            g.DrawLine(spokePen, 0, 0, 0, radius - wheelSize * 0.20f);
+            g.DrawLine(markerPen, 0, -radius + wheelSize * 0.08f, 0, -radius + wheelSize * 0.25f);
+            g.FillEllipse(hubBrush, -wheelSize * 0.15f, -wheelSize * 0.15f, wheelSize * 0.30f, wheelSize * 0.30f);
+
+            g.Restore(state);
+        }
+
+        private void EnsurePicFrameOverlayPaintHooked()
+        {
+            if (isPicFrameOverlayPaintHooked)
+                return;
+
+            picFrame.Paint += PicFrame_Paint;
+            isPicFrameOverlayPaintHooked = true;
+        }
+
+        private void PicFrame_Paint(object? sender, PaintEventArgs e)
+        {
+            if (picFrame.Image == null)
+                return;
+
+            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+            if (currentIndex >= 0 && angles.Count > currentIndex && angles[currentIndex] is double angle)
+                DrawSteeringWheelOverlay(e.Graphics, GetSteeringWheelBounds(), Math.Max(-1.0, Math.Min(1.0, angle)));
+
+            if (isReverseBadgeVisible)
+                DrawReverseBadge(e.Graphics, GetReverseBadgeBounds());
+        }
+
+        private RectangleF GetSteeringWheelBounds()
+        {
+            Image? image = picFrame.Image;
+            if (image == null)
+                return RectangleF.Empty;
+
+            Rectangle imageRect = GetZoomedImageBounds(picFrame.ClientSize, image.Size);
+            float margin = Math.Max(14f, Math.Min(picFrame.ClientSize.Width, picFrame.ClientSize.Height) * 0.035f);
+            float rightBlankLeft = imageRect.Right + margin;
+            float rightBlankWidth = picFrame.ClientSize.Width - rightBlankLeft - margin;
+            float wheelSize = Math.Max(70f, Math.Min(130f, Math.Min(rightBlankWidth, imageRect.Height * 0.30f)));
+
+            float x = rightBlankWidth >= wheelSize
+                ? rightBlankLeft + (rightBlankWidth - wheelSize) / 2f
+                : picFrame.ClientSize.Width - wheelSize - margin;
+            float y = imageRect.Top + imageRect.Height * 0.52f;
+
+            if (y + wheelSize > picFrame.ClientSize.Height - margin)
+                y = picFrame.ClientSize.Height - wheelSize - margin;
+
+            return new RectangleF(x, y, wheelSize, wheelSize);
+        }
+
+        private RectangleF GetReverseBadgeBounds()
+        {
+            string text = "후진";
+            Image? image = picFrame.Image;
+            if (image == null)
+                return RectangleF.Empty;
+
+            Rectangle imageRect = GetZoomedImageBounds(picFrame.ClientSize, image.Size);
+            float fontSize = Math.Max(28f, Math.Min(picFrame.ClientSize.Width, picFrame.ClientSize.Height) * 0.08f);
+
+            using var font = new Font("Malgun Gothic", fontSize, FontStyle.Bold, GraphicsUnit.Pixel);
+            Size textSize = TextRenderer.MeasureText(text, font);
+            float paddingX = fontSize * 0.45f;
+            float paddingY = fontSize * 0.25f;
+            float badgeWidth = textSize.Width + paddingX * 2f;
+            float badgeHeight = textSize.Height + paddingY * 2f;
+            float margin = Math.Max(14f, fontSize * 0.35f);
+            float rightBlankLeft = imageRect.Right + margin;
+            float x = rightBlankLeft + badgeWidth <= picFrame.ClientSize.Width - margin
+                ? rightBlankLeft
+                : picFrame.ClientSize.Width - badgeWidth - margin;
+            float y = Math.Max(14f, fontSize * 0.35f);
+
+            return new RectangleF(x, y, badgeWidth, badgeHeight);
+        }
+
+        private void DrawReverseBadge(Graphics g, RectangleF rect)
+        {
+            string text = "후진";
+            float fontSize = Math.Max(28f, Math.Min(picFrame.ClientSize.Width, picFrame.ClientSize.Height) * 0.08f);
+            float paddingX = fontSize * 0.45f;
+            float paddingY = fontSize * 0.25f;
+
+            using var backgroundBrush = new SolidBrush(Color.FromArgb(225, 220, 40, 40));
+            using var borderPen = new Pen(Color.White, Math.Max(2f, fontSize / 12f));
+            using var textBrush = new SolidBrush(Color.White);
+            using var font = new Font("Malgun Gothic", fontSize, FontStyle.Bold, GraphicsUnit.Pixel);
+
+            g.FillRectangle(backgroundBrush, rect);
+            g.DrawRectangle(borderPen, rect.X, rect.Y, rect.Width, rect.Height);
+            g.DrawString(text, font, textBrush, rect.X + paddingX, rect.Y + paddingY);
+        }
+
+        private static Rectangle GetZoomedImageBounds(Size clientSize, Size imageSize)
+        {
+            if (clientSize.Width <= 0 || clientSize.Height <= 0 || imageSize.Width <= 0 || imageSize.Height <= 0)
+                return Rectangle.Empty;
+
+            double ratio = Math.Min(
+                clientSize.Width / (double)imageSize.Width,
+                clientSize.Height / (double)imageSize.Height);
+
+            int width = (int)Math.Round(imageSize.Width * ratio);
+            int height = (int)Math.Round(imageSize.Height * ratio);
+            int x = (clientSize.Width - width) / 2;
+            int y = (clientSize.Height - height) / 2;
+            return new Rectangle(x, y, width, height);
         }
 
         // Selecting a list item updates the trackbar and displayed frame.
         private void listBoxFrames_SelectedIndexChanged(object? sender, EventArgs e)
         {
+            if (isPlainDraggingFrameSelection && !isApplyingFrameDragSelection && listBoxFrames.SelectedIndex >= 0)
+            {
+                int plainIndex = listBoxFrames.SelectedIndex;
+                BeginInvoke(new Action(() => SelectSingleFrameOnly(plainIndex)));
+            }
+
             if (listBoxFrames.SelectedIndex >= 0 && listBoxFrames.SelectedIndex < imagePaths.Count)
             {
                 int idx = listBoxFrames.SelectedIndex;
@@ -690,19 +1471,23 @@ namespace Team4prog.UI
             }
         }
 
+        private void listBoxLog_SelectedIndexChanged(object? sender, EventArgs e)
+        {
+            if (isPlainDraggingTrashSelection && !isApplyingTrashDragSelection && listBoxLog.SelectedIndex >= 0)
+            {
+                int plainIndex = listBoxLog.SelectedIndex;
+                BeginInvoke(new Action(() => SelectSingleTrashOnly(plainIndex)));
+            }
+
+        }
+
         // Moving the trackbar updates the list selection and displayed frame.
         private void trackBarFrame_Scroll(object? sender, EventArgs e)
         {
             int idx = trackBarFrame.Value;
             if (idx >= 0 && idx < imagePaths.Count)
             {
-                // Changing SelectedIndex calls ShowImage through the list selection event.
-                if (listBoxFrames.SelectedIndex != idx)
-                    listBoxFrames.SelectedIndex = idx;
-                else
-                    ShowImage(idx);
-
-                HighlightCurrentIndex(idx);
+                SetPlaybackFrame(idx);
             }
         }
     }

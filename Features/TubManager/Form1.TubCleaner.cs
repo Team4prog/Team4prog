@@ -24,13 +24,20 @@ namespace Team4prog.UI
                     MessageBox.Show("Select a frame to set the range.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
-                leftIndex = idx;
+
+                if (leftIndex >= 0 && idx < leftIndex)
+                {
+                    MessageBox.Show("우측 지정값이 좌측 지정값보다 작아서 지정할 수 없습니다.", "범위 지정 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                rightIndex = idx;
                 UpdateRangeLabel();
-                AddLog($"[Set Left] {leftIndex}");
+                AddLog($"[Set Right] {rightIndex}");
             }
             catch (Exception ex)
             {
-                AddLog($"Set Left 오류: {ex.Message}");
+                AddLog($"Set Right 오류: {ex.Message}");
             }
         }
 
@@ -44,13 +51,15 @@ namespace Team4prog.UI
                     MessageBox.Show("Select a frame to set the range.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
-                rightIndex = idx;
+
+                leftIndex = idx;
+                rightIndex = -1;
                 UpdateRangeLabel();
-                AddLog($"[Set Right] {rightIndex}");
+                AddLog($"[Set Left] {leftIndex}");
             }
             catch (Exception ex)
             {
-                AddLog($"Set Right 오류: {ex.Message}");
+                AddLog($"Set Left 오류: {ex.Message}");
             }
         }
 
@@ -58,16 +67,15 @@ namespace Team4prog.UI
         {
             try
             {
-                // Keep the default display until both range ends are selected.
                 if (leftIndex < 0 || rightIndex < 0)
                 {
-                    lblRange.Text = "[0, 0]";
+                    int l = leftIndex >= 0 ? leftIndex : 0;
+                    int r = rightIndex >= 0 ? rightIndex : 0;
+                    lblRange.Text = $"[{l}, {r}]";
                     return;
                 }
 
-                int l = Math.Min(leftIndex, rightIndex);
-                int r = Math.Max(leftIndex, rightIndex);
-                lblRange.Text = $"[{l}, {r}]";
+                lblRange.Text = $"[{leftIndex}, {rightIndex}]";
             }
             catch (Exception ex)
             {
@@ -81,14 +89,15 @@ namespace Team4prog.UI
             {
                 if (leftIndex < 0 || rightIndex < 0)
                 {
-                    MessageBox.Show("Set the range to delete first.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("삭제할 시작점과 끝점을 먼저 지정하세요.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
 
                 int l = leftIndex, r = rightIndex;
-                if (l > r)
+                if (rightIndex < leftIndex)
                 {
-                    var t = l; l = r; r = t;
+                    MessageBox.Show("우측 지정값이 좌측 지정값보다 작아서 삭제할 수 없습니다.", "범위 지정 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
                 }
 
                 if (imagePaths.Count == 0)
@@ -122,6 +131,8 @@ namespace Team4prog.UI
                     imagePaths.RemoveAt(i);
                     if (angles.Count > i) angles.RemoveAt(i);
                     if (throttles.Count > i) throttles.RemoveAt(i);
+                    if (pilotAngles.Count > i) pilotAngles.RemoveAt(i);
+                    if (pilotThrottles.Count > i) pilotThrottles.RemoveAt(i);
                 }
 
                 // Keep the deleted frames in their original order for restoration.
@@ -147,7 +158,10 @@ namespace Team4prog.UI
                     trackBarFrame.Value = newIdx;
                 }
 
-                AddLog($"[삭제 완료] {l} ~ {r} 프레임 삭제");
+                for (int i = 0; i < tempPaths.Count; i++)
+                {
+                    AddLog($"[삭제 완료] {Path.GetFileName(tempPaths[i])}");
+                }
 
                 // Reset range selection after a successful delete.
                 leftIndex = -1; rightIndex = -1;
@@ -170,14 +184,36 @@ namespace Team4prog.UI
                     return;
                 }
 
-                // Restore frames near their saved indices; append if the list is now shorter.
-                for (int i = 0; i < deletedImagePaths.Count; i++)
+                if (listBoxLog.SelectedIndices.Count == 0)
                 {
-                    int idx = (i < deletedIndices.Count) ? deletedIndices[i] : imagePaths.Count;
+                    MessageBox.Show("복원할 삭제 로그를 선택하세요.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                var selectedRestoreIndices = listBoxLog.SelectedIndices
+                    .Cast<int>()
+                    .Where(i => i >= 0 && i < deletedImagePaths.Count)
+                    .Distinct()
+                    .OrderBy(i => deletedIndices.Count > i ? deletedIndices[i] : imagePaths.Count)
+                    .ThenBy(i => i)
+                    .ToList();
+
+                if (selectedRestoreIndices.Count == 0)
+                {
+                    MessageBox.Show("선택한 삭제 로그와 일치하는 복원 데이터가 없습니다.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                int firstRestoredIndex = -1;
+
+                // Restore only the deleted frames selected in listBoxLog.
+                foreach (int restoreIndex in selectedRestoreIndices)
+                {
+                    int idx = (restoreIndex < deletedIndices.Count) ? deletedIndices[restoreIndex] : imagePaths.Count;
                     idx = Math.Min(idx, imagePaths.Count);
-                    imagePaths.Insert(idx, deletedImagePaths[i]);
-                    double a = deletedAngles[i];
-                    double t = deletedThrottles[i];
+                    imagePaths.Insert(idx, deletedImagePaths[restoreIndex]);
+                    double a = deletedAngles[restoreIndex];
+                    double t = deletedThrottles[restoreIndex];
                     if (double.IsNaN(a))
                         angles.Insert(idx, null);
                     else
@@ -187,15 +223,26 @@ namespace Team4prog.UI
                         throttles.Insert(idx, null);
                     else
                         throttles.Insert(idx, t);
+
+                    pilotAngles.Insert(idx, null);
+                    pilotThrottles.Insert(idx, null);
+
+                    if (firstRestoredIndex < 0)
+                        firstRestoredIndex = idx;
                 }
 
-                int restoredCount = deletedImagePaths.Count;
+                int restoredCount = selectedRestoreIndices.Count;
 
-                // Clear restore buffers after they are applied.
-                deletedImagePaths.Clear();
-                deletedAngles.Clear();
-                deletedThrottles.Clear();
-                deletedIndices.Clear();
+                // Remove restored entries from the visible delete log and restore buffers.
+                foreach (int restoreIndex in selectedRestoreIndices.OrderByDescending(i => i))
+                {
+                    if (restoreIndex < listBoxLog.Items.Count)
+                        listBoxLog.Items.RemoveAt(restoreIndex);
+                    deletedImagePaths.RemoveAt(restoreIndex);
+                    deletedAngles.RemoveAt(restoreIndex);
+                    deletedThrottles.RemoveAt(restoreIndex);
+                    deletedIndices.RemoveAt(restoreIndex);
+                }
 
                 RebuildListBoxFrames();
                 trackBarFrame.Minimum = 0;
@@ -203,7 +250,7 @@ namespace Team4prog.UI
 
                 if (imagePaths.Count > 0)
                 {
-                    int sel = 0;
+                    int sel = Math.Max(0, Math.Min(firstRestoredIndex, imagePaths.Count - 1));
                     listBoxFrames.SelectedIndex = sel;
                     trackBarFrame.Value = sel;
                 }

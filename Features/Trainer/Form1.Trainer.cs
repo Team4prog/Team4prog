@@ -46,12 +46,12 @@ namespace Team4prog.UI
                 if (trainingProcess != null && !trainingProcess.HasExited)
                 {
                     trainingProcess.Kill(entireProcessTree: true);
-                    AddLog("[학습 중지 요청]");
+                    AddTrainLog("[학습 중지 요청]");
                 }
             }
             catch (Exception ex)
             {
-                AddLog("[학습 중지 오류] " + ex.Message);
+                AddTrainLog("[학습 중지 오류] " + ex.Message);
             }
         }
 
@@ -71,12 +71,24 @@ namespace Team4prog.UI
                 {
                     modelType = "linear";
                     cmbModelType.SelectedItem = modelType;
-                    AddLog("[학습] 모델 타입이 비어 있어 linear로 설정했습니다.");
+                    AddTrainLog("[학습] 모델 타입이 비어 있어 linear로 설정했습니다.");
                 }
 
                 if (string.IsNullOrEmpty(carFolderPath))
                 {
                     MessageBox.Show("먼저 폴더를 선택하세요.");
+                    return;
+                }
+
+                if (HasTrashFrames())
+                {
+                    int trashCount = Math.Max(deletedImagePaths.Count, listBoxLog.Items.Count);
+                    MessageBox.Show(
+                        $"휴지통에 {trashCount}개의 파일이 있어서 학습할 수 없습니다.\n복원하거나 영구 삭제한 뒤 다시 학습하세요.",
+                        "학습 불가",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    AddTrainLog($"[학습 불가] 휴지통 파일 {trashCount}개");
                     return;
                 }
 
@@ -96,10 +108,12 @@ namespace Team4prog.UI
                 }
 
                 ResetLossChart();
-                FixTrainerLayout();
+                // FixTrainerLayout();
 
-                string? selectedModelPath = GetSelectedTrainingModelPath();
-                var psi = BuildTrainingStartInfo(workingDir, modelType, selectedModelPath, pathMode);
+                string modelArgument = ResolveTrainingModelArgument(workingDir, modelType, pathMode);
+                var modelBackups = BackupExistingLocalModelFiles(workingDir, pathMode);
+                DateTime trainingStartedAt = DateTime.Now;
+                var psi = BuildTrainingStartInfo(workingDir, modelType, modelArgument, pathMode);
 
                 using var process = new Process();
                 process.StartInfo = psi;
@@ -115,8 +129,7 @@ namespace Team4prog.UI
                         trainingOutput.Add(e.Data);
                         this.Invoke(new Action(() =>
                         {
-                            listBoxLog.Items.Add(e.Data);
-                            listBoxLog.TopIndex = listBoxLog.Items.Count - 1;
+                            AddTrainLog(e.Data);   
                             ParseLossLine(e.Data);
                         }));
                     }
@@ -129,7 +142,7 @@ namespace Team4prog.UI
                         trainingOutput.Add(e.Data);
                         this.Invoke(new Action(() =>
                         {
-                            AddLog("[학습 오류] " + e.Data);
+                            AddTrainLog("[학습 오류] " + e.Data);
                             ParseLossLine(e.Data);
                         }));
                     }
@@ -139,7 +152,7 @@ namespace Team4prog.UI
                 btnTrain.Enabled = true;
                 btnTrain.Text = "Stop";
                 btnTrain.BackColor = Color.FromArgb(255, 128, 128);
-                AddLog("[학습 시작]");
+                AddTrainLog("[학습 시작]");
 
                 if (!process.Start())
                 {
@@ -152,15 +165,19 @@ namespace Team4prog.UI
                 await Task.Run(() => process.WaitForExit());
 
                 string? logPath = WriteTrainingLog(trainingOutput);
+                EnsureTrainingModelOutput(modelArgument, workingDir, pathMode, trainingStartedAt);
+                RestoreLocalModelBackups(modelBackups, modelArgument);
 
                 if (trainingStopRequested)
                 {
-                    AddLog("[학습 중지됨]");
+                    MessageBox.Show("학습이 중단되었지만 모델이 생성되었습니다.");
+                    LoadModelList();
+                    AddTrainLog("[학습 중지됨]");
                 }
                 else if (process.ExitCode == 0)
                 {
                     MessageBox.Show("학습 완료");
-                    AddLog("[학습 완료]");
+                    AddTrainLog("[학습 완료]");
                     LoadModelList();
                 }
                 else
@@ -173,23 +190,23 @@ namespace Team4prog.UI
                         "학습 실패",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Error);
-                    AddLog($"[학습 실패] ExitCode={process.ExitCode}");
+                    AddTrainLog($"[학습 실패] ExitCode={process.ExitCode}");
                 }
             }
             catch (System.ComponentModel.Win32Exception ex)
             {
                 MessageBox.Show("python 또는 wsl 실행 파일을 찾을 수 없습니다. Python, WSL, 가상환경 설정을 확인하세요.\n" + ex.Message);
-                AddLog($"실행 파일 오류: {ex.Message}");
+                AddTrainLog($"실행 파일 오류: {ex.Message}");
             }
             catch (InvalidOperationException ex)
             {
                 MessageBox.Show("학습 프로세스 실행 상태가 올바르지 않습니다.\n" + ex.Message);
-                AddLog($"학습 프로세스 상태 오류: {ex.Message}");
+                AddTrainLog($"학습 프로세스 상태 오류: {ex.Message}");
             }
             catch (Exception ex)
             {
                 MessageBox.Show("오류: " + ex.Message);
-                AddLog($"학습 실행 오류: {ex.Message}");
+                AddTrainLog($"학습 실행 오류: {ex.Message}");
             }
             finally
             {
@@ -198,9 +215,17 @@ namespace Team4prog.UI
                 trainingStopRequested = false;
 
                 btnTrain.Enabled = true;
-                btnTrain.Text = "Train";
+                btnTrain.Text = "학습";
                 btnTrain.BackColor = Color.FromArgb(128, 255, 128);
             }
+        }
+
+        private void AddTrainLog(string message)
+        {
+            if (listBoxChartLoss == null) return;
+
+            listBoxChartLoss.Items.Add(message);
+            listBoxChartLoss.TopIndex = listBoxChartLoss.Items.Count - 1;
         }
 
         private void btnSelectCarFolder_Click(object sender, EventArgs e)
@@ -218,10 +243,9 @@ namespace Team4prog.UI
             }
         }
 
-        private ProcessStartInfo BuildTrainingStartInfo(string workingDir, string modelType, string? selectedModelPath, TrainingPathMode pathMode)
+        private ProcessStartInfo BuildTrainingStartInfo(string workingDir, string modelType, string modelArgument, TrainingPathMode pathMode)
         {
             string normalizedWorkingDir = NormalizeUserPath(workingDir);
-            string modelArgument = ResolveTrainingModelArgument(normalizedWorkingDir, modelType, selectedModelPath, pathMode);
             string trainScript = TrainingFileExists(normalizedWorkingDir, pathMode, "train.py") ? "train.py" : "manage.py";
 
             if (pathMode == TrainingPathMode.WslUnc || pathMode == TrainingPathMode.WslLinux)
@@ -238,7 +262,8 @@ namespace Team4prog.UI
                     "source ~/.bashrc >/dev/null 2>&1; " +
                     "source ~/miniconda3/etc/profile.d/conda.sh >/dev/null 2>&1 || " +
                     "source ~/anaconda3/etc/profile.d/conda.sh >/dev/null 2>&1 || true; " +
-                    $"conda activate e2e_env && cd {BashQuote(linuxWorkingDir)} && mkdir -p models && {scriptCmd}";
+                    $"conda activate e2e_env && cd {BashQuote(linuxWorkingDir)} && mkdir -p models && " +
+                    $"export MODEL_PATH={BashQuote(wslModelArgument)} DONKEY_MODEL_PATH={BashQuote(wslModelArgument)} DONKEYCAR_MODEL_PATH={BashQuote(wslModelArgument)} && {scriptCmd}";
 
                 var psi = new ProcessStartInfo
                 {
@@ -256,7 +281,7 @@ namespace Team4prog.UI
                 psi.ArgumentList.Add("-ic");
                 psi.ArgumentList.Add(bshCommand);
 
-                AddLog("[학습 명령 (WSL)] " + FormatProcessStartInfo(psi));
+                AddTrainLog("[학습 명령 (WSL)] " + FormatProcessStartInfo(psi));
                 return psi;
             }
 
@@ -270,6 +295,9 @@ namespace Team4prog.UI
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
+            localPsi.Environment["MODEL_PATH"] = modelArgument;
+            localPsi.Environment["DONKEY_MODEL_PATH"] = modelArgument;
+            localPsi.Environment["DONKEYCAR_MODEL_PATH"] = modelArgument;
 
             if (trainScript == "train.py")
             {
@@ -289,7 +317,7 @@ namespace Team4prog.UI
                 localPsi.ArgumentList.Add(modelArgument);
             }
 
-            AddLog("[학습 명령 (Local)] " + FormatProcessStartInfo(localPsi));
+            AddTrainLog("[학습 명령 (Local)] " + FormatProcessStartInfo(localPsi));
             return localPsi;
         }
 
@@ -329,39 +357,161 @@ namespace Team4prog.UI
                 Directory.CreateDirectory(logFolder);
                 string logFilePath = Path.Combine(logFolder, $"training_{DateTime.Now:yyyyMMdd_HHmmss}.log");
                 File.WriteAllLines(logFilePath, trainingOutput);
-                AddLog("[학습 로그] " + logFilePath);
+                AddTrainLog("[학습 로그] " + logFilePath);
                 return logFilePath;
             }
             catch (Exception ex)
             {
-                AddLog($"학습 로그 저장 오류: {ex.Message}");
+                AddTrainLog($"학습 로그 저장 오류: {ex.Message}");
                 return null;
             }
         }
 
-        private string ResolveTrainingModelArgument(string workingDir, string modelType, string? selectedModelPath, TrainingPathMode pathMode)
+        private string ResolveTrainingModelArgument(string workingDir, string modelType, TrainingPathMode pathMode)
         {
-            if (!string.IsNullOrWhiteSpace(selectedModelPath))
-            {
-                string normalizedSelectedModelPath = NormalizeUserPath(selectedModelPath);
-                AddLog("[학습 모델] " + Path.GetFileName(normalizedSelectedModelPath));
-                return normalizedSelectedModelPath;
-            }
-
-            string fileName = $"pilot_{modelType}_{DateTime.Now:yyyyMMdd_HHmmss}.h5";
+            string fileName = $"{DateTime.Now:yyyyMMdd_HHmmss}_{modelType}.h5";
 
             if (pathMode == TrainingPathMode.WslLinux)
             {
                 string linuxModelFilePath = CombineLinuxPath(workingDir, "models", fileName);
-                AddLog("[학습 모델 자동 생성] " + fileName);
+                AddTrainLog("[학습 모델 자동 생성] " + fileName)    ;
                 return linuxModelFilePath;
             }
 
             string modelsDirectoryPath = Path.Combine(workingDir, "models");
             Directory.CreateDirectory(modelsDirectoryPath);
             string createdModelFilePath = Path.Combine(modelsDirectoryPath, fileName);
-            AddLog("[학습 모델 자동 생성] " + fileName);
+            AddTrainLog("[학습 모델 자동 생성] " + fileName);
             return createdModelFilePath;
+        }
+
+        private Dictionary<string, string> BackupExistingLocalModelFiles(string workingDir, TrainingPathMode pathMode)
+        {
+            var backups = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            try
+            {
+                if (pathMode == TrainingPathMode.WslLinux)
+                    return backups;
+
+                string modelsDirectoryPath = Path.Combine(NormalizeUserPath(workingDir), "models");
+                if (!Directory.Exists(modelsDirectoryPath))
+                    return backups;
+
+                string backupDirectoryPath = Path.Combine(Path.GetTempPath(), "Team4progModelBackups", Guid.NewGuid().ToString("N"));
+                Directory.CreateDirectory(backupDirectoryPath);
+
+                foreach (string modelFilePath in Directory.EnumerateFiles(modelsDirectoryPath, "*.*", SearchOption.TopDirectoryOnly).Where(IsModelFile))
+                {
+                    string backupFilePath = Path.Combine(backupDirectoryPath, Path.GetFileName(modelFilePath));
+                    File.Copy(modelFilePath, backupFilePath, overwrite: true);
+                    backups[modelFilePath] = backupFilePath;
+                }
+            }
+            catch (Exception ex)
+            {
+                AddTrainLog("[모델 백업 오류] " + ex.Message);
+            }
+
+            return backups;
+        }
+
+        private void RestoreLocalModelBackups(Dictionary<string, string> backups, string expectedModelPath)
+        {
+            foreach (var backup in backups)
+            {
+                try
+                {
+                    if (string.Equals(NormalizeUserPath(backup.Key), NormalizeUserPath(expectedModelPath), StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    if (File.Exists(backup.Value))
+                        File.Copy(backup.Value, backup.Key, overwrite: true);
+                }
+                catch (Exception ex)
+                {
+                    AddTrainLog("[모델 복원 오류] " + ex.Message);
+                }
+            }
+        }
+
+        private void EnsureTrainingModelOutput(string expectedModelPath, string workingDir, TrainingPathMode pathMode, DateTime trainingStartedAt)
+        {
+            try
+            {
+                string normalizedExpectedModelPath = NormalizeUserPath(expectedModelPath);
+                if (pathMode == TrainingPathMode.WslLinux)
+                {
+                    EnsureWslTrainingModelOutput(normalizedExpectedModelPath, workingDir, trainingStartedAt);
+                    return;
+                }
+
+                if (File.Exists(normalizedExpectedModelPath))
+                    return;
+
+                string modelsDirectoryPath = Path.Combine(NormalizeUserPath(workingDir), "models");
+                if (!Directory.Exists(modelsDirectoryPath))
+                    return;
+
+                DateTime threshold = trainingStartedAt.AddSeconds(-2);
+                string? latestModelPath = Directory
+                    .EnumerateFiles(modelsDirectoryPath, "*.*", SearchOption.TopDirectoryOnly)
+                    .Where(IsTrainableModelFile)
+                    .Where(path => !string.Equals(NormalizeUserPath(path), normalizedExpectedModelPath, StringComparison.OrdinalIgnoreCase))
+                    .Where(path => File.GetLastWriteTime(path) >= threshold)
+                    .OrderByDescending(File.GetLastWriteTime)
+                    .FirstOrDefault();
+
+                if (string.IsNullOrWhiteSpace(latestModelPath))
+                    return;
+
+                File.Copy(latestModelPath, normalizedExpectedModelPath, overwrite: true);
+                CopyModelSidecar(latestModelPath, normalizedExpectedModelPath, ".tflite");
+                AddTrainLog("[학습 모델 이름 보정] " + Path.GetFileName(normalizedExpectedModelPath));
+            }
+            catch (Exception ex)
+            {
+                AddTrainLog("[학습 모델 이름 보정 오류] " + ex.Message);
+            }
+        }
+
+        private void CopyModelSidecar(string sourceModelPath, string expectedModelPath, string extension)
+        {
+            string sourceSidecarPath = Path.ChangeExtension(sourceModelPath, extension);
+            if (!File.Exists(sourceSidecarPath))
+                return;
+
+            string expectedSidecarPath = Path.ChangeExtension(expectedModelPath, extension);
+            File.Copy(sourceSidecarPath, expectedSidecarPath, overwrite: true);
+        }
+
+        private void EnsureWslTrainingModelOutput(string expectedModelPath, string workingDir, DateTime trainingStartedAt)
+        {
+            string distro = GetPreferredWslDistro(workingDir);
+            string linuxWorkingDir = ConvertPathForWsl(workingDir, distro);
+            string linuxExpectedModelPath = ConvertPathForWsl(expectedModelPath, distro);
+            string linuxExpectedSidecarPath = ChangeLinuxExtension(linuxExpectedModelPath, ".tflite");
+            long startedAtUnixTime = new DateTimeOffset(trainingStartedAt.AddSeconds(-2)).ToUnixTimeSeconds();
+            string linuxModelsDirectoryPath = CombineLinuxPath(linuxWorkingDir, "models");
+            string command =
+                $"if [ ! -f {BashQuote(linuxExpectedModelPath)} ]; then " +
+                $"latest=$(find {BashQuote(linuxModelsDirectoryPath)} -maxdepth 1 -type f \\( -iname '*.h5' -o -iname '*.keras' \\) -newermt @{startedAtUnixTime} -printf '%T@ %p\\n' 2>/dev/null | sort -nr | head -n 1 | cut -d' ' -f2-); " +
+                $"if [ -n \"$latest\" ]; then cp \"$latest\" {BashQuote(linuxExpectedModelPath)}; " +
+                $"sidecar=\"${{latest%.*}}.tflite\"; " +
+                $"[ -f \"$sidecar\" ] && cp \"$sidecar\" {BashQuote(linuxExpectedSidecarPath)}; fi; fi";
+
+            if (RunWslCommand(distro, command, out string output) != 0 && !string.IsNullOrWhiteSpace(output))
+                AddTrainLog("[WSL 모델 이름 보정 오류] " + output.Trim());
+        }
+
+        private static string ChangeLinuxExtension(string linuxPath, string extension)
+        {
+            int slashIndex = linuxPath.LastIndexOf('/');
+            int dotIndex = linuxPath.LastIndexOf('.');
+            if (dotIndex > slashIndex)
+                return linuxPath.Substring(0, dotIndex) + extension;
+
+            return linuxPath + extension;
         }
 
         private string? GetSelectedTrainingModelPath()
@@ -379,7 +529,7 @@ namespace Team4prog.UI
                 return normalizedSelectedModelPath;
             }
 
-            AddLog($"[학습] {ext} 모델은 학습 저장 대상으로 쓰지 않고 새 .h5 모델을 생성합니다.");
+            AddTrainLog($"[학습] {ext} 모델은 학습 저장 대상으로 쓰지 않고 새 .h5 모델을 생성합니다.");
             return null;
         }
 
@@ -626,11 +776,11 @@ namespace Team4prog.UI
                 string selectedModelFilePath = NormalizeUserPath(dialog.FileName);
                 AddModelToCombo(selectedModelFilePath);
                 cmbModelList.SelectedItem = selectedModelFilePath;
-                AddLog("[모델 선택] " + Path.GetFileName(selectedModelFilePath));
+                AddTrainLog("[모델 선택] " + Path.GetFileName(selectedModelFilePath));
             }
             catch (Exception ex)
             {
-                AddLog($"모델 선택 오류: {ex.Message}");
+                AddTrainLog($"모델 선택 오류: {ex.Message}");
             }
         }
 
@@ -681,13 +831,13 @@ namespace Team4prog.UI
                     File.Delete(normalizedSelectedModelPath);
                 }
 
-                AddLog("[모델 삭제] " + Path.GetFileName(normalizedSelectedModelPath));
+                AddTrainLog("[모델 삭제] " + Path.GetFileName(normalizedSelectedModelPath));
                 LoadModelList();
             }
             catch (Exception ex)
             {
                 MessageBox.Show("모델 삭제 실패: " + ex.Message);
-                AddLog($"모델 삭제 오류: {ex.Message}");
+                AddTrainLog($"모델 삭제 오류: {ex.Message}");
             }
         }
 
@@ -710,11 +860,11 @@ namespace Team4prog.UI
                 if (cmbModelList.Items.Count > 0)
                     cmbModelList.SelectedIndex = 0;
 
-                AddLog($"[모델 목록] {cmbModelList.Items.Count}개");
+                AddTrainLog($"[모델 목록] {cmbModelList.Items.Count}개");
             }
             catch (Exception ex)
             {
-                AddLog($"모델 목록 로드 오류: {ex.Message}");
+                AddTrainLog($"모델 목록 로드 오류: {ex.Message}");
             }
         }
 
