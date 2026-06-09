@@ -606,25 +606,53 @@ DONKEYCAR_WSL_DISTRO=Ubuntu-22.04
 
 ### Tub Manager 화면
 
-<img width="1919" height="1079" alt="tub manage 화면" src="https://github.com/user-attachments/assets/8f19fba8-fa02-4d9a-8a63-e8f8673cae39" />
+#### 프로그램 구동 화면
+
+##### 폴더 열기
+
+<img width="4289" height="2520" alt="프로그램 구동화면" src="https://github.com/user-attachments/assets/881197ac-81ab-4b35-b2fe-671de24d29ce" />
+
+##### 파일 지정 밑 삭제
+
+<img width="4263" height="2503" alt="프로그램 구동화면 2" src="https://github.com/user-attachments/assets/10df5493-c3ac-4e84-9794-252dda32add8" />
+
+##### 파일 삭제 되돌리기 
+
+<img width="1086" height="683" alt="삭제 되돌리기2" src="https://github.com/user-attachments/assets/e1607175-9b7c-4d26-9693-4d01e4f6f774" />
+
+##### 파일 영구 삭제
+
+<img width="2784" height="1670" alt="프로그램구동화면3" src="https://github.com/user-attachments/assets/1adb8d43-e1f3-4906-a8cd-657a66a9b563" />
+
+##### 필터 기능 
+
+<img width="1172" height="687" alt="필터 기능" src="https://github.com/user-attachments/assets/eb5a21b4-89fc-40ad-9e31-ad95ab346621" />
+
+##### 필터 기능 실행
+
+<img width="1110" height="687" alt="캡처" src="https://github.com/user-attachments/assets/a4841e42-b641-4c73-a407-935c85d4fad1" />
+
 
 ### Trainer 화면
 
-<img width="1919" height="1079" alt="trainer 화면" src="https://github.com/user-attachments/assets/4bcf63a7-7c68-4da0-8dd7-350deca189a3" />
+##### Trainer 탭
+<img width="1130" height="686" alt="trainer 탭" src="https://github.com/user-attachments/assets/4c75e713-40d3-4042-87a3-ade2bf05549e" />
 
-### 폴더 선택 화면
 
-<img width="1347" height="1079" alt="Folder 선택시" src="https://github.com/user-attachments/assets/00fd0dfa-9d47-465f-b849-fe5c3e552af2" />
+##### 학습 시작 밑 완료 화면
 
-### 학습 중 화면
+<img width="1106" height="680" alt="image" src="https://github.com/user-attachments/assets/45feccb1-538a-4a05-be25-03e839499cb7" />
 
-<img width="359" height="418" alt="학습 중" src="https://github.com/user-attachments/assets/827173d7-318e-42df-b209-8ea32e7fbd44" />
 
-### 학습 완료 화면
+##### 학습 모델 표시
 
-<img width="1377" height="962" alt="학습 완료 1" src="https://github.com/user-attachments/assets/6aac4d63-7601-471a-b802-a71480f64996" />
+<img width="1167" height="683" alt="학습 모델 표시" src="https://github.com/user-attachments/assets/528bd933-8ef6-44f0-bf3d-b74b78091931" />
 
-<img width="1247" height="820" alt="학습 완료 2" src="https://github.com/user-attachments/assets/5c445e75-cb57-490c-8a4c-a054755fd025" />
+### 도움말 창
+
+##### 도움말 기능
+
+<img width="1174" height="687" alt="도움말 창" src="https://github.com/user-attachments/assets/617911eb-a418-4818-b8b7-0fd8c77df3bf" />
 
 ## 12. 최종 정리
 
