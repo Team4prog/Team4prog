@@ -610,49 +610,45 @@ DONKEYCAR_WSL_DISTRO=Ubuntu-22.04
 
 ##### 폴더 열기
 
-<img width="4289" height="2520" alt="프로그램 구동화면" src="https://github.com/user-attachments/assets/881197ac-81ab-4b35-b2fe-671de24d29ce" />
+![폴더 열기](img/1.png)
 
 ##### 파일 지정 밑 삭제
 
-<img width="4263" height="2503" alt="프로그램 구동화면 2" src="https://github.com/user-attachments/assets/10df5493-c3ac-4e84-9794-252dda32add8" />
+![파일 지정 밑 삭제](img/2.png)
 
 ##### 파일 삭제 되돌리기 
 
-<img width="1086" height="683" alt="삭제 되돌리기2" src="https://github.com/user-attachments/assets/e1607175-9b7c-4d26-9693-4d01e4f6f774" />
+![파일 삭제 되돌리기](img/3.jpg)
 
 ##### 파일 영구 삭제
 
-<img width="2784" height="1670" alt="프로그램구동화면3" src="https://github.com/user-attachments/assets/1adb8d43-e1f3-4906-a8cd-657a66a9b563" />
+![파일 영구 삭제](img/4.jpg)
 
 ##### 필터 기능 
-
-<img width="1172" height="687" alt="필터 기능" src="https://github.com/user-attachments/assets/eb5a21b4-89fc-40ad-9e31-ad95ab346621" />
-
+	
+![필터 기능](img/5.jpg)
 ##### 필터 기능 실행
 
-<img width="1110" height="687" alt="캡처" src="https://github.com/user-attachments/assets/a4841e42-b641-4c73-a407-935c85d4fad1" />
-
+![필터 기능 실행](img/6.jpg)
 
 ### Trainer 화면
 
 ##### Trainer 탭
-<img width="1130" height="686" alt="trainer 탭" src="https://github.com/user-attachments/assets/4c75e713-40d3-4042-87a3-ade2bf05549e" />
 
+![Trainer 탭](img/7.jpg)
 
 ##### 학습 시작 밑 완료 화면
 
-<img width="1106" height="680" alt="image" src="https://github.com/user-attachments/assets/45feccb1-538a-4a05-be25-03e839499cb7" />
-
-
+![학습 시작 밑 완료 화면](img/8.jpg)
 ##### 학습 모델 표시
 
-<img width="1167" height="683" alt="학습 모델 표시" src="https://github.com/user-attachments/assets/528bd933-8ef6-44f0-bf3d-b74b78091931" />
+![학습 모델 표시](img/9.jpg)
 
 ### 도움말 창
 
 ##### 도움말 기능
 
-<img width="1174" height="687" alt="도움말 창" src="https://github.com/user-attachments/assets/617911eb-a418-4818-b8b7-0fd8c77df3bf" />
+![도움말 기능](img/10.jpg)
 
 ## 12. 최종 정리
 
